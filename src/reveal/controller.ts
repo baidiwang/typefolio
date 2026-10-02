@@ -104,14 +104,6 @@ class RevealController {
     return () => this.listeners.delete(listener)
   }
 
-  /** Height (px) of whatever covers the bottom of the viewport (the typewriter). */
-  setBottomInset(px: number) {
-    const next = Math.round(px)
-    if (next === this.bottomInset) return
-    this.bottomInset = next
-    if (this.entryObserver) this.createObservers()
-  }
-
   register(el: HTMLElement, options: RevealOptions): () => void {
     if (!this.textEnabled || this.jobs.has(el)) return () => {}
     const map = buildTextMap(el)
@@ -180,6 +172,7 @@ class RevealController {
       if (motion.matches) this.flushAll()
     })
 
+    this.bottomInset = measureInset()
     this.createObservers()
 
     // Line measurements are only trusted once fonts are in.
@@ -197,6 +190,11 @@ class RevealController {
     window.addEventListener('resize', () => {
       window.clearTimeout(resizeTimer)
       resizeTimer = window.setTimeout(() => {
+        const inset = measureInset()
+        if (inset !== this.bottomInset) {
+          this.bottomInset = inset
+          this.createObservers()
+        }
         if (window.innerWidth === width) return
         width = window.innerWidth
         this.invalidateLines()
@@ -484,6 +482,16 @@ class RevealController {
   private emit(event: RevealEvent) {
     for (const listener of this.listeners) listener(event)
   }
+}
+
+/**
+ * Height of whatever covers the bottom of the viewport: the element marked
+ * `data-reveal-inset` (the typewriter). Text below its top edge hasn't come
+ * out of the platen yet, so it doesn't count as "in view".
+ */
+function measureInset(): number {
+  const el = document.querySelector('[data-reveal-inset]')
+  return el ? Math.round(el.getBoundingClientRect().height) : 0
 }
 
 function isAboveViewport(el: Element): boolean {

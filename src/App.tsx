@@ -12,6 +12,7 @@ import {
 } from './content'
 import { useHashScroll } from './hooks/useHashScroll'
 import { Reveal } from './reveal/Reveal'
+import { Typewriter } from './typewriter/Typewriter'
 
 export default function App() {
   useHashScroll()
@@ -87,6 +88,8 @@ export default function App() {
           </footer>
         </main>
       </div>
+
+      <Typewriter />
     </div>
   )
 }

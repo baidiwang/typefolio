@@ -123,7 +123,24 @@ boundaries.
 their project enters, setting `data-stick="stuck"` for a short CSS "stuck
 on" animation (opacity and transform only). No motion under reduced motion.
 
-**8. Keyboard.** Focusing a link inside unrevealed text completes that
+**8. The typewriter is a listener.** The controller emits an event for
+every step:
+
+| Event | Typewriter does |
+| --- | --- |
+| `char` (char, column) | carriage `translateX(−column × step)`, typebar strike, a random key dips, click sound |
+| `return` (bell?) | end of a typed line: carriage return, platen knob turns, bell at the end of an element |
+| `feed` (bell?) | a paragraph line appeared: line feed (knob turns), bell at the last line |
+| `idle` | carriage returns home |
+
+Because the controller emits from the same frame loop that moves the
+highlight, carriage and text can't drift apart, and compression speeds both
+up together. The typewriter also tells the controller where the paper
+emerges: the controller reads the height of the element marked
+`data-reveal-inset` and ends its trigger zone there. Rig details:
+[`docs/typewriter-rig.md`](docs/typewriter-rig.md).
+
+**9. Keyboard.** Focusing a link inside unrevealed text completes that
 element instantly.
 
 ## Stack
