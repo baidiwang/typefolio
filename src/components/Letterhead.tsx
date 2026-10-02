@@ -1,37 +1,22 @@
 import { site } from '../content'
+import { ExternalLink } from './ExternalLink'
 
+/** Printed on the paper; scrolls away with it. Not a sticky web header. */
 export function Letterhead() {
   const { name, title, links } = site
 
   return (
-    <header className="letterhead" role="banner">
-      <div className="letterhead__identity">
-        <a className="letterhead__name" href="#top">
-          {name}
-        </a>
-        <span className="letterhead__dot" aria-hidden="true">
-          ·
-        </span>
-        <span className="letterhead__role">{title}</span>
-      </div>
-      <nav className="letterhead__nav" aria-label="Primary">
+    <header className="letterhead">
+      <h1 className="letterhead__name">{name}</h1>
+      <p className="letterhead__title">{title}</p>
+      <nav className="letterhead__contact" aria-label="Contact">
         <a href={links.resume.href}>{links.resume.label}</a>
+        <span aria-hidden="true"> · </span>
         <a href={links.email.href}>{links.email.label}</a>
-        <a
-          href={links.linkedin.href}
-          {...(links.linkedin.href.startsWith('http')
-            ? { target: '_blank', rel: 'noopener noreferrer' }
-            : {})}
-        >
-          {links.linkedin.label}
-        </a>
-        <a
-          href={links.github.href}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {links.github.label}
-        </a>
+        <span aria-hidden="true"> · </span>
+        <ExternalLink href={links.linkedin.href}>{links.linkedin.label}</ExternalLink>
+        <span aria-hidden="true"> · </span>
+        <ExternalLink href={links.github.href}>{links.github.label}</ExternalLink>
       </nav>
     </header>
   )
