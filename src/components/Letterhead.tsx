@@ -1,7 +1,9 @@
 import { site } from '../content'
-import { ExternalLink } from './ExternalLink'
 
-/** Printed on the paper; scrolls away with it. Not a sticky web header. */
+/**
+ * Printed on the paper; scrolls away with it. Not a sticky web header.
+ * Only the email lives here: Resume / LinkedIn / GitHub are typewriter keys.
+ */
 export function Letterhead() {
   const { name, title, links } = site
 
@@ -9,15 +11,9 @@ export function Letterhead() {
     <header className="letterhead">
       <h1 className="letterhead__name">{name}</h1>
       <p className="letterhead__title">{title}</p>
-      <nav className="letterhead__contact" aria-label="Contact">
-        <a href={links.resume.href}>{links.resume.label}</a>
-        <span aria-hidden="true"> · </span>
-        <a href={links.email.href}>{links.email.label}</a>
-        <span aria-hidden="true"> · </span>
-        <ExternalLink href={links.linkedin.href}>{links.linkedin.label}</ExternalLink>
-        <span aria-hidden="true"> · </span>
-        <ExternalLink href={links.github.href}>{links.github.label}</ExternalLink>
-      </nav>
+      <p className="letterhead__contact">
+        <a href={links.email.href}>{links.email.display}</a>
+      </p>
     </header>
   )
 }

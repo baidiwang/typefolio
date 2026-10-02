@@ -33,6 +33,18 @@ export default function App() {
 
           <Divider />
 
+
+          <section aria-labelledby="work-heading">
+            <Reveal as="h2" id="work-heading">
+              Selected work
+            </Reveal>
+            {featuredProjects.map((project, i) => (
+              <Project key={project.id} project={project} index={i} />
+            ))}
+          </section>
+
+          <Divider />
+
           <section aria-labelledby="experience-heading">
             <Reveal as="h2" id="experience-heading">
               Experience
@@ -44,17 +56,6 @@ export default function App() {
                 </Reveal>
               ))}
             </ul>
-          </section>
-
-          <Divider />
-
-          <section aria-labelledby="work-heading">
-            <Reveal as="h2" id="work-heading">
-              Selected work
-            </Reveal>
-            {featuredProjects.map((project, i) => (
-              <Project key={project.id} project={project} index={i} />
-            ))}
           </section>
 
           <Divider />

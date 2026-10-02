@@ -22,10 +22,12 @@
   --margin: clamp(1.25rem, 6vw, 4.5rem);
   --line: 1.6;
 
-  /* Height of the fixed typewriter at each breakpoint. The rig is 5:1, so
-     20vw of height fills the width. The paper's bottom padding and the
-     scroll padding both use it, so the last line clears the platen. */
-  --typewriter-height: min(20vw, 220px, 30vh);
+  /* Height of the fixed typewriter at each breakpoint. Desktop shows the
+     rig's 1400x240 crop (DESKTOP_VIEWBOX), so 240/1400 of the width fills
+     it edge to edge; capped at 160px (~18% of a 900px viewport). The
+     paper's bottom padding and the scroll padding both use it, so the last
+     line clears the platen. */
+  --typewriter-height: min(calc(100vw * 240 / 1400), 160px, 30vh);
 
   /* Typewriter colours (used by the placeholder rig). */
   --tw-body: #27322c;
@@ -394,7 +396,7 @@ a.taped:focus-visible {
 .typewriter__machine {
   position: relative;
   height: 100%;
-  aspect-ratio: 5 / 1;
+  aspect-ratio: 1400 / 240;
   max-width: 100%;
 }
 

@@ -79,9 +79,14 @@ mid-visit flushes everything.
 `controller.ts` is a singleton. `<Reveal as="p" mode="lines">` registers its
 element in a layout effect (before first paint, so nothing flashes):
 
-- Already in view at load → left visible. The one exception is the intro
-  (`onLoad`, `duration={1000}`), typed on load in about 1 s.
-- Otherwise → hidden and observed.
+- In view at load (above the platen line) → hidden and put in the **load
+  batch**. All registrations from the first commit are flushed together in
+  a microtask: the intro first, then everything below it on the first screen,
+  in document order, compressed to finish within **1.5 s** of fonts being
+  ready. Typewriter logic: nothing below the line being typed is ever
+  visible early.
+- Otherwise → hidden and observed. (The letterhead isn't registered: it's
+  printed stationery, visible from the first frame.)
 
 The controller runs a single `requestAnimationFrame` loop over a queue of
 jobs, one active at a time, in document order. Two modes:
@@ -103,7 +108,7 @@ anything that scrolls above the viewport while it's still waiting. Never a
 page-wide timer, never a scroll percentage.
 
 **5. Nobody waits: compression, not skipping.** Whenever elements join, the
-deadline becomes *now + 1.2 s*. Each frame the speed is
+deadline becomes *now + 1.2 s* (*1.5 s* for the load batch). Each frame the speed is
 
 ```
 speed = max(1, nominal time remaining for the whole queue / time left to deadline)

@@ -35,6 +35,7 @@ export type Project = {
   body?: string[]
   /** TODO: the old site has no roles. Empty strings are not rendered. */
   role: string
+  /** Technologies and tools only. Skill tags (e.g. "Interaction Design") don't go here. */
   stack: string[]
   links: ProjectLinks
   media: ProjectMedia
@@ -108,16 +109,7 @@ export const featuredProjects: Project[] = [
       'Designing a voice-first interface that makes the AI’s state legible — showing live transcription and captured tasks so users can see the AI working in real time.',
     ],
     role: '', // TODO
-    stack: [
-      'Next.js',
-      'TypeScript',
-      'OpenAI Realtime API',
-      'WebRTC',
-      'Voice UI',
-      'Interaction Design',
-      'Figma',
-      'Real-time UX',
-    ],
+    stack: ['Next.js', 'TypeScript', 'OpenAI Realtime API', 'WebRTC', 'Figma'],
     links: {
       live: 'https://voice-first-chat.vercel.app/',
       code: 'https://github.com/baidiwang/voice-first-chat',
@@ -139,17 +131,7 @@ export const featuredProjects: Project[] = [
       'Designing the desktop-pet toaster’s character and interaction language — its states, marker gestures, and the gentle “you were here” reveal — plus the information hierarchy that turns a scattered attention trail back into a clear “where was I” picture.',
     ],
     role: '', // TODO
-    stack: [
-      'Tauri',
-      'Rust',
-      'React',
-      'TypeScript',
-      'Claude API',
-      'Character Design',
-      'Interaction Design',
-      'Lovable',
-      'Claude Design',
-    ],
+    stack: ['Tauri', 'Rust', 'React', 'TypeScript', 'Claude API', 'Lovable', 'Claude Design'],
     // TODO: no live link on the old site.
     links: { code: 'https://github.com/baidiwang/breadcrumb' },
     media: {
@@ -169,15 +151,7 @@ export const featuredProjects: Project[] = [
       'Designing an interface that responds to looking itself — no hotspots, no chat box, no markers competing with the painting. Attention becomes the only input.',
     ],
     role: '', // TODO
-    stack: [
-      'Next.js',
-      'TypeScript',
-      'OpenAI API',
-      'Attention Detection',
-      'Interaction Design',
-      'AI UX',
-      'Editorial Design',
-    ],
+    stack: ['Next.js', 'TypeScript', 'OpenAI API'],
     links: {
       live: 'https://look-closer-masterpiece.vercel.app/',
       code: 'https://github.com/baidiwang/LookCloser',
@@ -196,7 +170,7 @@ export const featuredProjects: Project[] = [
     oneLiner:
       'A renter-controlled document copilot that shows its evidence — every extracted field comes with source quotes and confidence, and stays fully editable by the user.',
     role: '', // TODO
-    stack: ['OpenAI API', 'Serverless', 'JavaScript', 'AI Guardrails'],
+    stack: ['OpenAI API', 'Serverless', 'JavaScript'],
     links: {
       live: 'https://trust-path-copilot.vercel.app/',
       code: 'https://github.com/baidiwang/TrustPath',
@@ -230,7 +204,7 @@ export const gameProjects: Project[] = [
     oneLiner:
       'A narrative puzzle game where you play a spirit, possessing environmental objects to indirectly guide a little girl through space.',
     role: '', // TODO
-    stack: ['Unity', 'C#', 'Game Design', 'Narrative'],
+    stack: ['Unity', 'C#'],
     // TODO: the old "Details" link (baidiwang.github.io/memory-system/) was
     // removed because it doesn't match this project.
     links: {
@@ -250,7 +224,7 @@ export const gameProjects: Project[] = [
     oneLiner:
       'A third-person desert exploration game where uncertainty is the core mechanic — navigate without a map using environmental wayfinding. Released on Steam.',
     role: '', // TODO
-    stack: ['Unity', 'C#', 'Gameplay Systems', 'ScriptableObject'],
+    stack: ['Unity', 'C#', 'ScriptableObject'],
     links: {
       live: 'https://store.steampowered.com/app/4666960/desol/',
       liveLabel: 'Steam',

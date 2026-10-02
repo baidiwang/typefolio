@@ -9,10 +9,15 @@ Replace them with your own artwork (e.g. a Figma export) by keeping the ids,
 
 ## Coordinate system
 
-- `viewBox="0 0 1400 280"` (`RIG_VIEWBOX` in [`rig.ts`](../src/typewriter/rig.ts)).
-  If your artwork uses another size, update `RIG_VIEWBOX` and the 5:1
-  `aspect-ratio` / `--typewriter-height: min(20vw, …)` in `src/index.css` to
-  match its aspect ratio.
+- Artwork coordinates: `viewBox="0 0 1400 280"` (`RIG_VIEWBOX` in
+  [`rig.ts`](../src/typewriter/rig.ts)).
+- Desktop shows a crop of it, `DESKTOP_VIEWBOX` = `0 0 1400 240`: full width,
+  with the lower key rows running off the bottom of the screen. That keeps
+  the machine about 160 px tall while the platen still spans the paper.
+  If your artwork uses another size or crop, update `DESKTOP_VIEWBOX` and the
+  matching `aspect-ratio: 1400 / 240` and
+  `--typewriter-height: min(calc(100vw * 240 / 1400), 160px, 30vh)` in
+  `src/index.css`.
 - The **top edge of the platen** is where the paper comes out. The whole
   `.typewriter` element is the reveal "inset": text becomes visible when it
   rises above its top edge.
