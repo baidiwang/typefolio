@@ -1,4 +1,5 @@
 import { primaryHref, type Project as ProjectData } from '../content'
+import { Reveal } from '../reveal/Reveal'
 import { ExternalLink } from './ExternalLink'
 import { TapedMedia } from './TapedMedia'
 
@@ -25,22 +26,32 @@ export function Project({ project, index }: Props) {
       </div>
 
       <div className="project__text">
-        <h3 id={titleId} className="project__title">
+        <Reveal as="h3" id={titleId} className="project__title">
           {href ? <ExternalLink href={href}>{title}</ExternalLink> : title}
-        </h3>
-        <p className="project__kind">{kind}</p>
-        {role && <p className="project__role">Role: {role}</p>}
-        <p>{oneLiner}</p>
-        {body?.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-        {decision && <p className="ink-red">{decision}</p>}
-        <p className="project__stack">Stack: {stack.join(', ')}</p>
-        <p className="project__links">
+        </Reveal>
+        <Reveal className="project__kind">{kind}</Reveal>
+        {role && <Reveal className="project__role">Role: {role}</Reveal>}
+        <Reveal mode="lines">{oneLiner}</Reveal>
+        {body?.map((paragraph) => (
+          <Reveal key={paragraph} mode="lines">
+            {paragraph}
+          </Reveal>
+        ))}
+        {decision && (
+          <Reveal mode="lines" className="ink-red">
+            {decision}
+          </Reveal>
+        )}
+        <Reveal mode="lines" className="project__stack">
+          Stack: {stack.join(', ')}
+        </Reveal>
+        <Reveal className="project__links">
           {links.live && (
             <ExternalLink href={links.live}>{links.liveLabel ?? 'Live'} ↗</ExternalLink>
           )}
           {links.code && <ExternalLink href={links.code}>Code ↗</ExternalLink>}
           {links.writeup && <ExternalLink href={links.writeup}>Writeup ↗</ExternalLink>}
-        </p>
+        </Reveal>
       </div>
     </article>
   )

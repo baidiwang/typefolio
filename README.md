@@ -51,6 +51,81 @@ once as `--font-type` in `src/index.css`. Two inks on `--paper` (#f6f0e1):
 | `--ink-soft` | meta lines       | 6.6 : 1           |
 | `--ink-red`  | emphasis, focus  | 6.5 : 1           |
 
+## How the reveal engine works
+
+Code: [`src/reveal/`](src/reveal). No animation library, no React state per
+character.
+
+**1. Nothing is ever hidden in the markup.** Every word is rendered by React
+on the first render and laid out normally. To "un-type" text, the engine puts
+a DOM `Range` over the unrevealed tail of each element and registers it with
+the [CSS Custom Highlight API](https://developer.mozilla.org/docs/Web/API/CSS_Custom_Highlight_API):
+
+```css
+::highlight(unrevealed) { color: transparent; text-decoration-color: transparent; }
+```
+
+A highlight only repaints glyphs. It can't move layout (so there's no reflow
+and page height is fixed from the first frame) and it isn't in the
+accessibility tree (screen readers and find-in-page always see every word).
+Typing a character is just `range.setStart(node, offset + 1)`.
+
+**2. Progressive enhancement.** Hiding only happens when JS runs, the browser
+supports highlights, and `prefers-reduced-motion` is off. Otherwise nothing
+is registered and everything is simply visible. Switching reduced motion on
+mid-visit flushes everything.
+
+**3. One controller owns "what is being typed".** `reveal` in
+`controller.ts` is a singleton. `<Reveal as="p" mode="lines">` registers its
+element in a layout effect (before first paint, so nothing flashes):
+
+- Already in view at load → left visible. The one exception is the intro
+  (`onLoad`, `duration={1000}`), typed on load in about 1 s.
+- Otherwise → hidden and observed.
+
+The controller runs a single `requestAnimationFrame` loop over a queue of
+jobs, one active at a time, in document order. Two modes:
+
+- `type`: one character per step, ~30 ms each, capped so no visual line takes
+  more than 0.6 s (headings, short lines, links).
+- `lines`: one visual line per step, like a line feed (paragraphs).
+
+**4. Triggers are per element.** An `IntersectionObserver` whose root box
+ends at the platen line (the top of the typewriter) and stretches 100 000 px
+*above* the viewport. One observer therefore reports both cases:
+
+- Element scrolled into view → joins the queue.
+- Element jumped past in one frame (End key, deep link, fling), which a
+  normal observer would never report → completed instantly.
+
+A second observer, plus a cheap per-frame rect check of the queue, completes
+anything that scrolls above the viewport while it's still waiting. Never a
+page-wide timer, never a scroll percentage.
+
+**5. Nobody waits: compression, not skipping.** Whenever elements join, the
+deadline becomes *now + 1.2 s*. Each frame the speed is
+
+```
+speed = max(1, nominal time remaining for the whole queue / time left to deadline)
+```
+
+so a single heading types at natural pace, while a burst of content (fast
+scroll, tall screen) is sped up to land within the budget.
+
+**6. Measuring lines.** `lines.ts` finds visual line breaks by measuring a
+one-character `Range` at each possible break (start of a word or text node)
+and starting a new line when the glyph box drops. It runs after
+`document.fonts.ready`, again on every font `loadingdone`, and on resize
+(width changes). A line-feed reveal in progress snaps to the new line
+boundaries.
+
+**7. Media.** Taped photos don't wait for text: `reveal.watch()` fires when
+their project enters, setting `data-stick="stuck"` for a short CSS "stuck
+on" animation (opacity and transform only). No motion under reduced motion.
+
+**8. Keyboard.** Focusing a link inside unrevealed text completes that
+element instantly.
+
 ## Stack
 
 Vite + React + TypeScript, plain CSS. No animation library.

@@ -1,6 +1,7 @@
-import { useEffect, useRef, type CSSProperties } from 'react'
+import { useEffect, useLayoutEffect, useRef, type CSSProperties } from 'react'
 import type { ProjectMedia } from '../content'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
+import { reveal } from '../reveal/controller'
 
 type Props = {
   media: ProjectMedia
@@ -17,6 +18,26 @@ type Props = {
 export function TapedMedia({ media, href, title, tilt }: Props) {
   const reduced = usePrefersReducedMotion()
   const videoRef = useRef<HTMLVideoElement>(null)
+  const frameRef = useRef<HTMLElement & HTMLAnchorElement>(null)
+
+  // "Stuck on" when its project enters view. Doesn't wait for typing. Set
+  // before first paint so a below-the-fold photo never flashes in.
+  useLayoutEffect(() => {
+    const el = frameRef.current
+    if (!el) return
+    el.dataset.stick = 'pending'
+    return reveal.watch(el, (instant) => {
+      if (instant) {
+        el.dataset.stick = 'done'
+        return
+      }
+      el.dataset.stick = 'stuck'
+      // Hand the transform back to the hover styles once stuck.
+      el.addEventListener('animationend', () => (el.dataset.stick = 'done'), {
+        once: true,
+      })
+    })
+  }, [])
 
   useEffect(() => {
     const video = videoRef.current
@@ -70,13 +91,20 @@ export function TapedMedia({ media, href, title, tilt }: Props) {
 
   if (!href) {
     return (
-      <figure className={className} style={style} role="img" aria-label={label}>
+      <figure
+        ref={frameRef}
+        className={className}
+        style={style}
+        role="img"
+        aria-label={label}
+      >
         {frame}
       </figure>
     )
   }
   return (
     <a
+      ref={frameRef}
       className={className}
       style={style}
       href={href}

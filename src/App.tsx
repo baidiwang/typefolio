@@ -11,6 +11,7 @@ import {
   xrProjects,
 } from './content'
 import { useHashScroll } from './hooks/useHashScroll'
+import { Reveal } from './reveal/Reveal'
 
 export default function App() {
   useHashScroll()
@@ -25,17 +26,21 @@ export default function App() {
         <Letterhead />
 
         <main id="main" className="sheet">
-          <p className="intro">{site.intro}</p>
+          <Reveal className="intro" onLoad duration={1000}>
+            {site.intro}
+          </Reveal>
 
           <Divider />
 
           <section aria-labelledby="experience-heading">
-            <h2 id="experience-heading">Experience</h2>
+            <Reveal as="h2" id="experience-heading">
+              Experience
+            </Reveal>
             <ul className="experience">
               {experience.map((item) => (
-                <li key={item.org}>
+                <Reveal as="li" key={item.org}>
                   <strong>{item.org}</strong> — {item.role}
-                </li>
+                </Reveal>
               ))}
             </ul>
           </section>
@@ -43,7 +48,9 @@ export default function App() {
           <Divider />
 
           <section aria-labelledby="work-heading">
-            <h2 id="work-heading">Selected work</h2>
+            <Reveal as="h2" id="work-heading">
+              Selected work
+            </Reveal>
             {featuredProjects.map((project, i) => (
               <Project key={project.id} project={project} index={i} />
             ))}
@@ -52,14 +59,18 @@ export default function App() {
           <Divider />
 
           <section aria-labelledby="other-heading">
-            <h2 id="other-heading">Other</h2>
+            <Reveal as="h2" id="other-heading">
+              Other
+            </Reveal>
             <OneLiners items={otherProjects} />
           </section>
 
           <Divider />
 
           <section aria-labelledby="games-heading">
-            <h2 id="games-heading">Games &amp; XR</h2>
+            <Reveal as="h2" id="games-heading">
+              Games &amp; XR
+            </Reveal>
             {gameProjects.map((project, i) => (
               <Project key={project.id} project={project} index={i} />
             ))}
@@ -69,10 +80,10 @@ export default function App() {
           <Divider />
 
           <footer className="signature">
-            <p>{site.signature}</p>
-            <p>
+            <Reveal>{site.signature}</Reveal>
+            <Reveal>
               <a href={site.links.email.href}>{site.links.email.display}</a>
-            </p>
+            </Reveal>
           </footer>
         </main>
       </div>

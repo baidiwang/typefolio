@@ -1,4 +1,5 @@
 import type { OtherProject } from '../content'
+import { Reveal } from '../reveal/Reveal'
 import { ExternalLink } from './ExternalLink'
 
 /** Short entries: title, type, one sentence, one link. */
@@ -7,11 +8,11 @@ export function OneLiners({ items }: { items: OtherProject[] }) {
     <ul className="one-liners">
       {items.map((item) => (
         <li key={item.id} id={item.id} className="one-liner">
-          <p className="one-liner__head">
+          <Reveal className="one-liner__head">
             <strong>{item.title}</strong>
             <span className="project__kind"> — {item.kind}</span>
-          </p>
-          <p>
+          </Reveal>
+          <Reveal mode="lines">
             {item.oneLiner}
             {item.href && (
               <>
@@ -19,7 +20,7 @@ export function OneLiners({ items }: { items: OtherProject[] }) {
                 <ExternalLink href={item.href}>{item.linkLabel ?? 'Link'} ↗</ExternalLink>
               </>
             )}
-          </p>
+          </Reveal>
         </li>
       ))}
     </ul>
