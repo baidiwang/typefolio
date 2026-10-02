@@ -1,241 +1,291 @@
 /**
- * Portfolio content module — edit copy here.
- * Fields marked TODO need Baidi's confirmation before shipping publicly.
+ * Portfolio content — edit copy here.
+ *
+ * Source of truth: the old site's src/constants/categories.js
+ * (github.com/baidiwang/3D-Portfolio). Projects that appeared in several old
+ * categories are merged into one entry. Do not add facts that aren't there.
+ * Anything marked TODO needs Baidi's input before it ships.
  */
 
-export type ProjectSection = {
-  id: string
-  title: string
-  body: string
+export type ProjectLinks = {
+  /** Live site, store page, or demo. */
+  live?: string
+  /** Label for the live link when "Live" is wrong (e.g. "Steam"). */
+  liveLabel?: string
+  code?: string
+  writeup?: string
 }
 
-export type FeaturedProject = {
+export type ProjectMedia = {
+  /** Base path without extension: `${src}.mp4`, `${src}.webm`, `${src}.jpg`. */
+  src: string
+  width: number
+  height: number
+  alt: string
+}
+
+export type Project = {
+  /** Used as the deep-link anchor: /#lily */
   id: string
-  anchor: string
   title: string
+  /** Project type, from the old site's `category` field(s). */
+  kind: string
   oneLiner: string
+  /** Extra paragraphs merged in from other old categories. */
+  body?: string[]
+  /** TODO: the old site has no roles. Empty strings are not rendered. */
   role: string
-  mediaNote: string
-  sections: ProjectSection[]
+  stack: string[]
+  links: ProjectLinks
+  media: ProjectMedia
+  /** One sentence about a key decision, rendered in red ink. */
+  decision?: string
 }
 
 export type OtherProject = {
   id: string
   title: string
+  kind: string
   oneLiner: string
   href?: string
+  linkLabel?: string
 }
 
 export type ExperienceItem = {
   org: string
   role: string
-  detail: string
 }
 
 export const site = {
   name: 'Baidi Wang',
   title: 'Design Engineer',
-  positioning:
-    'Building AI interfaces and interactive web products — from Figma to components to motion.',
+  // From the old site's About Me (src/components/HomeInfo.jsx).
+  intro:
+    'I’m a Design Engineer building AI interfaces and interactive web products.',
   links: {
-    resume: {
-      label: 'Resume',
-      href: '/resume.pdf', // TODO: replace with real resume PDF URL or path
-    },
-    email: {
-      label: 'Email',
-      href: 'mailto:TODO@example.com', // TODO: real email
-      display: 'TODO@example.com',
-    },
-    linkedin: {
-      label: 'LinkedIn',
-      href: '#', // TODO: LinkedIn profile URL
-    },
-    github: {
-      label: 'GitHub',
-      href: 'https://github.com/baidiwang',
-    },
+    resume: { label: 'Resume', href: '/resume.pdf' }, // TODO: add public/resume.pdf
+    // TODO: real email address.
+    email: { label: 'Email', href: 'mailto:TODO@example.com', display: 'TODO@example.com' },
+    linkedin: { label: 'LinkedIn', href: 'https://www.linkedin.com/in/abbeywang' },
+    github: { label: 'GitHub', href: 'https://github.com/baidiwang' },
   },
-  signature: {
-    closing: '— Baidi',
-    note: 'Open to Design Engineer / UX Engineering roles. Happy to walk through any of the case studies above.',
-  },
+  signature: '— Baidi Wang',
 } as const
 
-export const featuredProjects: FeaturedProject[] = [
+export const experience: ExperienceItem[] = [
+  { org: 'Google', role: 'UX Engineering contractor' },
+  { org: 'Axios', role: 'Data Visualization Engineer' },
+]
+
+export const featuredProjects: Project[] = [
   {
     id: 'google-play',
-    anchor: 'google-play',
-    title: 'Google Play UXE',
+    title: 'Google Play Prototypes',
+    kind: 'UX Engineering',
     oneLiner:
-      'Public UX Engineering prototype exploring Play surfaces — interaction patterns, component polish, and motion for browsing and discovery.',
-    role: 'UX Engineering · Prototype (public)',
-    mediaNote: 'TODO: add screenshots / prototype embed',
-    sections: [
-      {
-        id: 'background',
-        title: 'Background',
-        body: 'TODO: problem framing, users, and constraints for the Play UXE prototype. Confirm what can be shared publicly.',
-      },
-      {
-        id: 'design',
-        title: 'Design & tokens',
-        body: 'TODO: design system / token decisions (spacing, type, color), Figma → component mapping.',
-      },
-      {
-        id: 'implementation',
-        title: 'Implementation',
-        body: 'TODO: stack, component architecture, key interaction implementations.',
-      },
-      {
-        id: 'motion',
-        title: 'Motion',
-        body: 'TODO: motion principles and signature transitions used in the prototype.',
-      },
-      {
-        id: 'outcomes',
-        title: 'Outcomes',
-        body: 'TODO: learnings, feedback, and what shipped vs. explored.',
-      },
-    ],
+      'Interactive prototypes turning Figma designs into production-ready React components to validate new features with real users.',
+    role: '', // TODO
+    stack: ['React', 'TypeScript', 'Redux', 'MUI', 'Framer Motion'],
+    // No live site or code on the old site: media and title link to the writeup.
+    links: {
+      writeup:
+        'https://medium.com/@WangPortfolio/web-and-mobile-projects-5922cfb86b60',
+    },
+    media: {
+      src: '/media/google-play',
+      width: 480,
+      height: 1076,
+      alt: 'Screen recording of a Google Play prototype switching between tabs.',
+    },
   },
   {
     id: 'lily',
-    anchor: 'lily',
     title: 'Lily',
+    kind: 'AI Voice Assistant · AI Interface Design',
     oneLiner:
-      'A voice-first AI interface that makes the model’s state legible — live listening, thinking, and response cues without a chat-box metaphor.',
-    role: 'AI interface design · Interaction',
-    mediaNote: 'TODO: add demo video / stills of voice-state UI',
-    sections: [
-      {
-        id: 'background',
-        title: 'Background',
-        body: 'Voice AI often hides system state. Lily explores how to show listening, processing, and speaking as readable UI — so users always know what the agent is doing.',
-      },
-      {
-        id: 'design',
-        title: 'Design & tokens',
-        body: 'TODO: confirm visual language (radar / state rings), type scale, and motion tokens used for voice states.',
-      },
-      {
-        id: 'implementation',
-        title: 'Implementation',
-        body: 'TODO: React / Web Audio / speech stack details and how state machine drives the UI.',
-      },
-      {
-        id: 'motion',
-        title: 'Motion',
-        body: 'TODO: state transitions between idle → listening → thinking → speaking.',
-      },
-      {
-        id: 'outcomes',
-        title: 'Outcomes',
-        body: 'TODO: usability notes and next iterations.',
-      },
+      'A voice-first sales assistant that captures post-call notes and creates follow-up tasks through natural conversation.',
+    body: [
+      'Designing a voice-first interface that makes the AI’s state legible — showing live transcription and captured tasks so users can see the AI working in real time.',
     ],
+    role: '', // TODO
+    stack: [
+      'Next.js',
+      'TypeScript',
+      'OpenAI Realtime API',
+      'WebRTC',
+      'Voice UI',
+      'Interaction Design',
+      'Figma',
+      'Real-time UX',
+    ],
+    links: {
+      live: 'https://voice-first-chat.vercel.app/',
+      code: 'https://github.com/baidiwang/voice-first-chat',
+    },
+    media: {
+      src: '/media/lily',
+      width: 720,
+      height: 386,
+      alt: 'Screen recording of Lily transcribing a call and listing captured tasks.',
+    },
   },
   {
     id: 'breadcrumb',
-    anchor: 'breadcrumb',
     title: 'Breadcrumb',
+    kind: 'AI Desktop App · Interaction & Character Design',
     oneLiner:
-      'Continuity for unfinished work — preserves not just history, but intent, failures, and exactly where to continue.',
-    role: 'Interaction & character design · Agent UX',
-    mediaNote: 'TODO: add “Remember this” UI stills / agent flow',
-    sections: [
-      {
-        id: 'background',
-        title: 'Background',
-        body: 'People abandon work mid-stream. Breadcrumb treats unfinished sessions as first-class state: return days later with partial context, and an agent reconstructs what you tried, what failed, and where to pick up.',
-      },
-      {
-        id: 'design',
-        title: 'Design & tokens',
-        body: 'TODO: character (desktop-pet toaster) language, card UI, and “Remember this” interaction pattern — confirm final naming and visuals.',
-      },
-      {
-        id: 'implementation',
-        title: 'Implementation',
-        body: 'TODO: agent memory model, session capture, and UI surface (desktop / web).',
-      },
-      {
-        id: 'motion',
-        title: 'Motion',
-        body: 'TODO: character idle / remember / restore animations.',
-      },
-      {
-        id: 'outcomes',
-        title: 'Outcomes',
-        body: 'Hackathon / prototype exploration (see Devpost). TODO: awards, demos, and follow-on work.',
-      },
+      'A desktop-pet working-memory companion for ADHD brains — a little toaster that drops a marker when your attention drifts, then rebuilds “where was I?” with AI when you return.',
+    body: [
+      'Designing the desktop-pet toaster’s character and interaction language — its states, marker gestures, and the gentle “you were here” reveal — plus the information hierarchy that turns a scattered attention trail back into a clear “where was I” picture.',
     ],
+    role: '', // TODO
+    stack: [
+      'Tauri',
+      'Rust',
+      'React',
+      'TypeScript',
+      'Claude API',
+      'Character Design',
+      'Interaction Design',
+      'Lovable',
+      'Claude Design',
+    ],
+    // TODO: no live link on the old site.
+    links: { code: 'https://github.com/baidiwang/breadcrumb' },
+    media: {
+      src: '/media/breadcrumb',
+      width: 720,
+      height: 468,
+      alt: 'Screen recording of Breadcrumb running on a desktop.',
+    },
   },
   {
     id: 'look-closer',
-    anchor: 'look-closer',
     title: 'Look Closer',
+    kind: 'AI Interface · Interaction Design',
     oneLiner:
-      'An AI-powered curiosity engine that notices what catches your eye and gently guides you through the hidden stories inside great masterpieces.',
-    role: 'Interaction design · AI × art',
-    mediaNote: 'TODO: add Last Supper demo stills / gaze UI',
-    sections: [
-      {
-        id: 'background',
-        title: 'Background',
-        body: 'Museum and art apps often rely on hotspots or chat. Look Closer responds to looking itself — noticing attention and offering context without interrupting the artwork.',
-      },
-      {
-        id: 'design',
-        title: 'Design & tokens',
-        body: 'TODO: attention cue UI, overlay typography over art, accessibility for motion / contrast.',
-      },
-      {
-        id: 'implementation',
-        title: 'Implementation',
-        body: 'TODO: vision / attention model, content retrieval, and front-end stack.',
-      },
-      {
-        id: 'motion',
-        title: 'Motion',
-        body: 'TODO: soft callouts, focus transitions, and non-intrusive reveal timing.',
-      },
-      {
-        id: 'outcomes',
-        title: 'Outcomes',
-        body: 'Prototype / Devpost project. TODO: user testing notes and next steps.',
-      },
+      'An artwork viewer where attention is the interface — it senses where your gaze lingers on a painting and quietly opens the story behind that detail.',
+    body: [
+      'Designing an interface that responds to looking itself — no hotspots, no chat box, no markers competing with the painting. Attention becomes the only input.',
     ],
+    role: '', // TODO
+    stack: [
+      'Next.js',
+      'TypeScript',
+      'OpenAI API',
+      'Attention Detection',
+      'Interaction Design',
+      'AI UX',
+      'Editorial Design',
+    ],
+    links: {
+      live: 'https://look-closer-masterpiece.vercel.app/',
+      code: 'https://github.com/baidiwang/LookCloser',
+    },
+    media: {
+      src: '/media/look-closer',
+      width: 720,
+      height: 330,
+      alt: 'Screen recording of Look Closer opening a story on The Last Supper.',
+    },
   },
-]
-
-export const experience: ExperienceItem[] = [
   {
-    org: 'Google',
-    role: 'UX Engineering',
-    detail:
-      'TODO: confirm team, dates, and one-line scope (Play / related UXE work). Public prototype noted under Featured.',
-  },
-  {
-    org: 'Axios',
-    role: 'Design / Engineering',
-    detail:
-      'TODO: confirm title, dates, and one-line contribution (product UI, design systems, or front-end).',
+    id: 'trustpath',
+    title: 'TrustPath',
+    kind: 'AI Interface',
+    oneLiner:
+      'A renter-controlled document copilot that shows its evidence — every extracted field comes with source quotes and confidence, and stays fully editable by the user.',
+    role: '', // TODO
+    stack: ['OpenAI API', 'Serverless', 'JavaScript', 'AI Guardrails'],
+    links: {
+      live: 'https://trust-path-copilot.vercel.app/',
+      code: 'https://github.com/baidiwang/TrustPath',
+    },
+    media: {
+      src: '/media/trustpath',
+      width: 720,
+      height: 352,
+      alt: 'Screen recording of TrustPath reviewing an uploaded document.',
+    },
   },
 ]
 
 export const otherProjects: OtherProject[] = [
   {
-    id: 'solo-game-desol',
-    title: 'Solo game + Desol',
+    id: 'data-visualization',
+    title: 'Data Visualization',
+    kind: 'Information Design',
     oneLiner:
-      'Game & XR work — exploratory 3D / spatial experiences (Unity / Three.js). TODO: split titles, trailers, and roles if they should be separate entries.',
-  },
-  {
-    id: 'trustpath',
-    title: 'TrustPath',
-    oneLiner:
-      'Web product exploring trust and pathfinding in interactive UI. TODO: refine one-liner to match final product pitch.',
-    href: 'https://github.com/baidiwang/TrustPath',
+      'Interactive editorial data visualizations — making complex datasets clear and explorable through considered chart design, color, and information hierarchy.',
+    href: 'https://medium.com/@WangPortfolio/daily-data-viz-graphics-bc698435092a',
+    linkLabel: 'Writeup',
   },
 ]
+
+export const gameProjects: Project[] = [
+  {
+    id: 'little-helper',
+    title: 'Little Helper',
+    kind: 'Narrative Puzzle Game',
+    oneLiner:
+      'A narrative puzzle game where you play a spirit, possessing environmental objects to indirectly guide a little girl through space.',
+    role: '', // TODO
+    stack: ['Unity', 'C#', 'Game Design', 'Narrative'],
+    // TODO: the old "Details" link (baidiwang.github.io/memory-system/) was
+    // removed because it doesn't match this project.
+    links: {
+      writeup: 'https://medium.com/@WangPortfolio/game-developmet-2cb0240c5d72',
+    },
+    media: {
+      src: '/media/little-helper',
+      width: 720,
+      height: 382,
+      alt: 'Gameplay recording of Little Helper.',
+    },
+  },
+  {
+    id: 'desolation-wanderer',
+    title: 'Desolation Wanderer',
+    kind: '3D Exploration Game',
+    oneLiner:
+      'A third-person desert exploration game where uncertainty is the core mechanic — navigate without a map using environmental wayfinding. Released on Steam.',
+    role: '', // TODO
+    stack: ['Unity', 'C#', 'Gameplay Systems', 'ScriptableObject'],
+    links: {
+      live: 'https://store.steampowered.com/app/4666960/desol/',
+      liveLabel: 'Steam',
+    },
+    media: {
+      src: '/media/desolation-wanderer',
+      width: 720,
+      height: 398,
+      alt: 'Gameplay recording of Desolation Wanderer crossing the desert.',
+    },
+  },
+]
+
+export const xrProjects: OtherProject[] = [
+  {
+    id: 'mixed-reality-cooking',
+    title: 'Mixed Reality Cooking',
+    kind: 'Mixed Reality',
+    oneLiner:
+      'An MR cooking experience with spatially-anchored interaction, hand-based input, and a data-driven recipe system — built on a modular architecture.',
+    href: 'https://horizon.meta.com/shares/razQmQWo0sTLh5O2I6TLr9u0vKvz7Y',
+    linkLabel: 'Demo',
+  },
+  {
+    id: 'spatial-jam',
+    title: 'Spatial Jam',
+    kind: 'XR Hackathon',
+    oneLiner:
+      'A collaborative real-time music experience on Snap Spectacles — create and share music spatially across locations.',
+    href: 'https://devpost.com/software/async-jam',
+    linkLabel: 'Devpost',
+  },
+]
+
+/** The main link for a project: where its media and title point. */
+export function primaryHref(links: ProjectLinks): string | undefined {
+  return links.live ?? links.code ?? links.writeup
+}

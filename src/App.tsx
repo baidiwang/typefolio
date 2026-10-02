@@ -1,89 +1,95 @@
+import { Divider } from './components/Divider'
 import { Letterhead } from './components/Letterhead'
-import { ProjectCard } from './components/ProjectCard'
+import { OneLiners } from './components/OneLiners'
+import { Project } from './components/Project'
 import {
   experience,
   featuredProjects,
+  gameProjects,
   otherProjects,
   site,
+  xrProjects,
 } from './content'
+import { useHashScroll } from './hooks/useHashScroll'
+import { Reveal } from './reveal/Reveal'
+import { Typewriter } from './typewriter/Typewriter'
 
 export default function App() {
+  useHashScroll()
+
   return (
-    <div className="page" id="top">
+    <div className="desk">
       <a className="skip-link" href="#main">
         Skip to content
       </a>
 
-      <Letterhead />
+      <div className="paper" id="top">
+        <Letterhead />
 
-      <main id="main" className="sheet">
-        <p className="positioning">{site.positioning}</p>
+        <main id="main" className="sheet">
+          <Reveal className="intro" onLoad duration={1000}>
+            {site.intro}
+          </Reveal>
 
-        <section className="block" aria-labelledby="featured-heading">
-          <h2 id="featured-heading" className="block__title">
-            Featured work
-          </h2>
-          <div className="project-list">
-            {featuredProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+          <Divider />
+
+          <section aria-labelledby="experience-heading">
+            <Reveal as="h2" id="experience-heading">
+              Experience
+            </Reveal>
+            <ul className="experience">
+              {experience.map((item) => (
+                <Reveal as="li" key={item.org}>
+                  <strong>{item.org}</strong> — {item.role}
+                </Reveal>
+              ))}
+            </ul>
+          </section>
+
+          <Divider />
+
+          <section aria-labelledby="work-heading">
+            <Reveal as="h2" id="work-heading">
+              Selected work
+            </Reveal>
+            {featuredProjects.map((project, i) => (
+              <Project key={project.id} project={project} index={i} />
             ))}
-          </div>
-        </section>
+          </section>
 
-        <section className="block" aria-labelledby="experience-heading">
-          <h2 id="experience-heading" className="block__title">
-            Experience
-          </h2>
-          <ul className="experience-list">
-            {experience.map((item) => (
-              <li key={item.org} className="experience-item">
-                <div className="experience-item__head">
-                  <span className="experience-item__org">{item.org}</span>
-                  <span className="experience-item__sep" aria-hidden="true">
-                    ·
-                  </span>
-                  <span className="experience-item__role">{item.role}</span>
-                </div>
-                <p className="experience-item__detail">{item.detail}</p>
-              </li>
+          <Divider />
+
+          <section aria-labelledby="other-heading">
+            <Reveal as="h2" id="other-heading">
+              Other
+            </Reveal>
+            <OneLiners items={otherProjects} />
+          </section>
+
+          <Divider />
+
+          <section aria-labelledby="games-heading">
+            <Reveal as="h2" id="games-heading">
+              Games &amp; XR
+            </Reveal>
+            {gameProjects.map((project, i) => (
+              <Project key={project.id} project={project} index={i} />
             ))}
-          </ul>
-        </section>
+            <OneLiners items={xrProjects} />
+          </section>
 
-        <section className="block" aria-labelledby="other-heading">
-          <h2 id="other-heading" className="block__title">
-            Other
-          </h2>
-          <ul className="other-list">
-            {otherProjects.map((item) => (
-              <li key={item.id} className="other-item">
-                <div className="other-item__title">
-                  {item.href ? (
-                    <a
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {item.title}
-                    </a>
-                  ) : (
-                    item.title
-                  )}
-                </div>
-                <p className="other-item__one-liner">{item.oneLiner}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
+          <Divider />
 
-        <footer className="signature">
-          <p className="signature__closing">{site.signature.closing}</p>
-          <p className="signature__note">{site.signature.note}</p>
-          <p className="signature__email">
-            <a href={site.links.email.href}>{site.links.email.display}</a>
-          </p>
-        </footer>
-      </main>
+          <footer className="signature">
+            <Reveal>{site.signature}</Reveal>
+            <Reveal>
+              <a href={site.links.email.href}>{site.links.email.display}</a>
+            </Reveal>
+          </footer>
+        </main>
+      </div>
+
+      <Typewriter />
     </div>
   )
 }
