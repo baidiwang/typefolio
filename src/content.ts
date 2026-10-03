@@ -64,9 +64,12 @@ export const site = {
   intro:
     'I’m a Design Engineer building AI interfaces and interactive web products.',
   links: {
-    resume: { label: 'Resume', href: '/resume.pdf' }, // TODO: add public/resume.pdf
-    // TODO: real email address.
-    email: { label: 'Email', href: 'mailto:TODO@example.com', display: 'TODO@example.com' },
+    resume: { label: 'Resume', href: '/resume.pdf' },
+    email: {
+      label: 'Email',
+      href: 'mailto:baidiwang30@gmail.com',
+      display: 'baidiwang30@gmail.com',
+    },
     linkedin: { label: 'LinkedIn', href: 'https://www.linkedin.com/in/abbeywang' },
     github: { label: 'GitHub', href: 'https://github.com/baidiwang' },
   },
