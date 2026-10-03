@@ -1,8 +1,10 @@
+import { ContactLinks } from './components/ContactLinks'
 import { Divider } from './components/Divider'
 import { ExternalLink } from './components/ExternalLink'
 import { Letterhead } from './components/Letterhead'
 import { OneLiners } from './components/OneLiners'
 import { Project } from './components/Project'
+import { SoundToggle } from './components/SoundToggle'
 import {
   experience,
   featuredProjects,
@@ -23,6 +25,8 @@ export default function App() {
         Skip to content
       </a>
 
+      <SoundToggle />
+
       <div className="paper" id="top">
         <Letterhead />
 
@@ -31,8 +35,7 @@ export default function App() {
             {site.intro}
           </Reveal>
 
-          <Divider />
-
+          <Divider variant={0} />
 
           <section aria-labelledby="work-heading">
             <Reveal as="h2" id="work-heading">
@@ -43,7 +46,7 @@ export default function App() {
             ))}
           </section>
 
-          <Divider />
+          <Divider variant={1} />
 
           <section aria-labelledby="experience-heading">
             <Reveal as="h2" id="experience-heading">
@@ -58,7 +61,7 @@ export default function App() {
             </ul>
           </section>
 
-          <Divider />
+          <Divider variant={2} />
 
           <section aria-labelledby="other-heading">
             <Reveal as="h2" id="other-heading">
@@ -67,7 +70,7 @@ export default function App() {
             <OneLiners items={otherProjects} />
           </section>
 
-          <Divider />
+          <Divider variant={3} />
 
           <Reveal mode="lines" className="games-note">
             {gamesNote.before}
@@ -77,14 +80,17 @@ export default function App() {
             {gamesNote.after}
           </Reveal>
 
-          <Divider />
+          <Divider variant={4} />
 
           {/* The page ends like a letter. */}
           <footer className="ending">
             <Reveal mode="lines">{site.ending.closing}</Reveal>
             <Reveal className="ending__signature">{site.ending.signature}</Reveal>
-            <Reveal>
+            <Reveal className="ending__email">
               <a href={site.links.email.href}>{site.links.email.display}</a>
+            </Reveal>
+            <Reveal className="ending__links">
+              <ContactLinks />
             </Reveal>
             <Reveal mode="lines" className="ending__ps">
               {site.ending.ps}

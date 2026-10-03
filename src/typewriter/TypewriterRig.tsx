@@ -1,5 +1,5 @@
 import type { Ref } from 'react'
-import { NAV_KEYS, RIG_VIEWBOX } from './rig'
+import { RIG_VIEWBOX } from './rig'
 
 /**
  * Placeholder typewriter artwork, built as a rig of named groups.
@@ -21,19 +21,12 @@ const PLATEN = 'var(--tw-platen)'
 const KEY = 'var(--tw-key)'
 const KEY_EDGE = 'var(--tw-key-edge)'
 
-// Nav row: four wide caps plus the round sound key, centred under the platen.
-const NAV_W = 170
-const NAV_H = 54
-const NAV_Y = 128
-const NAV_GAP = 24
-const SOUND_R = 27
-const ROW_W = NAV_KEYS.length * (NAV_W + NAV_GAP) + SOUND_R * 2
-const NAV_X0 = 700 - ROW_W / 2
-
-// Decorative round keys: two staggered rows.
+// Decorative round keys: three staggered rows. The top row is marked
+// `data-strip-row`: the mobile strip crops to it (plus the platen edge).
 const ROWS = [
-  { y: 214, count: 12, x0: 305 },
-  { y: 252, count: 11, x0: 341 },
+  { y: 160, count: 11, x0: 341, strip: true },
+  { y: 214, count: 12, x0: 305, strip: false },
+  { y: 252, count: 11, x0: 341, strip: false },
 ]
 
 export function TypewriterRig({ svgRef }: { svgRef: Ref<SVGSVGElement> }) {
@@ -89,44 +82,22 @@ export function TypewriterRig({ svgRef }: { svgRef: Ref<SVGSVGElement> }) {
       </g>
 
       <g id="keys">
-        {NAV_KEYS.map((key, i) => (
-          <g key={key} id={`key-${key}`} data-nav-key={key}>
-            <rect
-              x={NAV_X0 + i * (NAV_W + NAV_GAP)}
-              y={NAV_Y}
-              width={NAV_W}
-              height={NAV_H}
-              rx="10"
-              fill={KEY}
-              stroke={KEY_EDGE}
-              strokeWidth="4"
-            />
+        {ROWS.map((row) => (
+          <g key={row.y} {...(row.strip ? { 'data-strip-row': '' } : {})}>
+            {Array.from({ length: row.count }, (_, i) => (
+              <g key={i} data-key="">
+                <circle
+                  cx={row.x0 + i * 72}
+                  cy={row.y}
+                  r="19"
+                  fill={KEY}
+                  stroke={KEY_EDGE}
+                  strokeWidth="4"
+                />
+              </g>
+            ))}
           </g>
         ))}
-        <g id="key-sound" data-ui-key="sound">
-          <circle
-            cx={NAV_X0 + ROW_W - SOUND_R}
-            cy={NAV_Y + NAV_H / 2}
-            r={SOUND_R}
-            fill={KEY}
-            stroke={KEY_EDGE}
-            strokeWidth="4"
-          />
-        </g>
-        {ROWS.map((row) =>
-          Array.from({ length: row.count }, (_, i) => (
-            <g key={`${row.y}-${i}`} data-key="">
-              <circle
-                cx={row.x0 + i * 72}
-                cy={row.y}
-                r="19"
-                fill={KEY}
-                stroke={KEY_EDGE}
-                strokeWidth="4"
-              />
-            </g>
-          )),
-        )}
         <g data-key="space">
           <rect x="470" y="270" width="460" height="16" rx="9" fill={KEY} stroke={KEY_EDGE} strokeWidth="4" />
         </g>

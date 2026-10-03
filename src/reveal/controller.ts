@@ -5,18 +5,23 @@ import { buildTextMap, charAt, pointAt, type TextMap } from './textMap'
 /**
  * The reveal controller: the single owner of "what is being typed right now".
  *
- * - Elements register once (from <Reveal>). All text is in the DOM and laid
- *   out from the first render; the controller only hides the unrevealed tail
- *   of each element with a highlight Range (see highlight.ts).
+ * - Elements register once (from <Reveal>, or <Divider> for drawings). All
+ *   text is in the DOM and laid out from the first render; the controller
+ *   only hides the unrevealed tail of each element with a highlight Range
+ *   (see highlight.ts). Drawings (the red pen dividers) are jobs too, so they
+ *   take their turn in the same reading order.
  * - Triggers are per element (IntersectionObserver), never a timer or a
  *   global scroll percentage.
  * - One requestAnimationFrame loop advances one job at a time; every step is
- *   imperative (Range.setStart), not React state.
+ *   imperative (Range.setStart, a stroke offset), not React state.
  * - Listeners (the typewriter) receive one event per typed character and per
  *   line end, so they stay in lockstep with the text.
  */
 
 export type RevealMode = 'type' | 'lines'
+
+/** How a job reveals: typed text, line-fed text, or a drawn stroke. */
+export type JobMode = RevealMode | 'draw'
 
 export type RevealOptions = {
   /** 'type' = character by character; 'lines' = one visual line per step. */
@@ -27,6 +32,13 @@ export type RevealOptions = {
   duration?: number
 }
 
+export type DrawOptions = {
+  /** Nominal duration of the whole drawing (ms), before any compression. */
+  duration: number
+  /** Paint the drawing at `progress`: 0 = nothing yet, 1 = complete. */
+  apply: (progress: number) => void
+}
+
 export type RevealEvent =
   /** One character typed at `column` (0-based) of the current line. */
   | { type: 'char'; char: string; column: number }
@@ -35,13 +47,16 @@ export type RevealEvent =
   /** A whole line printed at once (line-feed reveal of a paragraph). */
   | { type: 'feed'; column: number; bell: boolean }
   /** A new element starts revealing. */
-  | { type: 'start'; element: HTMLElement; mode: RevealMode }
+  | { type: 'start'; element: HTMLElement; mode: JobMode }
   /** Queue drained. */
   | { type: 'idle' }
 
 type Listener = (event: RevealEvent) => void
 
-type Job = {
+type JobState = 'hidden' | 'queued' | 'active' | 'done'
+
+type TextJob = {
+  kind: 'text'
   el: HTMLElement
   options: RevealOptions
   map: TextMap
@@ -50,10 +65,22 @@ type Job = {
   offset: number
   /** Start index of each visual line; null = needs (re)measuring. */
   lineStarts: number[] | null
-  state: 'hidden' | 'queued' | 'active' | 'done'
+  state: JobState
 }
 
-type StartHook = (instant: boolean) => void
+type DrawJob = {
+  kind: 'draw'
+  el: HTMLElement
+  options: DrawOptions
+  /** Steps drawn so far, out of DRAW_STEPS. */
+  offset: number
+  state: JobState
+}
+
+type Job = TextJob | DrawJob
+
+/** instant = revealed without being typed/drawn (scrolled past, focused…). */
+type Hook = (instant: boolean) => void
 
 // —— Pace ——————————————————————————————————————————————————————————————
 /** Default pace for typed characters. */
@@ -62,6 +89,8 @@ const MS_PER_CHAR = 30
 const MAX_LINE_MS = 600
 /** Line-feed pace for paragraphs. */
 const MS_PER_LINE = 130
+/** A drawing advances in this many small steps (smooth at any speed). */
+const DRAW_STEPS = 40
 /** Whatever is queued always finishes within this long after the last join. */
 const QUEUE_BUDGET_MS = 1200
 /** The first screen (intro + everything in view below it) finishes within this. */
@@ -71,7 +100,8 @@ class RevealController {
   private jobs = new Map<HTMLElement, Job>()
   private queue: Job[] = []
   private active: Job | null = null
-  private startHooks = new Map<Element, StartHook>()
+  private startHooks = new Map<Element, Hook>()
+  private doneHooks = new Map<Element, Hook>()
   private listeners = new Set<Listener>()
 
   private entryObserver: IntersectionObserver | null = null
@@ -93,16 +123,16 @@ class RevealController {
 
   // —— Public API ————————————————————————————————————————————————————
 
-  /** Text reveal needs motion allowed and the Highlight API. */
+  /** Reveals need motion allowed and the Highlight API. */
   get textEnabled(): boolean {
     this.init()
     return highlightSupported && !this.reducedMotion
   }
 
-  /** Non-text reveals (taped media) only need motion allowed. */
-  get motionEnabled(): boolean {
+  /** Viewport y where the paper emerges from the typewriter. */
+  get platenLine(): number {
     this.init()
-    return !this.reducedMotion
+    return window.innerHeight - this.bottomInset
   }
 
   subscribe(listener: Listener): () => void {
@@ -110,53 +140,51 @@ class RevealController {
     return () => this.listeners.delete(listener)
   }
 
+  /** Register an element whose text is typed (see <Reveal>). */
   register(el: HTMLElement, options: RevealOptions): () => void {
     if (!this.textEnabled || this.jobs.has(el)) return () => {}
     const map = buildTextMap(el)
     if (map.length === 0) return () => {}
 
     const range = document.createRange()
-    const job: Job = { el, options, map, range, offset: 0, lineStarts: null, state: 'hidden' }
+    const job: TextJob = {
+      kind: 'text',
+      el,
+      options,
+      map,
+      range,
+      offset: 0,
+      lineStarts: null,
+      state: 'hidden',
+    }
     this.jobs.set(el, job)
-
-    // Hidden before first paint. Typewriter logic: nothing may be visible
-    // before the line above it has been typed, so text that's already in
-    // view at load isn't left showing; it joins the load batch and is typed
-    // after the intro, in document order.
     this.setHiddenFrom(job, 0)
     hide(range)
-    if (options.onLoad || el.getBoundingClientRect().top < this.triggerLine()) {
-      this.addToLoadBatch(job)
-    } else {
-      this.entryObserver?.observe(el)
-    }
+    this.place(job, Boolean(options.onLoad))
     return () => this.unregister(el)
   }
 
   /**
-   * All registrations from the first React commit happen in the same task;
-   * flush them as one batch in a microtask, with the first-screen budget.
+   * Register a drawing (a red pen divider). It's hidden with apply(0) and
+   * drawn in its turn, in the same reading order as the text around it.
+   * Under reduced motion it's never registered, so it simply stays drawn.
    */
-  private addToLoadBatch(job: Job) {
-    job.state = 'queued'
-    if (this.loadBatch.length === 0) {
-      queueMicrotask(() => {
-        // StrictMode registers twice; keep only the live job per element.
-        const batch = this.loadBatch.filter((j) => this.jobs.get(j.el) === j)
-        this.loadBatch = []
-        if (batch.length) this.enqueue(batch, LOAD_BUDGET_MS)
-      })
-    }
-    this.loadBatch.push(job)
+  registerDrawing(el: HTMLElement, options: DrawOptions): () => void {
+    if (!this.textEnabled || this.jobs.has(el)) return () => {}
+    const job: DrawJob = { kind: 'draw', el, options, offset: 0, state: 'hidden' }
+    this.jobs.set(el, job)
+    options.apply(0)
+    this.place(job, false)
+    return () => this.unregister(el)
   }
 
   /**
-   * Call `hook` once, when the registered element `el` starts typing
+   * Call `hook` once, when the registered element `el` starts revealing
    * (instant=false), or when it's revealed without being typed: scrolled
    * past, focused, reduced motion, not registered at all (instant=true).
    * Taped photos use this to stick on exactly when their title starts.
    */
-  whenStarts(el: Element, hook: StartHook): () => void {
+  whenStarts(el: Element, hook: Hook): () => void {
     const job = this.jobs.get(el as HTMLElement)
     if (!job || job.state === 'done' || job.state === 'active') {
       hook(job?.state !== 'active')
@@ -168,11 +196,21 @@ class RevealController {
     }
   }
 
-  private fireStartHook(el: Element, instant: boolean) {
-    const hook = this.startHooks.get(el)
-    if (!hook) return
-    this.startHooks.delete(el)
-    hook(instant)
+  /**
+   * Call `hook` once, when the registered element `el` has been fully
+   * revealed: typed to the end (instant=false) or completed early (instant=
+   * true). Called right away if `el` isn't hidden at all.
+   */
+  whenDone(el: Element, hook: Hook): () => void {
+    const job = this.jobs.get(el as HTMLElement)
+    if (!job || job.state === 'done') {
+      hook(true)
+      return () => {}
+    }
+    this.doneHooks.set(el, hook)
+    return () => {
+      this.doneHooks.delete(el)
+    }
   }
 
   /** Reveal everything now (reduced motion switched on, tests, etc.). */
@@ -234,9 +272,35 @@ class RevealController {
     })
   }
 
-  /** Viewport y where the paper emerges from the typewriter. */
-  private triggerLine(): number {
-    return window.innerHeight - this.bottomInset
+  /**
+   * Hidden before first paint. Typewriter logic: nothing may be visible
+   * before the line above it has been revealed, so anything already in view
+   * at load isn't left showing; it joins the load batch and is revealed after
+   * the intro, in document order. Everything else waits for its trigger.
+   */
+  private place(job: Job, onLoad: boolean) {
+    if (onLoad || job.el.getBoundingClientRect().top < this.platenLine) {
+      this.addToLoadBatch(job)
+    } else {
+      this.entryObserver?.observe(job.el)
+    }
+  }
+
+  /**
+   * All registrations from the first React commit happen in the same task;
+   * flush them as one batch in a microtask, with the first-screen budget.
+   */
+  private addToLoadBatch(job: Job) {
+    job.state = 'queued'
+    if (this.loadBatch.length === 0) {
+      queueMicrotask(() => {
+        // StrictMode registers twice; keep only the live job per element.
+        const batch = this.loadBatch.filter((j) => this.jobs.get(j.el) === j)
+        this.loadBatch = []
+        if (batch.length) this.enqueue(batch, LOAD_BUDGET_MS)
+      })
+    }
+    this.loadBatch.push(job)
   }
 
   private createObservers() {
@@ -293,7 +357,7 @@ class RevealController {
       this.passObserver?.observe(job.el)
       this.queue.push(job)
     }
-    // Always type in reading order.
+    // Always reveal in reading order.
     this.queue.sort((a, b) =>
       a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
     )
@@ -345,7 +409,7 @@ class RevealController {
 
   /**
    * The active job, promoting the next queued one if needed. Anything already
-   * scrolled above the viewport is completed instead of typed. (The pass
+   * scrolled above the viewport is completed instead of revealed. (The pass
    * observer does this too, but its callback can trail a fast scroll by a few
    * frames; one rect read per frame closes that gap.)
    */
@@ -364,10 +428,14 @@ class RevealController {
         continue
       }
       next.state = 'active'
-      this.ensureLines(next)
+      if (next.kind === 'text') this.ensureLines(next)
       this.active = next
-      this.emit({ type: 'start', element: next.el, mode: next.options.mode })
-      this.fireStartHook(next.el, false)
+      this.emit({
+        type: 'start',
+        element: next.el,
+        mode: next.kind === 'draw' ? 'draw' : next.options.mode,
+      })
+      this.fireHook(this.startHooks, next.el, false)
       return next
     }
     return null
@@ -376,6 +444,13 @@ class RevealController {
   // —— Steps ———————————————————————————————————————————————————————————
 
   private step(job: Job) {
+    if (job.kind === 'draw') {
+      job.offset += 1
+      if (job.offset >= DRAW_STEPS) this.complete(job, false)
+      else job.options.apply(job.offset / DRAW_STEPS)
+      return
+    }
+
     const starts = this.ensureLines(job)
     const line = lineOf(starts, job.offset)
     const lineEnd = line + 1 < starts.length ? starts[line + 1] : job.map.length
@@ -399,7 +474,7 @@ class RevealController {
       }
     }
 
-    if (job.offset >= job.map.length) this.complete(job)
+    if (job.offset >= job.map.length) this.complete(job, false)
     else {
       this.setHiddenFrom(job, job.offset)
       touch(job.range)
@@ -407,6 +482,7 @@ class RevealController {
   }
 
   private stepCost(job: Job): number {
+    if (job.kind === 'draw') return job.options.duration / DRAW_STEPS
     if (job.options.mode === 'lines') {
       const lines = this.ensureLines(job).length
       return job.options.duration ? job.options.duration / lines : MS_PER_LINE
@@ -414,7 +490,7 @@ class RevealController {
     return this.msPerChar(job)
   }
 
-  private msPerChar(job: Job): number {
+  private msPerChar(job: TextJob): number {
     if (job.options.duration) return job.options.duration / job.map.length
     const starts = this.ensureLines(job)
     let longest = 0
@@ -431,7 +507,9 @@ class RevealController {
     const jobs = this.active ? [this.active, ...this.queue] : this.queue
     for (const job of jobs) {
       if (job.state === 'done') continue
-      if (job.options.mode === 'lines') {
+      if (job.kind === 'draw') {
+        total += (DRAW_STEPS - job.offset) * this.stepCost(job)
+      } else if (job.options.mode === 'lines') {
         const starts = this.ensureLines(job)
         const left = starts.length - lineOf(starts, job.offset)
         total += left * this.stepCost(job)
@@ -442,15 +520,29 @@ class RevealController {
     return Math.max(0, total)
   }
 
-  private complete(job: Job) {
+  /** Reveal `job` fully. `instant` = it didn't get to finish on its own. */
+  private complete(job: Job, instant = true) {
     if (job.state === 'done') return
     job.state = 'done'
-    job.offset = job.map.length
-    show(job.range)
-    this.fireStartHook(job.el, true)
+    if (job.kind === 'draw') {
+      job.offset = DRAW_STEPS
+      job.options.apply(1)
+    } else {
+      job.offset = job.map.length
+      show(job.range)
+    }
+    this.fireHook(this.startHooks, job.el, true)
+    this.fireHook(this.doneHooks, job.el, instant)
     this.passObserver?.unobserve(job.el)
     this.entryObserver?.unobserve(job.el)
     if (this.active === job) this.active = null
+  }
+
+  private fireHook(hooks: Map<Element, Hook>, el: Element, instant: boolean) {
+    const hook = hooks.get(el)
+    if (!hook) return
+    hooks.delete(el)
+    hook(instant)
   }
 
   private unregister(el: HTMLElement) {
@@ -463,15 +555,15 @@ class RevealController {
 
   // —— Measuring ———————————————————————————————————————————————————————
 
-  private ensureLines(job: Job): number[] {
+  private ensureLines(job: TextJob): number[] {
     if (!job.lineStarts) job.lineStarts = measureLineStarts(job.map)
     return job.lineStarts
   }
 
-  /** Re-split every unfinished element (fonts loaded, width changed). */
+  /** Re-split every unfinished text element (fonts loaded, width changed). */
   private invalidateLines() {
     for (const job of this.jobs.values()) {
-      if (job.state === 'done') continue
+      if (job.kind !== 'text' || job.state === 'done') continue
       job.lineStarts = null
       // Keep a line-feed reveal on a line boundary after re-wrapping.
       if (job.state === 'active' && job.options.mode === 'lines' && job.offset > 0) {
@@ -486,7 +578,7 @@ class RevealController {
     }
   }
 
-  private setHiddenFrom(job: Job, index: number) {
+  private setHiddenFrom(job: TextJob, index: number) {
     const start = pointAt(job.map, index)
     const end = pointAt(job.map, job.map.length)
     job.range.setStart(start.node, start.offset)
