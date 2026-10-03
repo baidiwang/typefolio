@@ -47,14 +47,29 @@ scripts/encode-media.sh  ../3D-Portfolio/public/thumbnails lily    # just one
 
 ## Type and colour
 
-The face is Courier Prime, self-hosted via `@fontsource/courier-prime`, set
-once as `--font-type` in `src/index.css`. Two inks on `--paper` (#f6f0e1):
+The face is **Cutive Mono**, self-hosted via `@fontsource/cutive-mono`, set
+once as `--font-type` in `src/index.css`.
 
-| Token        | Use              | Contrast on paper |
-| ------------ | ---------------- | ----------------- |
-| `--ink`      | body             | 15.1 : 1          |
-| `--ink-soft` | meta lines       | 6.6 : 1           |
-| `--ink-red`  | emphasis, focus  | 6.5 : 1           |
+Cutive Mono has a single weight and no italic, so the page never asks for
+bold or italic and sets `font-synthesis: none` (no faux styles). Hierarchy
+comes from:
+
+| Element | Treatment |
+| ------- | --------- |
+| Name (letterhead) | 2em, caps, 0.28em tracking |
+| Section labels | caps, 0.24em tracking, red ink |
+| Project titles | 1.4em |
+| Inline labels (employer, short entries) | caps, 0.1em tracking |
+| Meta lines (type, stack, P.S.) | `--ink-soft` |
+
+Its strokes are thin, so body text is a size up (17px mobile, 19px desktop)
+and in near-black ink. Inks on `--paper` (#f6f0e1):
+
+| Token        | Use                    | Contrast on paper |
+| ------------ | ---------------------- | ----------------- |
+| `--ink`      | body                   | 16.6 : 1          |
+| `--ink-soft` | meta lines             | 8.9 : 1           |
+| `--ink-red`  | section labels, focus  | 6.5 : 1           |
 
 ## How the reveal engine works
 
@@ -157,15 +172,17 @@ emerges: the controller reads the height of the element marked
 **9. Keyboard.** Focusing a link inside unrevealed text completes that
 element instantly.
 
-## Design playground (dev only)
+## Design playground (dev + preview deployments)
 
-In `npm run dev`, try alternative looks from the URL. No UI, nothing in the
-production build ([`src/playground.ts`](src/playground.ts) is only imported
-behind `import.meta.env.DEV`).
+In `npm run dev` and on Vercel **preview** deployments, try alternative looks
+from the URL. No UI, and nothing of it in the production build:
+[`src/playground.ts`](src/playground.ts) is only imported when the build-time
+flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
+`VERCEL_ENV=preview`, or `PLAYGROUND=1`).
 
 ```
 /?theme=valentine | hermes | cobalt
-/?font=cutive | space | plex          (Cutive Mono, Space Mono, IBM Plex Mono)
+/?font=courier | space | plex         (Courier Prime, Space Mono, IBM Plex Mono)
 /?theme=hermes&font=plex
 ```
 
@@ -174,13 +191,13 @@ Themes only override CSS variables (`:root[data-theme=…]` in
 
 | Theme | Desk / paper / typewriter | ink | ink-soft | ink-red | key focus ring on body |
 | --- | --- | --- | --- | --- | --- |
-| default | warm grey / cream / green | 15.1 | 6.6 | 6.5 | 10.8 |
-| valentine | charcoal / warm white / Olivetti red | 16.2 | 7.1 | 6.4 | 5.7 |
-| hermes | walnut / ivory / seafoam | 16.0 | 7.0 | 6.9 | 9.2 |
-| cobalt | cobalt blue / white / cream | 17.2 | 7.5 | 6.5 | 5.3 |
+| default | warm grey / cream / green | 16.6 | 8.9 | 6.5 | 10.8 |
+| valentine | charcoal / warm white / Olivetti red | 17.8 | 9.5 | 6.4 | 5.7 |
+| hermes | walnut / ivory / seafoam | 17.6 | 9.4 | 6.9 | 9.2 |
+| cobalt | cobalt blue / white / cream | 18.9 | 10.1 | 6.5 | 5.3 |
 
 Text ratios are on the paper (AA needs 4.5); focus rings need 3. Keycap
-labels are ink on the key cap: 13.9 or more in every theme.
+labels are ink on the key cap: 15.3 or more in every theme.
 
 ## Stack
 

@@ -52,7 +52,7 @@ export default function App() {
             <ul className="experience">
               {experience.map((item) => (
                 <Reveal as="li" key={item.org}>
-                  <strong>{item.org}</strong> — {item.role}
+                  <span className="label">{item.org}</span> — {item.role}
                 </Reveal>
               ))}
             </ul>
