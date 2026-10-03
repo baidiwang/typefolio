@@ -1,110 +1,88 @@
 import { useEffect, useLayoutEffect, useRef, type CSSProperties } from 'react'
 import { reveal } from '../reveal/controller'
-import { BELL_PIVOT, LAYERS, PLANT, ROLLER } from './layers'
+import {
+  BELL_PIVOT,
+  KNOB_L_PIVOT,
+  KNOB_R_PIVOT,
+  LAYERS,
+  MACHINE,
+  PLANT,
+  ROLLER,
+} from './layers'
 import { playBell, playKey, playReturn } from './sound'
 
-/** Carriage travel per typed character, in px of the source drawing. */
-const STEP = 1
-const ROLLER_WIDTH = ROLLER.x1 - ROLLER.x0
-/** Plant: gap to the paper and the viewport edge; size limits. */
-const PLANT_GAP = 20
-const PLANT_MAX_HEIGHT = 420
-const PLANT_MIN_WIDTH = 110
-/** The bell may move this far right (source px) to clear the text column. */
-const BELL_MAX_SHIFT = 30
+/** Carriage travel per typed character, in reference px of the drawing. */
+const STEP = 1.4
+const MACHINE_H = MACHINE.y1 - MACHINE.y0
+/** The machine is centred on its roller, not on its lever-to-knob box. */
+const CENTRE_X = (ROLLER.x0 + ROLLER.x1) / 2
 
-type Layer = { x: number; y: number; w: number; h: number }
+type Box = { x: number; y: number; w: number; h: number }
 
-/** Above the roller the paper is in front of the body: cut the body there. */
-const BODY_CLIP_TOP = ((ROLLER.top - LAYERS.body.y) / LAYERS.body.h) * 100
-/** The bell rings about the foot of its stem. */
-const BELL_ORIGIN = `${((BELL_PIVOT.x - LAYERS.bell.x) / LAYERS.bell.w) * 100}% ${
-  ((BELL_PIVOT.y - LAYERS.bell.y) / LAYERS.bell.h) * 100
-}%`
+/** Size/place in units of the machine's displayed height, var(--tw-h). */
+const u = (n: number) => `calc(var(--tw-h) * ${(n / MACHINE_H).toFixed(5)})`
 
-/** Place a layer by its source-drawing coordinates, scaled by --s. */
-const at = ({ x, y, w, h }: Layer): CSSProperties => ({
-  left: `calc(var(--s) * ${x}px)`,
-  top: `calc(var(--s) * ${y}px)`,
-  width: `calc(var(--s) * ${w}px)`,
-  height: `calc(var(--s) * ${h}px)`,
+/** Place a layer by its drawing coordinates, inside the machine box. */
+const at = ({ x, y, w, h }: Box): CSSProperties => ({
+  left: u(x - MACHINE.x0),
+  top: u(y - MACHINE.y0),
+  width: u(w),
+  height: u(h),
 })
 
+/** transform-origin for a pivot point, as % of a layer's box. */
+const origin = (p: { x: number; y: number }, b: Box) =>
+  `${(((p.x - b.x) / b.w) * 100).toFixed(2)}% ${(((p.y - b.y) / b.h) * 100).toFixed(2)}%`
+
+const MACHINE_STYLE: CSSProperties = {
+  width: u(MACHINE.x1 - MACHINE.x0),
+  height: 'var(--tw-h)',
+  left: `calc(50% - ${u(CENTRE_X - MACHINE.x0)})`,
+}
+
+/** The plant stands just right of the machine, at half its height. */
+const PLANT_STYLE: CSSProperties = {
+  left: `calc(50% + ${u(MACHINE.x1 - CENTRE_X)} + 6px)`,
+  height: 'calc(var(--tw-h) * 0.5)',
+}
+
 /**
- * The typewriter fixed to the bottom of the viewport, drawn from layered
- * images (see docs/typewriter-rig.md). The paper (the page) comes out of
- * its roller: the reveal controller treats the top of this element
- * (`data-reveal-inset`) as the line where text becomes visible, and that
- * line is the roller's top edge.
+ * The desk scene fixed to the bottom of the viewport: the whole typewriter,
+ * drawn from layered images (see docs/typewriter-rig.md), standing on the
+ * desk in front of the letter, with a plant beside it. The paper continues
+ * behind it. The reveal controller treats the top of this scene
+ * (`data-reveal-inset`: the bell's top) as the line where text appears.
  *
- * - Scale: the drawing is scaled so the roller spans the paper exactly.
- * - Motion: subscribes to the reveal controller and moves the carriage and
- *   bell imperatively. No React state per character.
- * - Decorative only (aria-hidden, nothing focusable).
+ * Motion is imperative, driven by the reveal controller: the carriage
+ * slides per character and returns at line end, the knobs turn on each line
+ * feed, the bell rings at the end of an element and the plant sways with it.
+ * Decorative only (aria-hidden, nothing focusable).
  */
 export function Typewriter() {
-  const rootRef = useRef<HTMLDivElement>(null)
+  const machineRef = useRef<HTMLDivElement>(null)
   const carriageRef = useRef<HTMLDivElement>(null)
-  const rollerRef = useRef<HTMLImageElement>(null)
+  const knobLRef = useRef<HTMLImageElement>(null)
+  const knobRRef = useRef<HTMLImageElement>(null)
   const bellRef = useRef<HTMLImageElement>(null)
   const plantRef = useRef<HTMLImageElement>(null)
+  /** css px per reference px, from the machine's rendered height. */
   const scaleRef = useRef(1)
 
-  // —— Geometry: roller = paper width; plant beside the paper ————————————
-
   useLayoutEffect(() => {
-    const root = rootRef.current
-    const paper = document.querySelector<HTMLElement>('.paper')
-    if (!root || !paper) return
-
-    const place = () => {
-      const r = paper.getBoundingClientRect()
-      const s = r.width / ROLLER_WIDTH
-      scaleRef.current = s
-      root.style.setProperty('--s', String(s))
-      root.style.setProperty('--machine-left', `${r.left - ROLLER.x0 * s}px`)
-      root.style.setProperty('--machine-top', `${-ROLLER.top * s}px`)
-      // The bell stands over the paper's right margin. Nudge it right until
-      // it clears the text column, so it never covers a word.
-      const textRight = r.right - parseFloat(getComputedStyle(paper).paddingRight)
-      const bellLeft = r.left + (LAYERS.bell.x - ROLLER.x0) * s
-      const shift = Math.min(Math.max(0, textRight + 6 - bellLeft), BELL_MAX_SHIFT * s)
-      root.style.setProperty('--bell-shift', `${shift}px`)
-
-      // How far the bell rises above the roller: the end of the paper and
-      // keyboard focus keep clear of it (see .paper / html in index.css).
-      document.documentElement.style.setProperty(
-        '--typewriter-overhang',
-        `${Math.ceil((ROLLER.top - LAYERS.bell.y) * s)}px`,
-      )
-
-      // The plant only appears when it fits on the desk beside the paper.
-      const space = window.innerWidth - r.right - 2 * PLANT_GAP
-      const height = Math.min(
-        PLANT_MAX_HEIGHT,
-        window.innerHeight * 0.5,
-        space / (PLANT.w / PLANT.h),
-      )
-      root.dataset.plant = space >= PLANT_MIN_WIDTH ? 'on' : 'off'
-      root.style.setProperty('--plant-left', `${r.right + PLANT_GAP}px`)
-      root.style.setProperty('--plant-height', `${Math.round(height)}px`)
+    const machine = machineRef.current
+    if (!machine) return
+    const measure = () => {
+      scaleRef.current = machine.getBoundingClientRect().height / MACHINE_H
     }
-
-    place()
-    const ro = new ResizeObserver(place)
-    ro.observe(paper)
-    window.addEventListener('resize', place)
-    return () => {
-      ro.disconnect()
-      window.removeEventListener('resize', place)
-    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(machine)
+    return () => ro.disconnect()
   }, [])
-
-  // —— Sync to the reveal controller ——————————————————————————————————————
 
   useEffect(() => {
     const carriage = carriageRef.current
-    const roller = rollerRef.current
+    const knobs = [knobLRef.current, knobRRef.current]
     const bell = bellRef.current
     const plant = plantRef.current
 
@@ -114,17 +92,19 @@ export function Typewriter() {
       carriage.style.transform = `translateX(${-column * STEP * scaleRef.current}px)`
     }
     const carriageReturn = () => moveCarriage(0, 260, 'cubic-bezier(0.3, 0.8, 0.2, 1)')
-    // Line feed: the roller gives a small nudge (inner element, so it
-    // doesn't fight the carriage's horizontal transform).
+    // Line feed: the platen knobs turn a notch.
     const lineFeed = () => {
-      roller?.animate(
-        [
-          { transform: 'translateY(0)' },
-          { transform: `translateY(${1.5 * scaleRef.current}px)` },
-          { transform: 'translateY(0)' },
-        ],
-        { duration: 140, easing: 'ease-out' },
-      )
+      for (const knob of knobs) {
+        knob?.animate(
+          [
+            { transform: 'rotate(0deg)' },
+            { transform: 'rotate(-14deg)' },
+            { transform: 'rotate(3deg)' },
+            { transform: 'rotate(0deg)' },
+          ],
+          { duration: 220, easing: 'ease-out' },
+        )
+      }
     }
     const ringBell = () => {
       bell?.animate(
@@ -141,9 +121,9 @@ export function Typewriter() {
       plant?.animate(
         [
           { transform: 'rotate(0deg)' },
-          { transform: 'rotate(1.4deg)' },
-          { transform: 'rotate(-1deg)' },
-          { transform: 'rotate(0.4deg)' },
+          { transform: 'rotate(2deg)' },
+          { transform: 'rotate(-1.4deg)' },
+          { transform: 'rotate(0.5deg)' },
           { transform: 'rotate(0deg)' },
         ],
         { duration: 1200, easing: 'ease-out' },
@@ -176,27 +156,43 @@ export function Typewriter() {
   }, [])
 
   return (
-    <div ref={rootRef} className="typewriter" data-reveal-inset="" aria-hidden="true">
-      <img ref={plantRef} className="desk-plant" src={PLANT.src} alt="" decoding="async" />
-      <div className="typewriter__machine">
+    <div className="typewriter" data-reveal-inset="" aria-hidden="true">
+      <div ref={machineRef} className="typewriter__machine" style={MACHINE_STYLE}>
         {/* Back to front: body, bell (on the frame, behind the roller), carriage. */}
-        <img
-          className="tw-layer tw-body"
-          src={LAYERS.body.src}
-          style={{ ...at(LAYERS.body), clipPath: `inset(${BODY_CLIP_TOP}% 0 0 0)` }}
-          alt=""
-        />
+        <img className="tw-layer" src={LAYERS.body.src} style={at(LAYERS.body)} alt="" />
         <img
           ref={bellRef}
-          className="tw-layer tw-bell"
+          className="tw-layer"
           src={LAYERS.bell.src}
-          style={{ ...at(LAYERS.bell), transformOrigin: BELL_ORIGIN }}
+          style={{ ...at(LAYERS.bell), transformOrigin: origin(BELL_PIVOT, LAYERS.bell) }}
           alt=""
         />
-        <div ref={carriageRef} className="tw-layer tw-carriage" style={at(LAYERS.carriage)}>
-          <img ref={rollerRef} src={LAYERS.carriage.src} alt="" />
+        <div ref={carriageRef} className="tw-carriage">
+          <img className="tw-layer" src={LAYERS.carriage.src} style={at(LAYERS.carriage)} alt="" />
+          <img
+            ref={knobLRef}
+            className="tw-layer"
+            src={LAYERS.knobL.src}
+            style={{ ...at(LAYERS.knobL), transformOrigin: origin(KNOB_L_PIVOT, LAYERS.knobL) }}
+            alt=""
+          />
+          <img
+            ref={knobRRef}
+            className="tw-layer"
+            src={LAYERS.knobR.src}
+            style={{ ...at(LAYERS.knobR), transformOrigin: origin(KNOB_R_PIVOT, LAYERS.knobR) }}
+            alt=""
+          />
         </div>
       </div>
+      <img
+        ref={plantRef}
+        className="desk-plant"
+        src={PLANT.src}
+        style={PLANT_STYLE}
+        alt=""
+        decoding="async"
+      />
     </div>
   )
 }

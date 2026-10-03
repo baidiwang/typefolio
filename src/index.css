@@ -17,7 +17,8 @@
      desk, warm white paper. Contrast on --paper (WCAG AA needs 4.5:1):
      --ink 17.8:1 · --ink-soft 9.5:1 · --ink-red 6.4:1
      The desk is a warm charcoal, a touch lighter than #2b2a2c, so the
-     typewriter's black outlines and knobs still read against it. */
+     typewriter's black feet and knobs still read where they stand on it
+     beside the paper. */
   --paper: #fbf8f2;
   --paper-shadow: rgb(0 0 0 / 0.45);
   --desk: #3d3532;
@@ -30,13 +31,13 @@
   --margin: clamp(1.25rem, 6vw, 4.5rem);
   --line: 1.6;
 
-  /* The fixed typewriter: from the roller's top edge (where the paper
-     comes out) down to the bottom of the viewport. The bell and lever rise
-     above it by --typewriter-overhang (set by Typewriter.tsx from the
-     drawing's scale). The paper's bottom padding and the scroll padding use
-     both, so the last line and focused links clear the machine. */
-  --typewriter-height: min(200px, 30vh);
-  --typewriter-overhang: 150px;
+  /* The desk scene fixed to the bottom of the viewport: the whole machine
+     (bell to feet) is --tw-h tall and stands --tw-gap above the bottom
+     edge. The paper's bottom padding and the scroll padding use both, so
+     the last line and focused links clear the bell. */
+  --tw-h: min(220px, 26vh);
+  --tw-gap: 10px;
+  --tw-total: calc(var(--tw-h) + var(--tw-gap));
 }
 
 /* —— Design playground (dev + preview deployments: src/playground.ts) ——
@@ -72,6 +73,33 @@
   --ink-red: #b3261e;
 }
 
+/* ?paper=grain|folded|crumpled: overlays from scripts/paper-textures.py,
+   black/white at a few % alpha, so they suit every theme's paper. Each is
+   two tiles of coprime sizes, so the pattern doesn't visibly repeat. The
+   fold tile is one letter page (8.5 × 11), sized to the sheet's width:
+   two creases per page, folded in thirds. Even if every layer's darkest
+   pixel landed on the same spot, ink-red stays ≥ 4.8:1 in every theme
+   (README, Design playground). */
+:root[data-paper] .paper {
+  background-image: var(--paper-extra, none), url('/paper/grain-a.webp'),
+    url('/paper/grain-b.webp');
+  background-size: var(--paper-extra-size, auto), 128px, 97px;
+  background-repeat: var(--paper-extra-repeat, repeat), repeat, repeat;
+}
+
+:root[data-paper='folded'] {
+  --paper-extra: url('/paper/fold.webp');
+  --paper-extra-size: 100% auto;
+  --paper-extra-repeat: repeat-y;
+}
+
+:root[data-paper='crumpled'] .paper {
+  background-image: url('/paper/crumple-a.webp'), url('/paper/crumple-b.webp'),
+    url('/paper/grain-a.webp'), url('/paper/grain-b.webp');
+  background-size: 384px, 277px, 128px, 97px;
+  background-repeat: repeat;
+}
+
 /* Alternative faces have real weights: no outline needed. */
 :root[data-font='courier'] {
   --font-type: 'Courier Prime', 'Courier New', ui-monospace, monospace;
@@ -89,12 +117,12 @@
   --text-stroke: 0px;
 }
 
-/* Mobile: a thin strip (roller + the top of the body), at most 15% of the
-   viewport. The bell is hidden there, so nothing rises above it. */
-@media (max-width: 639px) {
+/* Phones: the whole machine, small (≤ 15% of the viewport), clear of the
+   home indicator. */
+@media (max-width: 719px) {
   :root {
-    --typewriter-height: min(20vw, 15vh);
-    --typewriter-overhang: 0px !important;
+    --tw-h: min(100px, 12vh);
+    --tw-gap: max(8px, env(safe-area-inset-bottom));
   }
 }
 
@@ -107,7 +135,7 @@
 html {
   background: var(--desk);
   /* Keyboard focus and in-page jumps never land under the typewriter. */
-  scroll-padding-bottom: calc(var(--typewriter-height) + var(--typewriter-overhang) + 1rem);
+  scroll-padding-bottom: calc(var(--tw-total) + 1rem);
   -webkit-text-size-adjust: 100%;
   /* Never fake a bold or italic the font doesn't have. */
   font-synthesis: none;
@@ -202,7 +230,7 @@ a:hover {
   min-height: 100vh;
   margin: 0 auto;
   padding: calc(var(--margin) * 0.6) var(--margin)
-    calc(var(--typewriter-height) + var(--typewriter-overhang) + 2rem);
+    calc(var(--tw-total) + 2rem);
   background: var(--paper);
   box-shadow:
     0 0 0 1px rgb(60 45 20 / 0.06),
@@ -471,8 +499,9 @@ a.taped:focus-visible {
 }
 
 /* —— Sound toggle (src/components/SoundToggle.tsx) ——
-   Fixed top-right, clear of notches and rounded corners. A paper disc with
-   an ink rim reads on both the dark desk and the paper; on = red. */
+   Fixed top-right (bottom-right beside the machine on phones), clear of
+   notches and rounded corners. A paper disc with an ink rim reads on both
+   the dark desk and the paper; on = red. */
 
 .sound-toggle {
   position: fixed;
@@ -514,6 +543,13 @@ a.taped:focus-visible {
   border-color: var(--ink-red);
   background: var(--ink-red);
   color: var(--paper);
+}
+
+@media (max-width: 719px) {
+  .sound-toggle {
+    top: auto;
+    bottom: max(0.75rem, calc(env(safe-area-inset-bottom) + 0.5rem));
+  }
 }
 
 /* Two rings, light then dark, so the focus indicator stands out on the
@@ -569,18 +605,17 @@ a.taped:focus-visible {
 }
 
 /* —— Typewriter (src/typewriter; docs/typewriter-rig.md) ——
-   Layered images of one drawing, scaled by --s (set from the paper's width
-   so the roller spans the paper). The strip is desk-coloured: below the
-   roller the paper has gone into the machine. */
+   The whole machine, drawn from layered images and sized by --tw-h,
+   standing on the desk in front of the letter: the paper scrolls on behind
+   it. Layer boxes are set inline by Typewriter.tsx. */
 
 .typewriter {
   position: fixed;
   inset: auto 0 0;
   z-index: 10;
-  height: var(--typewriter-height);
-  background: var(--desk);
+  height: var(--tw-total);
   pointer-events: none;
-  /* The lever and knobs can hang past the window edges; never scroll. */
+  /* The plant may sit past a narrow window's edge; never scroll. */
   overflow-x: clip;
 }
 
@@ -592,54 +627,33 @@ a.taped:focus-visible {
 
 .typewriter__machine {
   position: absolute;
-  left: var(--machine-left, 0);
-  top: var(--machine-top, 0);
+  bottom: var(--tw-gap);
   z-index: 1;
+  /* A soft contact shadow on the desk and paper. */
+  filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.28));
+}
+
+.tw-carriage {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
 }
 
 .tw-layer {
   position: absolute;
 }
 
-.tw-carriage {
-  will-change: transform;
-}
-
-.tw-carriage img {
-  width: 100%;
-  height: 100%;
-}
-
-/* Shifted clear of the text column (--bell-shift, from Typewriter.tsx);
-   rings about the foot of its stem (transform-origin set inline). */
-.tw-bell {
-  translate: var(--bell-shift, 0) 0;
-}
-
-/* On the desk to the right of the paper, standing on the same line as the
-   machine; behind it if they overlap. Typewriter.tsx sizes it to the space
-   and hides it when there isn't room. */
+/* Half the machine's height, on the same baseline, just right of it
+   (left and height set inline). */
 .desk-plant {
   position: absolute;
-  bottom: 0;
-  left: var(--plant-left, 100%);
-  height: var(--plant-height, 0);
+  bottom: var(--tw-gap);
   width: auto;
   transform-origin: 50% 100%;
 }
 
-.typewriter[data-plant='off'] .desk-plant {
-  display: none;
-}
-
-/* Phones: just the strip (roller and the top of the body). The bell and
-   plant are hidden and nothing pokes above the strip. */
-@media (max-width: 639px) {
-  .typewriter {
-    overflow: clip;
-  }
-
-  .typewriter .tw-bell,
+/* Phones: no room beside the machine (and the sound button sits there). */
+@media (max-width: 719px) {
   .typewriter .desk-plant {
     display: none;
   }

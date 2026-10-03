@@ -3,6 +3,7 @@
  *
  *   ?theme=classic | hermes | cobalt   (default: valentine)
  *   ?font=courier | space | plex       (default: Cutive Mono; Plex at 500)
+ *   ?paper=plain | grain | folded | crumpled   (default: plain)
  *
  * Enabled in dev and on preview deployments: main.tsx imports this module
  * only when `__PLAYGROUND__` (vite.config.ts), so production builds contain
@@ -12,6 +13,7 @@
  */
 
 const THEMES = ['valentine', 'classic', 'hermes', 'cobalt'] as const
+const PAPERS = ['plain', 'grain', 'folded', 'crumpled'] as const
 
 /** Applies URL overrides. Resolves once any extra font CSS is loaded. */
 export async function applyPlayground(): Promise<void> {
@@ -29,6 +31,12 @@ export async function applyPlayground(): Promise<void> {
   // valentine is the default: no attribute needed.
   if (theme && theme !== 'valentine' && (THEMES as readonly string[]).includes(theme)) {
     root.dataset.theme = theme
+  }
+
+  // Textures are overlays on --paper (public/paper, scripts/paper-textures.py).
+  const paper = params.get('paper')
+  if (paper && paper !== 'plain' && (PAPERS as readonly string[]).includes(paper)) {
+    root.dataset.paper = paper
   }
 
   const font = params.get('font')
