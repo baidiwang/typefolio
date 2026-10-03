@@ -23,8 +23,8 @@ Replace them with your own artwork (e.g. a Figma export) by keeping the ids,
   rises above its top edge.
 - Desktop: `preserveAspectRatio="xMidYMax meet"`, bottom-centred.
 - Mobile (< 640 px): the viewBox is **derived** at runtime as the union of the
-  key row (`[data-nav-key]`, `[data-ui-key]`) plus the lower half of
-  `#platen > rect`, padded. Move the keys and the strip follows.
+  top key row (`[data-strip-row]`) plus the lower half of `#platen > rect`,
+  padded. Move the keys and the strip follows.
 
 ## Groups
 
@@ -41,37 +41,21 @@ changes and new artwork.
 | `#typebar` | optional | strike: `rotate(0 → −16deg → 0)` over 90 ms (Web Animations) | bottom centre (`50% 100%`) | each non-space character, max one per frame |
 | `#bell` | optional | ring: `rotate(0 → 14 → −10 → 0deg)` over 360 ms | top centre (`50% 0%`) | end of an element (`bell: true` events) |
 | `#keys` | yes | none | — | — |
-| `[data-nav-key="resume" \| "email" \| "linkedin" \| "github"]` | yes (inside `#keys`) | `.is-pressed` → `translateY(4px)` | — | pointer down / Enter on its link |
-| `[data-ui-key="sound"]` | yes (inside `#keys`) | `.is-pressed` → `translateY(4px)` | — | pointer down / Enter on the sound toggle |
+| `[data-strip-row]` | yes (inside `#keys`) | none; its bounding box defines the mobile strip's crop | — | — |
 | `[data-key]` | optional, any number | `translateY(0 → 4px → 0)` over 110 ms | — | a random one per typed character |
 | `#body` | optional | none (static) | — | — |
 
 `#typebar` and `#bell` are hidden on the mobile strip.
 
-## Keycap links
+## Nothing interactive
 
-The nav keys are **real HTML links** (`<a>`; the sound toggle is a
-`<button aria-pressed>`) laid over the SVG. They aren't positioned with
-hard-coded pixels: on mount, on every resize of the machine, and whenever the
-viewBox changes, `Typewriter.tsx` reads each `[data-nav-key]` /
-`[data-ui-key]` group's `getBoundingClientRect()` and places the matching
-link exactly over it.
-
-So when you swap in new artwork:
-
-1. Draw each nav key as a group with the right `data-nav-key` value (and one
-   `data-ui-key="sound"`). Any shape works; its bounding box is the hit area.
-2. Keep labels **out of the SVG**: the label text is rendered in HTML (crisp,
-   accessible, uses `--font-type`). Its size scales with the key height.
-3. Links come from `site.links` in `src/content.ts`.
-
-Each link gets a 10 px larger invisible touch area (`.keycap::before`), a
-focus ring in `--tw-focus` (chosen per theme to contrast with the typewriter body), and the pressed-key animation (`.keycap:active` plus
-`.is-pressed` on the SVG group). Under reduced motion the press is shown
-without movement.
+The typewriter is decorative: the SVG is `aria-hidden` and nothing on it is
+focusable. The contact links are printed on the paper (letterhead and
+closing), and the sound toggle is its own button in the top-right corner
+([`SoundToggle.tsx`](../src/components/SoundToggle.tsx)).
 
 ## Sound
 
 `src/typewriter/sound.ts` synthesises keystroke, return and bell sounds with
-Web Audio. It's off on every visit; the round key toggles it. The
+Web Audio. It's off on every visit; the speaker button toggles it. The
 `AudioContext` is only created on that click.

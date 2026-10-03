@@ -51,25 +51,46 @@ The face is **Cutive Mono**, self-hosted via `@fontsource/cutive-mono`, set
 once as `--font-type` in `src/index.css`.
 
 Cutive Mono has a single weight and no italic, so the page never asks for
-bold or italic and sets `font-synthesis: none` (no faux styles). Hierarchy
-comes from:
+bold or italic and sets `font-synthesis: none` (no faux styles). Its strokes
+are thin, so every glyph gets a hairline outline in its own ink
+(`-webkit-text-stroke: var(--text-stroke) currentColor`, 0.4px), which reads
+as a heavier weight without touching layout, and body tracking is a little
+tight (`--tracking: -0.02em`). Hidden text hides its outline too:
+`::highlight(unrevealed)` sets `-webkit-text-stroke-color: transparent`.
+
+Hierarchy comes from size, caps and ink, never from tracking or weight:
 
 | Element | Treatment |
 | ------- | --------- |
-| Name (letterhead) | 2em, caps, 0.28em tracking |
-| Section labels | caps, 0.24em tracking, red ink |
+| Name (letterhead) | 2em, caps |
+| Section labels | caps, red ink |
 | Project titles | 1.4em |
-| Inline labels (employer, short entries) | caps, 0.1em tracking |
+| Inline labels (employer, short entries) | caps |
 | Meta lines (type, stack, P.S.) | `--ink-soft` |
 
-Its strokes are thin, so body text is a size up (17px mobile, 19px desktop)
-and in near-black ink. Inks on `--paper` (#f6f0e1):
+Body text is 17px on phones, 19px on desktop, in near-black ink. The default
+theme is **valentine** (warm white paper, charcoal desk, Olivetti-red
+typewriter). Inks on `--paper` (#fbf8f2):
 
 | Token        | Use                    | Contrast on paper |
 | ------------ | ---------------------- | ----------------- |
-| `--ink`      | body                   | 16.6 : 1          |
-| `--ink-soft` | meta lines             | 8.9 : 1           |
-| `--ink-red`  | section labels, focus  | 6.5 : 1           |
+| `--ink`      | body                   | 17.8 : 1          |
+| `--ink-soft` | meta lines             | 9.5 : 1           |
+| `--ink-red`  | section labels, pen dividers, focus | 6.4 : 1 |
+
+## Sections, links and sound
+
+- **Dividers** are a quick wavy line in red pen
+  ([`Divider.tsx`](src/components/Divider.tsx)): three hand-drawn variants,
+  mirrored after the third. Each one draws itself (stroke offset) when
+  typing reaches it; static under reduced motion.
+- **Contact links** (Resume · Email · LinkedIn · GitHub) are printed in the
+  letterhead and typed again at the end, under the email
+  ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)). The resume is
+  `public/BaidiWangResume.pdf`.
+- **Sound** is off by default. The round speaker button in the top-right
+  corner ([`SoundToggle.tsx`](src/components/SoundToggle.tsx)) toggles it
+  (`aria-pressed`), clear of notches via `env(safe-area-inset-*)`.
 
 ## How the reveal engine works
 
@@ -144,15 +165,30 @@ and starting a new line when the glyph box drops. It runs after
 (width changes). A line-feed reveal in progress snaps to the new line
 boundaries.
 
-**7. One project at a time.** A taped photo sticks on (`data-stick="stuck"`,
-a short opacity/transform animation) exactly when its project's title
-starts typing: `reveal.whenStarts(titleEl, hook)` fires on the controller's
-`start` for that element, or immediately with `instant` if the title is
-revealed without typing (scrolled past, focused, reduced motion). Since one
-job types at a time in document order, a project's text, links included,
-finishes before the next project's title, and so its photo, starts.
+**7. One project at a time.** A project reads head (title, type,
+one-liner), photo, rest: that's its DOM, tab and typing order. Desktop puts
+the photo in a left column beside the text; phones stack it in reading
+order, so the title is never pushed below the photo. A taped photo sticks on
+(`data-stick="stuck"`, a short opacity/transform animation) when typing
+reaches it:
 
-**8. The typewriter is a listener.** The controller emits an event for
+- desktop: `reveal.whenStarts(title)`, the controller's `start` for the
+  title beside it;
+- stacked: `reveal.whenDone(oneLiner)`, then once the photo itself has come
+  out of the platen.
+
+Either hook fires with `instant` if its element is revealed without typing
+(scrolled past, focused, reduced motion). Since one job runs at a time in
+document order, a project's text, links included, finishes before the next
+project's title starts.
+
+**8. Drawings are jobs too.** `reveal.registerDrawing(el, { duration,
+apply })` queues a non-text reveal (the pen dividers) in the same reading
+order and budget as text; the controller calls `apply(progress)` from 0 to
+1 in 40 steps. A divider in the first screen draws between the intro and
+"Selected work"; one further down waits for its turn.
+
+**9. The typewriter is a listener.** The controller emits an event for
 every step:
 
 | Event | Typewriter does |
@@ -169,7 +205,7 @@ emerges: the controller reads the height of the element marked
 `data-reveal-inset` and ends its trigger zone there. Rig details:
 [`docs/typewriter-rig.md`](docs/typewriter-rig.md).
 
-**9. Keyboard.** Focusing a link inside unrevealed text completes that
+**10. Keyboard.** Focusing a link inside unrevealed text completes that
 element instantly.
 
 ## Design playground (dev + preview deployments)
@@ -181,23 +217,27 @@ flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
 `VERCEL_ENV=preview`, or `PLAYGROUND=1`).
 
 ```
-/?theme=valentine | hermes | cobalt
-/?font=courier | space | plex         (Courier Prime, Space Mono, IBM Plex Mono)
+/?theme=classic | hermes | cobalt     (default: valentine)
+/?font=courier | space | plex         (Courier Prime, Space Mono, IBM Plex Mono 500)
 /?theme=hermes&font=plex
 ```
 
 Themes only override CSS variables (`:root[data-theme=…]` in
-`src/index.css`), including the placeholder typewriter's colours.
+`src/index.css`), including the placeholder typewriter's colours. The
+alternative faces have real weights, so they drop Cutive's outline
+(`--text-stroke: 0`); Plex is shown at weight 500.
 
-| Theme | Desk / paper / typewriter | ink | ink-soft | ink-red | key focus ring on body |
-| --- | --- | --- | --- | --- | --- |
-| default | warm grey / cream / green | 16.6 | 8.9 | 6.5 | 10.8 |
-| valentine | charcoal / warm white / Olivetti red | 17.8 | 9.5 | 6.4 | 5.7 |
-| hermes | walnut / ivory / seafoam | 17.6 | 9.4 | 6.9 | 9.2 |
-| cobalt | cobalt blue / white / cream | 18.9 | 10.1 | 6.5 | 5.3 |
+| Theme | Desk / paper / typewriter | ink | ink-soft | ink-red |
+| --- | --- | --- | --- | --- |
+| valentine (default) | charcoal / warm white / Olivetti red | 17.8 | 9.5 | 6.4 |
+| classic | warm grey / cream / green | 16.6 | 8.9 | 6.5 |
+| hermes | walnut / ivory / seafoam | 17.6 | 9.4 | 6.9 |
+| cobalt | cobalt blue / white / cream | 18.9 | 10.1 | 6.5 |
 
-Text ratios are on the paper (AA needs 4.5); focus rings need 3. Keycap
-labels are ink on the key cap: 15.3 or more in every theme.
+Ratios are on the paper (AA text needs 4.5). The sound button is a paper
+disc with an ink icon (17.8) or, when on, paper on red ink (6.4); its focus
+ring is a paper ring inside an ink ring, so it stands out on the charcoal
+desk and on the paper alike.
 
 ## Stack
 

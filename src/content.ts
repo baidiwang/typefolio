@@ -64,7 +64,7 @@ export const site = {
   intro:
     'I’m a Design Engineer building AI interfaces and interactive web products.',
   links: {
-    resume: { label: 'Resume', href: '/resume.pdf' },
+    resume: { label: 'Resume', href: '/BaidiWangResume.pdf' },
     email: {
       label: 'Email',
       href: 'mailto:baidiwang30@gmail.com',
@@ -78,7 +78,7 @@ export const site = {
     closing: 'Thanks for reading all the way down. Write back anytime,',
     // TODO: becomes a handwritten SVG signature drawn with a stroke animation.
     signature: 'Baidi Wang',
-    ps: 'P.S. Every sound on this page is synthesized live in your browser. Press ♪ to hear it.',
+    ps: 'P.S. Every sound on this page is synthesized live in your browser. Turn on the speaker, top right, to hear it.',
   },
 } as const
 
