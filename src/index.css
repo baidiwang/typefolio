@@ -31,16 +31,17 @@
   --margin: clamp(1.25rem, 6vw, 4.5rem);
   --line: 1.6;
 
-  /* The desk strip fixed to the bottom of the viewport: from the roller's
-     top edge (where the paper goes in) down. The machine's body is
-     --tw-body tall and stands --tw-gap above the bottom edge; the strip is
-     the part of it below the roller (--tw-below, set by Typewriter.tsx from
-     the drawing) plus the gap. The paper's bottom padding and the scroll
-     padding use it, so the last line and focused links clear the roller. */
-  --tw-body: min(181px, 21.4vh);
-  --tw-gap: 10px;
-  --tw-below: 1;
-  --tw-strip: calc(var(--tw-body) * var(--tw-below) + var(--tw-gap));
+  /* The typewriter's body is exactly as wide as the paper, and the paper
+     disappears behind its top edge. On desktop the visible part (top edge
+     to just below the keyboard frame) is --tw-visible tall, which sets the
+     paper's width through the drawing's aspect (--tw-aspect). Typewriter.tsx
+     then sets --tw-s (css px per drawing px) from the paper's actual width,
+     and the drawing's rows (--tw-rows-*). The strip from the body's top edge
+     to the bottom of the viewport is --tw-strip tall; the paper's bottom
+     padding and the scroll padding use it. Fallbacks match the drawing. */
+  --tw-visible: min(230px, 26vh);
+  --tw-paper: calc(var(--tw-visible) * var(--tw-aspect, 3.5477));
+  --tw-strip: calc(var(--tw-s, 0.8127) * var(--tw-rows-desk, 283) * 1px);
 }
 
 /* —— Design playground (dev + preview deployments: src/playground.ts) ——
@@ -105,12 +106,23 @@
   --text-stroke: 0px;
 }
 
-/* Phones: the whole machine, small (≤ 15% of the viewport), clear of the
-   home indicator. */
+/* Desktop: the paper is only as wide as the machine (≈ 700–820 px), so a
+   slimmer margin keeps the text column readable. It still clears the bell,
+   which stands about 48 drawing px (≤ 40 css px) inside the paper. */
+@media (min-width: 720px) {
+  :root {
+    --margin: 2.75rem;
+  }
+}
+
+/* Phones: the paper keeps its width and the whole machine shows, scaled
+   to it (≈ 123 px tall at 390 px), clear of the home indicator. */
 @media (max-width: 719px) {
   :root {
-    --tw-body: min(95px, 11.4vh);
-    --tw-gap: max(8px, env(safe-area-inset-bottom));
+    --tw-paper: 100%;
+    --tw-strip: calc(
+      var(--tw-s, 0.3645) * var(--tw-rows-phone, 337) * 1px + env(safe-area-inset-bottom, 0px)
+    );
   }
 }
 
@@ -154,7 +166,7 @@ body {
 
 @media (min-width: 640px) {
   body {
-    font-size: 1.1875rem;
+    font-size: 1.125rem;
   }
 }
 
@@ -214,7 +226,7 @@ a:hover {
 }
 
 .paper {
-  width: min(100%, calc(var(--measure) + 2 * var(--margin)));
+  width: min(100%, calc(var(--measure) + 2 * var(--margin)), var(--tw-paper));
   min-height: 100vh;
   margin: 0 auto;
   padding: calc(var(--margin) * 0.6) var(--margin)
@@ -361,7 +373,7 @@ h2 {
     grid-template-areas:
       'media head'
       'media rest';
-    column-gap: 2.4em;
+    column-gap: 1.5em;
     align-items: start;
   }
 
@@ -496,8 +508,8 @@ a.taped:focus-visible {
 }
 
 /* —— Sound toggle (src/components/SoundToggle.tsx) ——
-   Fixed top-right (bottom-right beside the machine on phones), clear of
-   notches and rounded corners. A paper disc with an ink rim reads on both
+   Fixed top-right, clear of notches and rounded corners (on phones the
+   machine fills the bottom edge). A paper disc with an ink rim reads on both
    the dark desk and the paper; on = red. */
 
 .sound-toggle {
@@ -540,13 +552,6 @@ a.taped:focus-visible {
   border-color: var(--ink-red);
   background: var(--ink-red);
   color: var(--paper);
-}
-
-@media (max-width: 719px) {
-  .sound-toggle {
-    top: auto;
-    bottom: max(0.75rem, calc(env(safe-area-inset-bottom) + 0.5rem));
-  }
 }
 
 /* Two rings, light then dark, so the focus indicator stands out on the
@@ -602,12 +607,11 @@ a.taped:focus-visible {
 }
 
 /* —— Typewriter (src/typewriter; docs/typewriter-rig.md) ——
-   A wide-carriage machine drawn from layered images, sized by --tw-body.
-   The strip is the desk below the roller: the paper has gone into the
-   machine, so nothing of it shows below the roller's top edge. Only the
-   carriage's ends (lever, collars, knobs) rise above that edge, at the
-   paper's sides; the body and bell stay below it.
-   Layer boxes and the paper's edges (--pl, --pr, --pc) are set inline. */
+   A wide, low machine drawn from layered images, scaled by --tw-s so its
+   body matches the paper. The strip is the desk below the body's top edge:
+   the paper has gone into the machine, so nothing of it shows below that
+   edge. On desktop the red band under the keyboard runs off the bottom of
+   the screen. Layer boxes are set inline; --pl is the paper's left edge. */
 
 .typewriter {
   position: fixed;
@@ -626,41 +630,42 @@ a.taped:focus-visible {
   user-select: none;
 }
 
-/* Zero-size anchors on the strip's top edge; layers hang off them. */
+/* A zero-size anchor at the body's top-left corner. */
 .tw-origin {
   position: absolute;
   top: 0;
+  left: var(--pl, 0);
 }
 
-.tw-body {
-  /* A soft contact shadow on the desk. */
-  filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.3));
-}
-
-.tw-carriage {
+/* The roller shows only between the shoulders. */
+.tw-notch {
   position: absolute;
-  inset: 0;
-  will-change: transform;
-}
-
-.tw-roller-mid {
-  position: absolute;
-  background-repeat: repeat-x;
+  overflow: hidden;
 }
 
 .tw-layer {
   position: absolute;
 }
 
-/* On the desk beside the body, on its baseline (left and height inline). */
+.tw-carriage,
+.tw-notch .tw-layer {
+  will-change: transform;
+}
+
+/* On the desk to the right of the machine, at about 40% of its height,
+   standing on the bottom of the screen (left and height inline). */
 .desk-plant {
   position: absolute;
-  bottom: var(--tw-gap);
+  bottom: 0;
   width: auto;
   transform-origin: 50% 100%;
 }
 
-/* Phones: no room beside the body (and the sound button sits there). */
+.typewriter[data-plant='off'] .desk-plant {
+  display: none;
+}
+
+/* Phones: the machine fills the width; no room for the plant. */
 @media (max-width: 719px) {
   .typewriter .desk-plant {
     display: none;

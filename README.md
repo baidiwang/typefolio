@@ -68,7 +68,7 @@ Hierarchy comes from size, caps and ink, never from tracking or weight:
 | Inline labels (employer, short entries) | caps |
 | Meta lines (type, stack) | `--ink-soft` |
 
-Body text is 17px on phones, 19px on desktop, in near-black ink. The default
+Body text is 17px on phones, 18px on desktop, in near-black ink. The default
 theme is **valentine** (warm white paper, warm charcoal desk #3d3532, so the
 typewriter's black outlines still read against it, Olivetti-red
 typewriter). Inks on `--paper` (#fbf8f2):
@@ -99,16 +99,18 @@ at ink ≥ 14.2, ink-soft ≥ 7.6, ink-red ≥ 5.5 in every theme.
   letterhead ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)); the
   letter's closing ends with the email address. The resume is
   `public/BaidiWangResume.pdf`.
-- **The typewriter** is a hand-drawn wide-carriage machine split into
-  layers (static body, sliding carriage, turning knobs, a bell on the body's shoulder). Its
-  roller spans the paper and the paper goes into it: below the roller there's
-  only the desk and the machine's body (`min(181px, 21.4vh)` tall, 95 px on
-  phones), with a plant beside it on desktop. Details:
+- **The typewriter** is a hand-drawn wide, low machine split into layers
+  (static body, a roller sliding behind the body's shoulders with the lever
+  and knobs, turning knobs, a ringing bell). The paper is exactly as wide as
+  its red body and disappears behind the body's top edge. On desktop the
+  machine shows from that edge to just below the keyboard,
+  `min(230px, 26vh)`, which sets the paper's width (≈ 700–820 px); on phones
+  the paper keeps its width and the whole machine shows, scaled to it. A
+  plant stands beside it on desktop. Details:
   [`docs/typewriter-rig.md`](docs/typewriter-rig.md).
-- **Sound** is off by default. The round speaker button
-  ([`SoundToggle.tsx`](src/components/SoundToggle.tsx)) toggles it
-  (`aria-pressed`): top-right on desktop, bottom-right on the desk beside
-  the machine on phones, clear of notches via `env(safe-area-inset-*)`.
+- **Sound** is off by default. The round speaker button in the top-right
+  corner ([`SoundToggle.tsx`](src/components/SoundToggle.tsx)) toggles it
+  (`aria-pressed`), clear of notches via `env(safe-area-inset-*)`.
 
 ## How the reveal engine works
 
@@ -211,7 +213,7 @@ every step:
 
 | Event | Typewriter does |
 | --- | --- |
-| `char` (char, column) | carriage `translateX(−column × step)`, key click (space: carriage only) |
+| `char` (char, column) | roller, lever and knobs `translateX(−column × step)`, key click (space: carriage only) |
 | `return` (bell?) | end of a typed line: carriage return, the knobs turn (line feed), bell at the end of an element |
 | `feed` (bell?) | a paragraph line appeared: the knobs turn, bell at the last line |
 | `idle` | carriage returns home |
@@ -220,9 +222,9 @@ Because the controller emits from the same frame loop that moves the
 highlight, carriage and text can't drift apart, and compression speeds both
 up together. The typewriter also tells the controller where the paper
 emerges: the controller reads the height of the element marked
-`data-reveal-inset` (the desk strip, up to the roller's top edge) and ends
+`data-reveal-inset` (the desk strip, up to the body's top edge) and ends
 its trigger zone there. The strip hides the paper below that edge, so lines
-of an element that are typed but haven't come out of the roller yet stay
+of an element that are typed but haven't come out of the machine yet stay
 out of sight. Rig details:
 [`docs/typewriter-rig.md`](docs/typewriter-rig.md).
 
