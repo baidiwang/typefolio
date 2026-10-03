@@ -1,10 +1,10 @@
-"""Paper textures for the ?paper= playground option (see README).
+"""Paper textures (see README, "Paper").
 
-Writes small, seamlessly tiling overlays to public/paper/. Every tile is
-black or white with a low alpha, so it works on any theme's --paper colour:
-black darkens (fibres, crease shadows), white lightens (crease highlights).
-Each texture is two tiles of coprime sizes layered on top of each other, so
-the combined pattern only repeats every few thousand pixels.
+Writes small, seamlessly tiling overlays to public/paper/: fine grain (two
+tiles of coprime sizes layered, so the pattern only repeats every few
+thousand pixels) and a letter page folded in thirds. Every tile is a warm
+shadow or a warm light at a few % alpha, so it works on any theme's
+--paper colour and keeps it warm.
 
 All noise is made periodic by construction (filtered in the frequency
 domain), so tiles have no seams. Seeded: re-running gives the same files.
@@ -19,6 +19,10 @@ from PIL import Image
 
 OUT = Path(__file__).resolve().parent.parent / 'public' / 'paper'
 QUALITY = 80
+# Overlay colours: a warm brown shadow and a warm white light, so the
+# texture darkens towards sepia rather than grey and the paper stays warm.
+SHADOW = (120, 78, 32)
+LIGHT = (255, 250, 236)
 
 # Letter paper is 8.5 × 11 in. At the sheet's widest (about 944 css px) a
 # page is about 1222 px tall; folded in thirds, a crease every 407 px. The
@@ -53,22 +57,12 @@ def fibres(rng, size):
     return n / n.std()
 
 
-def shade(height, light=(-0.5, -0.8)):
-    """Lambert-ish shading of a periodic height field, lit from the top left.
-    Returns signed light: > 0 faces the light, < 0 faces away."""
-    gy = (np.roll(height, -1, 0) - np.roll(height, 1, 0)) / 2
-    gx = (np.roll(height, -1, 1) - np.roll(height, 1, 1)) / 2
-    lx, ly = light
-    return -(gx * lx + gy * ly) / np.sqrt(1 + gx**2 + gy**2)
-
-
 def to_rgba(signed, max_alpha):
-    """Signed values in [-1, 1] → white (positive) / black (negative) with
-    alpha up to `max_alpha` (0–1)."""
+    """Signed values in [-1, 1] → warm light (positive) / warm shadow
+    (negative) with alpha up to `max_alpha` (0–1)."""
     v = np.clip(signed, -1, 1)
     a = np.round(np.abs(v) * max_alpha * 255).astype(np.uint8)
-    rgb = np.where(v[..., None] > 0, 255, 0).astype(np.uint8)
-    rgb = np.broadcast_to(rgb, v.shape + (3,))
+    rgb = np.where(v[..., None] > 0, LIGHT, SHADOW).astype(np.uint8)
     return Image.fromarray(np.dstack([rgb, a]), 'RGBA')
 
 
@@ -95,15 +89,6 @@ def folded_tile(rng, width=PAGE_W):
     return to_rgba(-v, 0.05)
 
 
-def crumple_tile(rng, size, scale):
-    """Ridged noise (sharp folds where the noise crosses zero) at two
-    octaves, lit from the top left."""
-    h = -np.abs(periodic_noise(rng, size, size, scale=scale))
-    h += -0.5 * np.abs(periodic_noise(rng, size, size, scale=scale / 2.3))
-    s = shade(h * 2.0)
-    return to_rgba(s / np.abs(s).max() * 1.6, 0.04)
-
-
 def save(img, name):
     path = OUT / name
     img.save(path, 'WEBP', quality=QUALITY, alpha_quality=60, method=6)
@@ -119,8 +104,6 @@ def main():
         'grain-a.webp': save(grain_tile(rng, 128, 0.035), 'grain-a.webp'),
         'grain-b.webp': save(grain_tile(rng, 97, 0.025), 'grain-b.webp'),
         'fold.webp': save(folded_tile(rng), 'fold.webp'),
-        'crumple-a.webp': save(crumple_tile(rng, 384, 70), 'crumple-a.webp'),
-        'crumple-b.webp': save(crumple_tile(rng, 277, 45), 'crumple-b.webp'),
     }
     for name, size in sizes.items():
         print(f'{name:16} {size / 1024:5.1f} KB')

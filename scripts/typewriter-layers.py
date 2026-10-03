@@ -14,13 +14,23 @@ page (2x the largest display size), not for the source.
 
 Layers (reference px, 1024x1024):
 
-  body      static: the machine, keys included. The strip of body hidden
-            behind the roller is filled in, so sliding the carriage never
-            reveals a hole.
-  carriage  roller, end collars and the return lever. Slides.
-  knob-l/r  the platen knobs. Slide with the carriage; turn on line feed.
-  bell      the bell on its stem (stem extended down behind the roller).
-            Rings about the stem's foot.
+  body        static: the machine, keys included. The strip of body hidden
+              behind the roller is filled in, so sliding the carriage never
+              reveals a hole.
+  roller-l    left end of the carriage: return lever, collar and the first
+              stretch of roller.
+  roller-mid  the roller's middle as a horizontal tile: slices of the drawn
+              roller in shuffled order, never stretched. The page repeats it
+              to make the carriage as wide as the paper.
+  roller-r    right end: the last stretch of roller and its collar.
+  knob-l/r    the platen knobs, at the carriage's ends; turn on line feed.
+  bell        the bell on its stem (stem extended down behind the roller).
+              Rings about the stem's foot.
+
+The roller's edges wobble a pixel or two in the drawing. For the middle
+slices to join, the roller is straightened to one band (its median edges);
+towards each end the correction fades out, so the ends keep their drawn
+shape.
 
 Writes public/art/*.webp and src/typewriter/layers.ts (geometry).
 """
@@ -53,12 +63,19 @@ KNOB_L_BOX = (148, 288, 214, 400)  # x0, y0, x1, y1
 KNOB_R_BOX = (866, 262, 912, 400)
 STEM_BOTTOM = 346                 # the bell's stem is extended down to here
 OUTLINE = (30, 27, 28)
+POT_FILL = (246, 242, 234)        # inside the plant pot's outline
 ROLLER_INK = (26, 22, 24)         # paints out red streaks/fringe on the roller
 ALPHA_MIN = 16                    # faint alpha noise below this is transparent
 
-# Export: the whole machine shows at most 220 css px tall; 2x that.
-MACHINE_DISPLAY_MAX = 220
-PLANT_DISPLAY_MAX = 110           # about half the machine
+END_W = 50                        # roller kept with each end slice
+MID_SLICES = 5                    # the middle is cut into this many slices
+MID_LEN = 2600                    # length of the shuffled middle tile; the
+                                  # widest paper needs ~2400
+SEED = 3
+
+# Export: the body shows at most 190 css px tall; 2x that.
+BODY_DISPLAY_MAX = 190
+PLANT_DISPLAY_MAX = 95            # about half the body
 WEBP_QUALITY = 84
 
 
@@ -148,6 +165,41 @@ def roller_edges(cylinder):
         ok = ~np.isnan(arr)
         arr[:] = np.interp(xs, xs[ok], arr[ok])
     return median_smooth(top), median_smooth(bottom)
+
+
+def warp_column(col, n):
+    """Resample a column of RGBA pixels to n rows (premultiplied, linear)."""
+    c = col.astype(float)
+    a = c[:, 3:4] / 255
+    pm = np.concatenate([c[:, :3] * a, c[:, 3:4]], axis=1)
+    pos = np.linspace(0, len(c) - 1, n)
+    out = np.stack([np.interp(pos, np.arange(len(c)), pm[:, i]) for i in range(4)], axis=1)
+    alpha = np.maximum(out[:, 3:4] / 255, 1e-6)
+    out[:, :3] = np.where(out[:, 3:4] > 0, out[:, :3] / alpha, 0)
+    return np.clip(np.round(out), 0, 255).astype(np.uint8)
+
+
+def fill_pot(rgba, box):
+    """The pot is drawn as an outline on paper; on the desk its inside would
+    read as desk. Fill transparent areas enclosed by the drawing in the
+    bottom quarter of the plant (the pot) with an off-white glaze."""
+    x0, y0, x1, y1 = box
+    clear = rgba[..., 3] == 0
+    outside = np.zeros_like(clear)
+    h, w = clear.shape
+    stack = [(y, x) for y in range(h) for x in (0, w - 1) if clear[y, x]]
+    stack += [(y, x) for x in range(w) for y in (0, h - 1) if clear[y, x]]
+    while stack:
+        y, x = stack.pop()
+        if outside[y, x] or not clear[y, x]:
+            continue
+        outside[y, x] = True
+        for yy, xx in ((y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)):
+            if 0 <= yy < h and 0 <= xx < w and not outside[yy, xx]:
+                stack.append((yy, xx))
+    hole = clear & ~outside
+    hole[:y0 + (y1 - y0) * 3 // 4] = False
+    rgba[hole] = (*POT_FILL, 255)
 
 
 def main():
@@ -280,9 +332,58 @@ def main():
         bl[y, stem_cols] = src[foot_row - 3, stem_cols]
         bl[y, stem_cols, 3] = 255
 
+    # —— Straighten the roller, then slice it ——————————————————————————————
+    inner = slice(ROLLER_X0 + END_W, ROLLER_X1 - END_W)
+    T = int(np.median(top[inner])) - 1          # band rows [T, B)
+    B = int(np.median(bottom[inner])) + 2
+    seam_l, seam_r = ROLLER_X0 + END_W, ROLLER_X1 - END_W
+    for x in range(ROLLER_X0, ROLLER_X1 + 1):
+        if x < seam_l:
+            k = (x - ROLLER_X0) / (seam_l - ROLLER_X0)
+        elif x > seam_r:
+            k = (ROLLER_X1 - x) / (ROLLER_X1 - seam_r)
+        else:
+            k = 1.0
+        k = k * k * (3 - 2 * k)  # smoothstep
+        ot, ob = int(top[x]) - 1, int(bottom[x]) + 2
+        tt, tb = round(ot + (T - ot) * k), round(ob + (B - ob) * k)
+        band = warp_column(carr[ot:ob, x], tb - tt)
+        carr[min(ot, tt):max(ob, tb), x] = 0
+        carr[tt:tb, x] = band
+
+    # Cut at the darkest columns (between highlight dashes), so joins between
+    # slices that weren't neighbours in the drawing don't split a dash.
+    darkness = (carr[T:B, :, :3].astype(float) @ [0.299, 0.587, 0.114]).mean(axis=0)
+
+    def darkest(x, r=8):
+        return int(x - r + np.argmin(darkness[x - r:x + r + 1]))
+
+    seam_l, seam_r = darkest(seam_l), darkest(seam_r)
+    cuts = [seam_l] + [darkest(round(seam_l + (seam_r - seam_l) * i / MID_SLICES))
+                       for i in range(1, MID_SLICES)] + [seam_r]
+    slices = [carr[T:B, a:b] for a, b in zip(cuts, cuts[1:])]
+    rng = np.random.default_rng(SEED)
+    order, length = [], 0
+    while length < MID_LEN:
+        i = int(rng.integers(len(slices)))
+        # never the same slice twice in a row, nor wrapping to the start
+        if order and i == order[-1]:
+            continue
+        order.append(i)
+        length += slices[i].shape[1]
+    while order[-1] == order[0]:
+        order.pop()
+    mid = np.concatenate([slices[i] for i in order], axis=1)
+
+    roller_l = carr.copy()
+    roller_l[:, seam_l:] = 0
+    roller_r = carr.copy()
+    roller_r[:, :seam_r] = 0
+
     layers_rgba = {
         'typewriter-body': body,
-        'typewriter-carriage': carr,
+        'typewriter-roller-l': roller_l,
+        'typewriter-roller-r': roller_r,
         'typewriter-knob-l': np.where(knob_l[..., None], src, 0).astype(np.uint8),
         'typewriter-knob-r': np.where(knob_r[..., None], src, 0).astype(np.uint8),
         'typewriter-bell': bl,
@@ -294,11 +395,7 @@ def main():
         return int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1
 
     boxes = {k: bbox(v[..., 3] > 0) for k, v in layers_rgba.items()}
-    mx0 = min(b[0] for b in boxes.values())
-    my0 = min(b[1] for b in boxes.values())
-    mx1 = max(b[2] for b in boxes.values())
-    my1 = max(b[3] for b in boxes.values())
-    scale = 2 * MACHINE_DISPLAY_MAX / (my1 - my0)
+    scale = 2 * BODY_DISPLAY_MAX / (boxes['typewriter-body'][3] - boxes['typewriter-body'][1])
 
     layers = {}
 
@@ -314,9 +411,11 @@ def main():
 
     for name, rgba in layers_rgba.items():
         export(name, rgba, boxes[name], scale)
+    export('typewriter-roller-mid', mid, (0, 0, mid.shape[1], mid.shape[0]), scale)
 
     plant = load(PLANT_SRC)
     pbox = bbox(plant[..., 3] > 0)
+    fill_pot(plant, pbox)
     export('plant', plant, pbox, 2 * PLANT_DISPLAY_MAX / (pbox[3] - pbox[1]))
 
     # Remove exports from earlier versions of the rig.
@@ -329,7 +428,8 @@ def main():
         print(f"{k:22s} {v['px'][0]:5d}x{v['px'][1]:<5d} {v['bytes'] / 1024:6.1f} KB")
     print(f"{'total':22s} {'':11s} {total / 1024:6.1f} KB")
 
-    roller_top = int(np.median(top[ROLLER_X0 + 20:ROLLER_X1 - 20]))
+    roller_top = T + 1
+    centre_x = (ROLLER_X0 + ROLLER_X1) // 2
     knob_centre = lambda b: f"{{ x: {(b[0] + b[2]) // 2}, y: {(b[1] + b[3]) // 2} }}"
 
     def entry(name):
@@ -338,22 +438,33 @@ def main():
 
     TS_OUT.write_text(f"""// Generated by scripts/typewriter-layers.py — do not edit by hand.
 // Geometry of the raster rig in reference px (art/typewriter.png resampled
-// to 1024x1024). The page scales it from MACHINE's height.
+// to 1024x1024). The page scales it from the body's height.
 
-/** Where each layer image sits in the drawing. */
+/** Where each layer image sits in the drawing. rollerL/knobL are placed
+ *  from the roller's left end, rollerR/knobR from its right end. */
 export const LAYERS = {{
   body: {entry('typewriter-body')},
   bell: {entry('typewriter-bell')},
-  carriage: {entry('typewriter-carriage')},
+  rollerL: {entry('typewriter-roller-l')},
+  rollerR: {entry('typewriter-roller-r')},
   knobL: {entry('typewriter-knob-l')},
   knobR: {entry('typewriter-knob-r')},
 }} as const
 
-/** The whole machine (bell top to feet, lever to right knob). */
-export const MACHINE = {{ x0: {mx0}, y0: {my0}, x1: {mx1}, y1: {my1} }} as const
+/** The roller's middle: a tile, repeated horizontally (never stretched)
+ *  to fill the carriage between the end slices. */
+export const ROLLER_MID = {{ src: '{layers['typewriter-roller-mid']['src']}', y: {T}, h: {B - T}, w: {mid.shape[1]} }} as const
 
-/** The roller cylinder: its ends and top edge. */
-export const ROLLER = {{ x0: {ROLLER_X0}, x1: {ROLLER_X1}, top: {roller_top} }} as const
+/** The roller cylinder: its ends, where the end slices meet the middle, and
+ *  its top edge (where the paper comes out). The body is centred on centreX. */
+export const ROLLER = {{
+  x0: {ROLLER_X0},
+  x1: {ROLLER_X1},
+  seamL: {seam_l},
+  seamR: {seam_r},
+  top: {roller_top},
+  centreX: {centre_x},
+}} as const
 
 /** Pivots: the bell rings about its stem's foot; the knobs turn about
  *  their centres. */

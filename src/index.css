@@ -31,13 +31,16 @@
   --margin: clamp(1.25rem, 6vw, 4.5rem);
   --line: 1.6;
 
-  /* The desk scene fixed to the bottom of the viewport: the whole machine
-     (bell to feet) is --tw-h tall and stands --tw-gap above the bottom
-     edge. The paper's bottom padding and the scroll padding use both, so
-     the last line and focused links clear the bell. */
-  --tw-h: min(220px, 26vh);
+  /* The desk strip fixed to the bottom of the viewport: from the roller's
+     top edge (where the paper goes in) down. The machine's body is
+     --tw-body tall and stands --tw-gap above the bottom edge; the strip is
+     the part of it below the roller (--tw-below, set by Typewriter.tsx from
+     the drawing) plus the gap. The paper's bottom padding and the scroll
+     padding use it, so the last line and focused links clear the roller. */
+  --tw-body: min(190px, 22.5vh);
   --tw-gap: 10px;
-  --tw-total: calc(var(--tw-h) + var(--tw-gap));
+  --tw-below: 0.952;
+  --tw-strip: calc(var(--tw-body) * var(--tw-below) + var(--tw-gap));
 }
 
 /* —— Design playground (dev + preview deployments: src/playground.ts) ——
@@ -73,31 +76,16 @@
   --ink-red: #b3261e;
 }
 
-/* ?paper=grain|folded|crumpled: overlays from scripts/paper-textures.py,
-   black/white at a few % alpha, so they suit every theme's paper. Each is
-   two tiles of coprime sizes, so the pattern doesn't visibly repeat. The
-   fold tile is one letter page (8.5 × 11), sized to the sheet's width:
-   two creases per page, folded in thirds. Even if every layer's darkest
-   pixel landed on the same spot, ink-red stays ≥ 4.8:1 in every theme
-   (README, Design playground). */
-:root[data-paper] .paper {
-  background-image: var(--paper-extra, none), url('/paper/grain-a.webp'),
-    url('/paper/grain-b.webp');
-  background-size: var(--paper-extra-size, auto), 128px, 97px;
-  background-repeat: var(--paper-extra-repeat, repeat), repeat, repeat;
-}
-
-:root[data-paper='folded'] {
-  --paper-extra: url('/paper/fold.webp');
-  --paper-extra-size: 100% auto;
-  --paper-extra-repeat: repeat-y;
-}
-
-:root[data-paper='crumpled'] .paper {
-  background-image: url('/paper/crumple-a.webp'), url('/paper/crumple-b.webp'),
-    url('/paper/grain-a.webp'), url('/paper/grain-b.webp');
-  background-size: 384px, 277px, 128px, 97px;
+/* ?paper=plain|grain (playground; the default is folded, on .paper below).
+   grain drops the folds; plain drops the texture. */
+:root[data-paper='grain'] .paper {
+  background-image: url('/paper/grain-a.webp'), url('/paper/grain-b.webp');
+  background-size: 128px, 97px;
   background-repeat: repeat;
+}
+
+:root[data-paper='plain'] .paper {
+  background-image: none;
 }
 
 /* Alternative faces have real weights: no outline needed. */
@@ -121,7 +109,7 @@
    home indicator. */
 @media (max-width: 719px) {
   :root {
-    --tw-h: min(100px, 12vh);
+    --tw-body: min(100px, 12vh);
     --tw-gap: max(8px, env(safe-area-inset-bottom));
   }
 }
@@ -135,7 +123,7 @@
 html {
   background: var(--desk);
   /* Keyboard focus and in-page jumps never land under the typewriter. */
-  scroll-padding-bottom: calc(var(--tw-total) + 1rem);
+  scroll-padding-bottom: calc(var(--tw-strip) + 1rem);
   -webkit-text-size-adjust: 100%;
   /* Never fake a bold or italic the font doesn't have. */
   font-synthesis: none;
@@ -230,8 +218,17 @@ a:hover {
   min-height: 100vh;
   margin: 0 auto;
   padding: calc(var(--margin) * 0.6) var(--margin)
-    calc(var(--tw-total) + 2rem);
-  background: var(--paper);
+    calc(var(--tw-strip) + 3rem);
+  /* Folded letter paper: overlays from scripts/paper-textures.py, a warm
+     shadow/light at a few % alpha, so they suit every theme's paper. The
+     grain is two tiles of coprime sizes, so it doesn't visibly repeat. The
+     fold tile is one letter page (8.5 × 11), sized to the sheet's width:
+     two creases per page, folded in thirds. Even if every layer's darkest
+     pixel landed on the same spot, ink-red stays AA in every theme
+     (README, Paper). */
+  background: url('/paper/fold.webp') 0 0 / 100% auto repeat-y,
+    url('/paper/grain-a.webp') 0 0 / 128px repeat, url('/paper/grain-b.webp') 0 0 / 97px repeat,
+    var(--paper);
   box-shadow:
     0 0 0 1px rgb(60 45 20 / 0.06),
     0 10px 40px var(--paper-shadow);
@@ -605,17 +602,20 @@ a.taped:focus-visible {
 }
 
 /* —— Typewriter (src/typewriter; docs/typewriter-rig.md) ——
-   The whole machine, drawn from layered images and sized by --tw-h,
-   standing on the desk in front of the letter: the paper scrolls on behind
-   it. Layer boxes are set inline by Typewriter.tsx. */
+   A wide-carriage machine drawn from layered images, sized by --tw-body.
+   The strip is the desk below the roller: the paper has gone into the
+   machine, so nothing of it shows below the roller's top edge. Above that
+   edge the roller, lever, knobs and bell stand in front of the paper.
+   Layer boxes and the paper's edges (--pl, --pr, --pc) are set inline. */
 
 .typewriter {
   position: fixed;
   inset: auto 0 0;
   z-index: 10;
-  height: var(--tw-total);
+  height: var(--tw-strip);
+  background: var(--desk);
   pointer-events: none;
-  /* The plant may sit past a narrow window's edge; never scroll. */
+  /* The lever and knobs can reach past a narrow window's edges. */
   overflow-x: clip;
 }
 
@@ -625,12 +625,15 @@ a.taped:focus-visible {
   user-select: none;
 }
 
-.typewriter__machine {
+/* Zero-size anchors on the strip's top edge; layers hang off them. */
+.tw-origin {
   position: absolute;
-  bottom: var(--tw-gap);
-  z-index: 1;
-  /* A soft contact shadow on the desk and paper. */
-  filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.28));
+  top: 0;
+}
+
+.tw-body {
+  /* A soft contact shadow on the desk. */
+  filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.3));
 }
 
 .tw-carriage {
@@ -639,12 +642,16 @@ a.taped:focus-visible {
   will-change: transform;
 }
 
+.tw-roller-mid {
+  position: absolute;
+  background-repeat: repeat-x;
+}
+
 .tw-layer {
   position: absolute;
 }
 
-/* Half the machine's height, on the same baseline, just right of it
-   (left and height set inline). */
+/* On the desk beside the body, on its baseline (left and height inline). */
 .desk-plant {
   position: absolute;
   bottom: var(--tw-gap);
@@ -652,7 +659,7 @@ a.taped:focus-visible {
   transform-origin: 50% 100%;
 }
 
-/* Phones: no room beside the machine (and the sound button sits there). */
+/* Phones: no room beside the body (and the sound button sits there). */
 @media (max-width: 719px) {
   .typewriter .desk-plant {
     display: none;

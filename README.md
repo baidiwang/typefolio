@@ -79,6 +79,16 @@ typewriter). Inks on `--paper` (#fbf8f2):
 | `--ink-soft` | meta lines             | 9.5 : 1           |
 | `--ink-red`  | section labels, pen dividers, focus | 6.4 : 1 |
 
+**Paper.** The sheet is folded letter paper: fine grain plus two creases per
+letter-sized page (8.5 × 11, folded in thirds; the page scales with the
+sheet's width). The textures
+([`scripts/paper-textures.py`](scripts/paper-textures.py), `public/paper/`,
+15 KB) are seamless overlays of a warm shadow and a warm light at a few %
+alpha, so the paper stays warm white in every theme. The grain is two tiles
+of coprime sizes, so it doesn't visibly repeat. Worst case, with every
+layer's darkest pixel on the same spot, contrast on the textured paper stays
+at ink ≥ 14.2, ink-soft ≥ 7.6, ink-red ≥ 5.5 in every theme.
+
 ## Sections, links and sound
 
 - **Dividers** are a quick wavy line in red pen
@@ -89,15 +99,16 @@ typewriter). Inks on `--paper` (#fbf8f2):
   letterhead ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)); the
   letter's closing ends with the email address. The resume is
   `public/BaidiWangResume.pdf`.
-- **The typewriter** is a hand-drawn image split into layers (static body,
-  sliding carriage, turning knobs, ringing bell). The whole machine stands
-  at the bottom of the viewport in front of the letter, `min(220px, 26vh)`
-  tall (100 px on phones), with a plant beside it on desktop. Details:
+- **The typewriter** is a hand-drawn wide-carriage machine split into
+  layers (static body, sliding carriage, turning knobs, ringing bell). Its
+  roller spans the paper and the paper goes into it: below the roller there's
+  only the desk and the machine's body (`min(190px, 22.5vh)` tall, 100 px on
+  phones), with a plant beside it on desktop. Details:
   [`docs/typewriter-rig.md`](docs/typewriter-rig.md).
 - **Sound** is off by default. The round speaker button
   ([`SoundToggle.tsx`](src/components/SoundToggle.tsx)) toggles it
-  (`aria-pressed`): top-right on desktop, bottom-right beside the machine
-  on phones, clear of notches via `env(safe-area-inset-*)`.
+  (`aria-pressed`): top-right on desktop, bottom-right on the desk beside
+  the machine on phones, clear of notches via `env(safe-area-inset-*)`.
 
 ## How the reveal engine works
 
@@ -209,8 +220,10 @@ Because the controller emits from the same frame loop that moves the
 highlight, carriage and text can't drift apart, and compression speeds both
 up together. The typewriter also tells the controller where the paper
 emerges: the controller reads the height of the element marked
-`data-reveal-inset` (the desk scene, up to the top of the bell) and ends its
-trigger zone there. Rig details:
+`data-reveal-inset` (the desk strip, up to the roller's top edge) and ends
+its trigger zone there. The strip hides the paper below that edge, so lines
+of an element that are typed but haven't come out of the roller yet stay
+out of sight. Rig details:
 [`docs/typewriter-rig.md`](docs/typewriter-rig.md).
 
 **10. Keyboard.** Focusing a link inside unrevealed text completes that
@@ -227,8 +240,8 @@ flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
 ```
 /?theme=classic | hermes | cobalt     (default: valentine)
 /?font=courier | space | plex         (Courier Prime, Space Mono, IBM Plex Mono 500)
-/?paper=plain | grain | folded | crumpled   (default: plain)
-/?theme=hermes&font=plex&paper=grain
+/?paper=plain | grain                 (default: folded)
+/?theme=hermes&font=plex&paper=plain
 ```
 
 Themes only override CSS variables (`:root[data-theme=…]` in
@@ -243,16 +256,8 @@ alternative faces have real weights, so they drop Cutive's outline
 | hermes | walnut / ivory / seafoam | 17.6 | 9.4 | 6.9 |
 | cobalt | cobalt blue / white / cream | 18.9 | 10.1 | 6.5 |
 
-Ratios are on the paper (AA text needs 4.5).
-
-Paper textures ([`scripts/paper-textures.py`](scripts/paper-textures.py),
-`public/paper/`, 50 KB in all) are seamless black/white overlays at a few %
-alpha, so they work on every theme: **grain** (fine fibres), **folded**
-(grain plus two creases per letter-sized page, folded in thirds) and
-**crumpled** (grain plus soft crumple creases). Each is two tiles of coprime
-sizes, so the pattern doesn't visibly repeat. Worst case, with every layer's
-darkest pixel on the same spot, ink-red stays at 4.8 or more in every theme
-(ink ≥ 12.3, ink-soft ≥ 6.6). The sound button is a paper
+Ratios are on plain paper (AA text needs 4.5); see **Paper** above for the
+textured default. The sound button is a paper
 disc with an ink icon (17.8) or, when on, paper on red ink (6.4); its focus
 ring is a paper ring inside an ink ring, so it stands out on the charcoal
 desk and on the paper alike.

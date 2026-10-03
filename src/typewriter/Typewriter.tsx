@@ -5,27 +5,29 @@ import {
   KNOB_L_PIVOT,
   KNOB_R_PIVOT,
   LAYERS,
-  MACHINE,
   PLANT,
   ROLLER,
+  ROLLER_MID,
 } from './layers'
 import { playBell, playKey, playReturn } from './sound'
 
 /** Carriage travel per typed character, in reference px of the drawing. */
 const STEP = 1.4
-const MACHINE_H = MACHINE.y1 - MACHINE.y0
-/** The machine is centred on its roller, not on its lever-to-knob box. */
-const CENTRE_X = (ROLLER.x0 + ROLLER.x1) / 2
+const BODY = LAYERS.body
+/** How far the body reaches below the roller's top edge, in body heights:
+ *  the desk strip's height (index.css reads it as --tw-below). */
+const BELOW = (BODY.y + BODY.h - ROLLER.top) / BODY.h
 
 type Box = { x: number; y: number; w: number; h: number }
 
-/** Size/place in units of the machine's displayed height, var(--tw-h). */
-const u = (n: number) => `calc(var(--tw-h) * ${(n / MACHINE_H).toFixed(5)})`
+/** Reference px → css, in units of the body's displayed height, --tw-body. */
+const u = (n: number) => `calc(var(--tw-body) * ${(n / BODY.h).toFixed(5)})`
 
-/** Place a layer by its drawing coordinates, inside the machine box. */
-const at = ({ x, y, w, h }: Box): CSSProperties => ({
-  left: u(x - MACHINE.x0),
-  top: u(y - MACHINE.y0),
+/** Place a layer relative to an origin in the drawing; y is always measured
+ *  from the roller's top edge (the top of the strip). */
+const at = ({ x, y, w, h }: Box, originX: number): CSSProperties => ({
+  left: u(x - originX),
+  top: u(y - ROLLER.top),
   width: u(w),
   height: u(h),
 })
@@ -34,24 +36,28 @@ const at = ({ x, y, w, h }: Box): CSSProperties => ({
 const origin = (p: { x: number; y: number }, b: Box) =>
   `${(((p.x - b.x) / b.w) * 100).toFixed(2)}% ${(((p.y - b.y) / b.h) * 100).toFixed(2)}%`
 
-const MACHINE_STYLE: CSSProperties = {
-  width: u(MACHINE.x1 - MACHINE.x0),
-  height: 'var(--tw-h)',
-  left: `calc(50% - ${u(CENTRE_X - MACHINE.x0)})`,
+/** The roller's middle fills the paper's width between the two end slices. */
+const MID_STYLE: CSSProperties = {
+  left: `calc(var(--pl) + ${u(ROLLER.seamL - ROLLER.x0)})`,
+  width: `calc(var(--pr) - var(--pl) - ${u(ROLLER.seamL - ROLLER.x0)} - ${u(ROLLER.x1 - ROLLER.seamR)})`,
+  top: u(ROLLER_MID.y - ROLLER.top),
+  height: u(ROLLER_MID.h),
+  backgroundImage: `url('${ROLLER_MID.src}')`,
+  backgroundSize: `${u(ROLLER_MID.w)} 100%`,
 }
 
-/** The plant stands just right of the machine, at half its height. */
+/** The plant stands on the desk just right of the body, at half its height. */
 const PLANT_STYLE: CSSProperties = {
-  left: `calc(50% + ${u(MACHINE.x1 - CENTRE_X)} + 6px)`,
-  height: 'calc(var(--tw-h) * 0.5)',
+  left: `calc(var(--pc) + ${u(BODY.x + BODY.w - ROLLER.centreX)} + 6px)`,
+  height: 'calc(var(--tw-body) * 0.5)',
 }
 
 /**
- * The desk scene fixed to the bottom of the viewport: the whole typewriter,
- * drawn from layered images (see docs/typewriter-rig.md), standing on the
- * desk in front of the letter, with a plant beside it. The paper continues
- * behind it. The reveal controller treats the top of this scene
- * (`data-reveal-inset`: the bell's top) as the line where text appears.
+ * The desk scene fixed to the bottom of the viewport: a wide-carriage
+ * typewriter drawn from layered images (see docs/typewriter-rig.md). Its
+ * roller spans the paper, and the paper goes into it: below the roller's
+ * top edge there's only the desk (this strip) and the machine's body. That
+ * edge is where text appears (`data-reveal-inset`).
  *
  * Motion is imperative, driven by the reveal controller: the carriage
  * slides per character and returns at line end, the knobs turn on each line
@@ -59,24 +65,36 @@ const PLANT_STYLE: CSSProperties = {
  * Decorative only (aria-hidden, nothing focusable).
  */
 export function Typewriter() {
-  const machineRef = useRef<HTMLDivElement>(null)
+  const sceneRef = useRef<HTMLDivElement>(null)
+  const bodyRef = useRef<HTMLImageElement>(null)
   const carriageRef = useRef<HTMLDivElement>(null)
   const knobLRef = useRef<HTMLImageElement>(null)
   const knobRRef = useRef<HTMLImageElement>(null)
   const bellRef = useRef<HTMLImageElement>(null)
   const plantRef = useRef<HTMLImageElement>(null)
-  /** css px per reference px, from the machine's rendered height. */
+  /** css px per reference px, from the body's rendered height. */
   const scaleRef = useRef(1)
 
+  // The carriage spans the paper: track the paper's edges (--pl, --pr) and
+  // centre (--pc), in viewport px.
   useLayoutEffect(() => {
-    const machine = machineRef.current
-    if (!machine) return
+    const scene = sceneRef.current
+    const body = bodyRef.current
+    const paper = document.querySelector<HTMLElement>('.paper')
+    if (!scene || !body || !paper) return
+    document.documentElement.style.setProperty('--tw-below', BELOW.toFixed(4))
     const measure = () => {
-      scaleRef.current = machine.getBoundingClientRect().height / MACHINE_H
+      const r = paper.getBoundingClientRect()
+      scene.style.setProperty('--pl', `${r.left}px`)
+      scene.style.setProperty('--pr', `${r.right}px`)
+      scene.style.setProperty('--pc', `${(r.left + r.right) / 2}px`)
+      scaleRef.current = body.getBoundingClientRect().height / BODY.h
     }
     measure()
     const ro = new ResizeObserver(measure)
-    ro.observe(machine)
+    ro.observe(paper)
+    ro.observe(body)
+    ro.observe(document.documentElement)
     return () => ro.disconnect()
   }, [])
 
@@ -156,31 +174,41 @@ export function Typewriter() {
   }, [])
 
   return (
-    <div className="typewriter" data-reveal-inset="" aria-hidden="true">
-      <div ref={machineRef} className="typewriter__machine" style={MACHINE_STYLE}>
-        {/* Back to front: body, bell (on the frame, behind the roller), carriage. */}
-        <img className="tw-layer" src={LAYERS.body.src} style={at(LAYERS.body)} alt="" />
+    <div ref={sceneRef} className="typewriter" data-reveal-inset="" aria-hidden="true">
+      {/* Back to front: body and bell (static, centred under the paper),
+          then the carriage (slides). Each .tw-origin is a zero-size anchor. */}
+      <div className="tw-origin tw-body" style={{ left: 'var(--pc)' }}>
+        <img ref={bodyRef} className="tw-layer" src={BODY.src} style={at(BODY, ROLLER.centreX)} alt="" />
         <img
           ref={bellRef}
           className="tw-layer"
           src={LAYERS.bell.src}
-          style={{ ...at(LAYERS.bell), transformOrigin: origin(BELL_PIVOT, LAYERS.bell) }}
+          style={{
+            ...at(LAYERS.bell, ROLLER.centreX),
+            transformOrigin: origin(BELL_PIVOT, LAYERS.bell),
+          }}
           alt=""
         />
-        <div ref={carriageRef} className="tw-carriage">
-          <img className="tw-layer" src={LAYERS.carriage.src} style={at(LAYERS.carriage)} alt="" />
+      </div>
+      <div ref={carriageRef} className="tw-carriage">
+        <div className="tw-roller-mid" style={MID_STYLE} />
+        <div className="tw-origin" style={{ left: 'var(--pl)' }}>
+          <img className="tw-layer" src={LAYERS.rollerL.src} style={at(LAYERS.rollerL, ROLLER.x0)} alt="" />
           <img
             ref={knobLRef}
             className="tw-layer"
             src={LAYERS.knobL.src}
-            style={{ ...at(LAYERS.knobL), transformOrigin: origin(KNOB_L_PIVOT, LAYERS.knobL) }}
+            style={{ ...at(LAYERS.knobL, ROLLER.x0), transformOrigin: origin(KNOB_L_PIVOT, LAYERS.knobL) }}
             alt=""
           />
+        </div>
+        <div className="tw-origin" style={{ left: 'var(--pr)' }}>
+          <img className="tw-layer" src={LAYERS.rollerR.src} style={at(LAYERS.rollerR, ROLLER.x1)} alt="" />
           <img
             ref={knobRRef}
             className="tw-layer"
             src={LAYERS.knobR.src}
-            style={{ ...at(LAYERS.knobR), transformOrigin: origin(KNOB_R_PIVOT, LAYERS.knobR) }}
+            style={{ ...at(LAYERS.knobR, ROLLER.x1), transformOrigin: origin(KNOB_R_PIVOT, LAYERS.knobR) }}
             alt=""
           />
         </div>
