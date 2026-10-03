@@ -66,7 +66,7 @@ Hierarchy comes from size, caps and ink, never from tracking or weight:
 | Section labels | caps, red ink |
 | Project titles | 1.4em |
 | Inline labels (employer, short entries) | caps |
-| Meta lines (type, stack, P.S.) | `--ink-soft` |
+| Meta lines (type, stack) | `--ink-soft` |
 
 Body text is 17px on phones, 19px on desktop, in near-black ink. The default
 theme is **valentine** (warm white paper, charcoal desk, Olivetti-red
@@ -85,8 +85,8 @@ typewriter). Inks on `--paper` (#fbf8f2):
   mirrored after the third. Each one draws itself (stroke offset) when
   typing reaches it; static under reduced motion.
 - **Contact links** (Resume · Email · LinkedIn · GitHub) are printed in the
-  letterhead and typed again at the end, under the email
-  ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)). The resume is
+  letterhead ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)); the
+  letter's closing ends with the email address. The resume is
   `public/BaidiWangResume.pdf`.
 - **Sound** is off by default. The round speaker button in the top-right
   corner ([`SoundToggle.tsx`](src/components/SoundToggle.tsx)) toggles it

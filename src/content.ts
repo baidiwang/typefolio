@@ -52,17 +52,11 @@ export type OtherProject = {
   linkLabel?: string
 }
 
-export type ExperienceItem = {
-  org: string
-  role: string
-}
-
 export const site = {
   name: 'Baidi Wang',
   title: 'Design Engineer',
-  // From the old site's About Me (src/components/HomeInfo.jsx).
   intro:
-    'I’m a Design Engineer building AI interfaces and interactive web products.',
+    'I’m a Design Engineer building AI interfaces and interactive web products. I’ve built UX prototypes at Google and data visualizations at Axios, and right now I’m building an iOS app of my own.',
   links: {
     resume: { label: 'Resume', href: '/BaidiWangResume.pdf' },
     email: {
@@ -73,19 +67,15 @@ export const site = {
     linkedin: { label: 'LinkedIn', href: 'https://www.linkedin.com/in/abbeywang' },
     github: { label: 'GitHub', href: 'https://github.com/baidiwang' },
   },
-  /** The page ends like a letter. Placeholder copy. */
+  /** The page ends like a letter: the closing (ending in the email
+   *  address, linked), then the signature. */
   ending: {
-    closing: 'Thanks for reading all the way down. Write back anytime,',
+    closing:
+      'Thanks for reading to the bottom of the page! If you want to reach out, just write me back:',
     // TODO: becomes a handwritten SVG signature drawn with a stroke animation.
     signature: 'Baidi Wang',
-    ps: 'P.S. Every sound on this page is synthesized live in your browser. Turn on the speaker, top right, to hear it.',
   },
 } as const
-
-export const experience: ExperienceItem[] = [
-  { org: 'Google', role: 'UX Engineering contractor' },
-  { org: 'Axios', role: 'Data Visualization Engineer' },
-]
 
 export const featuredProjects: Project[] = [
   {
@@ -202,19 +192,59 @@ export const otherProjects: OtherProject[] = [
   },
 ]
 
-/**
- * Games & XR, collapsed to one line:
- * "I also make games and XR: Desolation Wanderer is on Steam, the rest is on Medium."
- */
-export const gamesNote = {
-  before: 'I also make games and XR: Desolation Wanderer is on ',
-  steam: { label: 'Steam', href: 'https://store.steampowered.com/app/4666960/desol/' },
-  middle: ', the rest is on ',
-  medium: {
-    label: 'Medium',
-    href: 'https://medium.com/@WangPortfolio/game-developmet-2cb0240c5d72',
+/** GAMES & 3D: full entries, after Selected work. */
+export const gameProjects: Project[] = [
+  {
+    id: 'little-helper',
+    title: 'Little Helper',
+    kind: 'Narrative Puzzle Game',
+    oneLiner:
+      'A narrative puzzle game where you play a spirit, possessing environmental objects to indirectly guide a little girl through space.',
+    role: '', // TODO
+    stack: ['Unity', 'C#'],
+    // TODO: the old "Details" link (baidiwang.github.io/memory-system/) was
+    // removed because it doesn't match this project.
+    links: {
+      writeup: 'https://medium.com/@WangPortfolio/game-developmet-2cb0240c5d72',
+    },
+    media: {
+      src: '/media/little-helper',
+      width: 720,
+      height: 382,
+      alt: 'Gameplay recording of Little Helper.',
+    },
   },
-  after: '.',
+  {
+    id: 'desol',
+    title: 'Desol',
+    kind: '3D Exploration Game',
+    oneLiner:
+      'A third-person desert exploration game where uncertainty is the core mechanic — navigate without a map using environmental wayfinding. Released on Steam.',
+    role: '', // TODO
+    stack: ['Unity', 'C#', 'ScriptableObject'],
+    links: {
+      live: 'https://store.steampowered.com/app/4666960/desol/',
+      liveLabel: 'Steam',
+    },
+    media: {
+      src: '/media/desol',
+      width: 720,
+      height: 398,
+      alt: 'Gameplay recording of Desol crossing the desert.',
+    },
+  },
+]
+
+/** One line under the games: "More XR experiments: A ↗ · B ↗". */
+export const xrExperiments = {
+  label: 'More XR experiments:',
+  links: [
+    {
+      title: 'Mixed Reality Cooking',
+      href: 'https://horizon.meta.com/shares/razQmQWo0sTLh5O2I6TLr9u0vKvz7Y',
+    },
+    { title: 'Spatial Jam', href: 'https://devpost.com/software/async-jam' },
+  ],
 }
 
 /** The main link for a project: where its media and title point. */
