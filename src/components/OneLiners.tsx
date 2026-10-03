@@ -9,7 +9,7 @@ export function OneLiners({ items }: { items: OtherProject[] }) {
       {items.map((item) => (
         <li key={item.id} id={item.id} className="one-liner">
           <Reveal className="one-liner__head">
-            <strong>{item.title}</strong>
+            <span className="label">{item.title}</span>
             <span className="project__kind"> — {item.kind}</span>
           </Reveal>
           <Reveal mode="lines">

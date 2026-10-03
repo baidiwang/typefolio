@@ -5,16 +5,19 @@
 :root {
   color-scheme: light;
 
-  /* Type: swap the face here. */
-  --font-type: 'Courier Prime', 'Courier New', 'Liberation Mono', ui-monospace, monospace;
+  /* Type: swap the face here. Cutive Mono has ONE weight and no italic, so
+     the whole design uses regular only (font-synthesis: none below) and
+     builds hierarchy from size, caps, letter spacing and ink colour. */
+  --font-type: 'Cutive Mono', 'Courier New', 'Liberation Mono', ui-monospace, monospace;
 
-  /* Paper and ink. Contrast on --paper (WCAG AA needs 4.5:1):
-     --ink 15.1:1 · --ink-soft 6.6:1 · --ink-red 6.5:1 */
+  /* Paper and ink. Cutive's strokes are thin, so body ink is near-black.
+     Contrast on --paper (WCAG AA needs 4.5:1):
+     --ink 16.6:1 · --ink-soft 8.9:1 · --ink-red 6.5:1 */
   --paper: #f6f0e1;
   --paper-shadow: rgb(60 45 20 / 0.18);
   --desk: #cbc2b0;
-  --ink: #1d1b18;
-  --ink-soft: #5a544b;
+  --ink: #121110;
+  --ink-soft: #46413a;
   --ink-red: #a3241b;
   --tape: rgb(238 228 196 / 0.72);
 
@@ -42,14 +45,14 @@
   --tw-focus: #efe7d2;
 }
 
-/* —— Design playground (dev only: see src/playground.ts) ——
-   ?theme=valentine|hermes|cobalt  ?font=cutive|space|plex
+/* —— Design playground (dev + preview deployments: src/playground.ts) ——
+   ?theme=valentine|hermes|cobalt  ?font=courier|space|plex
    Each theme only overrides tokens; the default look above is untouched.
    Contrast per theme is listed in the README (Design playground): text
    needs 4.5:1 on paper, focus rings 3:1 on what they're drawn over. */
 
 /* Olivetti-red typewriter, deep charcoal desk, warm white paper.
-   ink 16.2 · ink-soft 7.1 · ink-red 6.4 on paper; key focus 5.7 on body */
+   ink 17.8 · ink-soft 9.5 · ink-red 6.4 on paper; key focus 5.7 on body */
 :root[data-theme='valentine'] {
   --paper: #fbf8f2;
   --paper-shadow: rgb(0 0 0 / 0.45);
@@ -65,7 +68,7 @@
 }
 
 /* Seafoam typewriter, walnut desk, ivory paper.
-   ink 16.0 · ink-soft 7.0 · ink-red 6.9 on paper; key focus 9.2 on body */
+   ink 17.6 · ink-soft 9.4 · ink-red 6.9 on paper; key focus 9.2 on body */
 :root[data-theme='hermes'] {
   --paper: #fbf7ea;
   --paper-shadow: rgb(30 15 5 / 0.45);
@@ -80,7 +83,7 @@
 }
 
 /* Cobalt-blue desk, white paper, cream typewriter.
-   ink 17.2 · ink-soft 7.5 · ink-red 6.5 on paper; key focus 5.3 on body */
+   ink 18.9 · ink-soft 10.1 · ink-red 6.5 on paper; key focus 5.3 on body */
 :root[data-theme='cobalt'] {
   --paper: #ffffff;
   --paper-shadow: rgb(0 15 60 / 0.4);
@@ -95,8 +98,8 @@
   --tw-focus: #b3261e;
 }
 
-:root[data-font='cutive'] {
-  --font-type: 'Cutive Mono', 'Courier New', ui-monospace, monospace;
+:root[data-font='courier'] {
+  --font-type: 'Courier Prime', 'Courier New', ui-monospace, monospace;
 }
 
 :root[data-font='space'] {
@@ -127,20 +130,33 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Never fake a bold or italic the font doesn't have. */
+html {
+  font-synthesis: none;
+}
+
+h1,
+h2,
+h3,
+strong,
+b {
+  font-weight: 400;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
   background: var(--desk);
   color: var(--ink);
   font-family: var(--font-type);
-  font-size: 1rem;
+  font-size: 1.0625rem;
   line-height: var(--line);
   -webkit-font-smoothing: antialiased;
 }
 
 @media (min-width: 640px) {
   body {
-    font-size: 1.0625rem;
+    font-size: 1.1875rem;
   }
 }
 
@@ -224,11 +240,18 @@ h3 {
   margin: 0;
 }
 
+/* Section labels: caps, wide tracking, red ink (no bold). */
 h2 {
   margin: 0 0 1.2em;
+  color: var(--ink-red);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 700;
+  letter-spacing: 0.24em;
+}
+
+/* Inline labels (employer, short-entry titles): caps and tracking. */
+.label {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .divider {
@@ -247,9 +270,8 @@ h2 {
 }
 
 .letterhead__name {
-  font-size: 1.5em;
-  font-weight: 700;
-  letter-spacing: 0.2em;
+  font-size: 2em;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
 }
 
@@ -299,8 +321,9 @@ h2 {
 }
 
 .project__title {
-  font-size: 1.15em;
-  font-weight: 700;
+  font-size: 1.4em;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
 }
 
 .project__kind,
@@ -343,6 +366,20 @@ h2 {
 .taped--portrait {
   width: 62%;
   margin-inline: auto;
+}
+
+/* Stacked layout: a tall portrait clip would push its project's text off
+   the first screen. Cap its height; width follows the aspect ratio. */
+@media (max-width: 719px) {
+  .taped.taped--portrait {
+    width: max-content;
+  }
+
+  .taped.taped--portrait video,
+  .taped.taped--portrait img {
+    width: auto;
+    height: min(40vh, 320px);
+  }
 }
 
 .taped video,
@@ -399,8 +436,8 @@ a.taped:focus-visible {
 /* Placeholder until the handwritten SVG signature lands. */
 .ending__signature {
   margin: 1.2em 0 0.4em !important;
-  font-size: 1.4em;
-  font-style: italic;
+  font-size: 1.6em;
+  letter-spacing: 0.04em;
 }
 
 .ending__ps {
@@ -552,8 +589,7 @@ a.taped:focus-visible {
   background: transparent;
   color: var(--ink);
   font-family: var(--font-type);
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
