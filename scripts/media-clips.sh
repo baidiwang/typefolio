@@ -12,4 +12,6 @@ CLIPS=(
   "breadcrumb|breadcrumb.gif|0|||720|23|32"
   "look-closer|look-closer.gif|0|||720|24|33"
   "trustpath|trustPath.gif|0|||720|24|33"
+  "little-helper|little-helpers.gif|0|||720|24|33"
+  "desol|desol.gif|0|||720|24|33"
 )

@@ -1,17 +1,11 @@
-import { ContactLinks } from './components/ContactLinks'
+import { Fragment } from 'react'
 import { Divider } from './components/Divider'
 import { ExternalLink } from './components/ExternalLink'
 import { Letterhead } from './components/Letterhead'
 import { OneLiners } from './components/OneLiners'
 import { Project } from './components/Project'
 import { SoundToggle } from './components/SoundToggle'
-import {
-  experience,
-  featuredProjects,
-  gamesNote,
-  otherProjects,
-  site,
-} from './content'
+import { featuredProjects, gameProjects, otherProjects, site, xrExperiments } from './content'
 import { useHashScroll } from './hooks/useHashScroll'
 import { Reveal } from './reveal/Reveal'
 import { Typewriter } from './typewriter/Typewriter'
@@ -48,17 +42,22 @@ export default function App() {
 
           <Divider variant={1} />
 
-          <section aria-labelledby="experience-heading">
-            <Reveal as="h2" id="experience-heading">
-              Experience
+          <section aria-labelledby="games-heading">
+            <Reveal as="h2" id="games-heading">
+              Games &amp; 3D
             </Reveal>
-            <ul className="experience">
-              {experience.map((item) => (
-                <Reveal as="li" key={item.org}>
-                  <span className="label">{item.org}</span> — {item.role}
-                </Reveal>
+            {gameProjects.map((project, i) => (
+              <Project key={project.id} project={project} index={i} />
+            ))}
+            <Reveal className="xr-note">
+              {xrExperiments.label}{' '}
+              {xrExperiments.links.map((link, i) => (
+                <Fragment key={link.href}>
+                  {i > 0 && <span aria-hidden="true"> · </span>}
+                  <ExternalLink href={link.href}>{link.title} ↗</ExternalLink>
+                </Fragment>
               ))}
-            </ul>
+            </Reveal>
           </section>
 
           <Divider variant={2} />
@@ -72,29 +71,13 @@ export default function App() {
 
           <Divider variant={3} />
 
-          <Reveal mode="lines" className="games-note">
-            {gamesNote.before}
-            <ExternalLink href={gamesNote.steam.href}>{gamesNote.steam.label}</ExternalLink>
-            {gamesNote.middle}
-            <ExternalLink href={gamesNote.medium.href}>{gamesNote.medium.label}</ExternalLink>
-            {gamesNote.after}
-          </Reveal>
-
-          <Divider variant={4} />
-
-          {/* The page ends like a letter. */}
+          {/* The page ends like a letter: closing, then the signature. */}
           <footer className="ending">
-            <Reveal mode="lines">{site.ending.closing}</Reveal>
-            <Reveal className="ending__signature">{site.ending.signature}</Reveal>
-            <Reveal className="ending__email">
+            <Reveal mode="lines">
+              {site.ending.closing}{' '}
               <a href={site.links.email.href}>{site.links.email.display}</a>
             </Reveal>
-            <Reveal className="ending__links">
-              <ContactLinks />
-            </Reveal>
-            <Reveal mode="lines" className="ending__ps">
-              {site.ending.ps}
-            </Reveal>
+            <Reveal className="ending__signature">{site.ending.signature}</Reveal>
           </footer>
         </main>
       </div>

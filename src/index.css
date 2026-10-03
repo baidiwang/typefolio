@@ -306,14 +306,9 @@ h2 {
 
 /* —— Lists —— */
 
-.experience,
 .one-liners {
   padding: 0;
   list-style: none;
-}
-
-.experience li + li {
-  margin-top: 0.4em;
 }
 
 .one-liner {
@@ -355,7 +350,8 @@ h2 {
 
 @media (min-width: 720px) {
   .project {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    /* Media about 55% of the content width, text about 45%. */
+    grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
     grid-template-rows: auto 1fr;
     grid-template-areas:
       'media head'
@@ -408,20 +404,21 @@ h2 {
 }
 
 .taped--portrait {
-  width: 62%;
+  width: max-content;
   margin-inline: auto;
 }
 
-/* Stacked layout: a tall portrait clip would push its project's text off
-   the first screen. Cap its height; width follows the aspect ratio. */
-@media (max-width: 719px) {
-  .taped.taped--portrait {
-    width: max-content;
-  }
+/* Portrait clips are height-capped (width follows the aspect ratio), so a
+   tall phone recording never towers over its text. */
+.taped.taped--portrait video,
+.taped.taped--portrait img {
+  width: auto;
+  height: min(56vh, 440px);
+}
 
+@media (max-width: 719px) {
   .taped.taped--portrait video,
   .taped.taped--portrait img {
-    width: auto;
     height: min(40vh, 320px);
   }
 }
@@ -467,8 +464,8 @@ a.taped:focus-visible {
 
 /* —— Ending: a letter's sign-off —— */
 
-.games-note {
-  margin: 0 !important;
+.xr-note {
+  margin: -1.6em 0 0 !important;
 }
 
 .ending p {
@@ -481,15 +478,6 @@ a.taped:focus-visible {
   font-size: 1.6em;
 }
 
-/* Email and the contact line read as one block. */
-.ending__email {
-  margin-bottom: 0.15em !important;
-}
-
-.ending__ps {
-  margin-top: 2em !important;
-  color: var(--ink-soft);
-}
 
 @media (prefers-reduced-motion: reduce) {
   .taped {
