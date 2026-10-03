@@ -66,7 +66,7 @@ So when you swap in new artwork:
 3. Links come from `site.links` in `src/content.ts`.
 
 Each link gets a 10 px larger invisible touch area (`.keycap::before`), a
-dashed red focus ring, and the pressed-key animation (`.keycap:active` plus
+focus ring in `--tw-focus` (chosen per theme to contrast with the typewriter body), and the pressed-key animation (`.keycap:active` plus
 `.is-pressed` on the SVG group). Under reduced motion the press is shown
 without movement.
 

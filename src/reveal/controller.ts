@@ -53,7 +53,7 @@ type Job = {
   state: 'hidden' | 'queued' | 'active' | 'done'
 }
 
-type Watcher = (instant: boolean) => void
+type StartHook = (instant: boolean) => void
 
 // —— Pace ——————————————————————————————————————————————————————————————
 /** Default pace for typed characters. */
@@ -71,7 +71,7 @@ class RevealController {
   private jobs = new Map<HTMLElement, Job>()
   private queue: Job[] = []
   private active: Job | null = null
-  private watchers = new Map<Element, Watcher>()
+  private startHooks = new Map<Element, StartHook>()
   private listeners = new Set<Listener>()
 
   private entryObserver: IntersectionObserver | null = null
@@ -151,33 +151,33 @@ class RevealController {
   }
 
   /**
-   * Call `onReveal` once when `el` first enters the view (instant=false), or
-   * immediately if it's already on screen / above it (instant=true).
+   * Call `hook` once, when the registered element `el` starts typing
+   * (instant=false), or when it's revealed without being typed: scrolled
+   * past, focused, reduced motion, not registered at all (instant=true).
+   * Taped photos use this to stick on exactly when their title starts.
    */
-  watch(el: Element, onReveal: Watcher): () => void {
-    if (!this.motionEnabled) {
-      onReveal(true)
+  whenStarts(el: Element, hook: StartHook): () => void {
+    const job = this.jobs.get(el as HTMLElement)
+    if (!job || job.state === 'done' || job.state === 'active') {
+      hook(job?.state !== 'active')
       return () => {}
     }
-    if (el.getBoundingClientRect().top < this.triggerLine()) {
-      onReveal(true)
-      return () => {}
-    }
-    this.watchers.set(el, onReveal)
-    this.entryObserver?.observe(el)
+    this.startHooks.set(el, hook)
     return () => {
-      this.watchers.delete(el)
-      this.entryObserver?.unobserve(el)
+      this.startHooks.delete(el)
     }
+  }
+
+  private fireStartHook(el: Element, instant: boolean) {
+    const hook = this.startHooks.get(el)
+    if (!hook) return
+    this.startHooks.delete(el)
+    hook(instant)
   }
 
   /** Reveal everything now (reduced motion switched on, tests, etc.). */
   flushAll() {
     for (const job of this.jobs.values()) this.complete(job)
-    for (const [el, watcher] of this.watchers) {
-      this.watchers.delete(el)
-      watcher(true)
-    }
     this.queue = []
     this.active = null
   }
@@ -231,12 +231,6 @@ class RevealController {
       for (const job of this.jobs.values()) {
         if (job.state !== 'done' && job.el.contains(target)) this.complete(job)
       }
-      for (const [el, watcher] of this.watchers) {
-        if (el.contains(target)) {
-          this.watchers.delete(el)
-          watcher(true)
-        }
-      }
     })
   }
 
@@ -273,7 +267,6 @@ class RevealController {
       if (job.state === 'hidden') this.entryObserver.observe(job.el)
       if (job.state === 'queued' || job.state === 'active') this.passObserver.observe(job.el)
     }
-    for (const el of this.watchers.keys()) this.entryObserver.observe(el)
   }
 
   private onEntries(entries: IntersectionObserverEntry[]) {
@@ -283,12 +276,6 @@ class RevealController {
       const el = entry.target as HTMLElement
       this.entryObserver?.unobserve(el)
       const above = entry.boundingClientRect.bottom <= 0
-
-      const watcher = this.watchers.get(el)
-      if (watcher) {
-        this.watchers.delete(el)
-        watcher(above)
-      }
 
       const job = this.jobs.get(el)
       if (!job || job.state !== 'hidden') continue
@@ -380,6 +367,7 @@ class RevealController {
       this.ensureLines(next)
       this.active = next
       this.emit({ type: 'start', element: next.el, mode: next.options.mode })
+      this.fireStartHook(next.el, false)
       return next
     }
     return null
@@ -459,6 +447,7 @@ class RevealController {
     job.state = 'done'
     job.offset = job.map.length
     show(job.range)
+    this.fireStartHook(job.el, true)
     this.passObserver?.unobserve(job.el)
     this.entryObserver?.unobserve(job.el)
     if (this.active === job) this.active = null
