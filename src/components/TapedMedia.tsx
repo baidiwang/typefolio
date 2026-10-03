@@ -7,6 +7,8 @@ type Props = {
   media: ProjectMedia
   href?: string
   title: string
+  /** id of the project's title: the photo sticks on when it starts typing. */
+  titleId: string
   /** Rotation in degrees, so neighbouring photos don't sit identically. */
   tilt: number
 }
@@ -15,18 +17,25 @@ type Props = {
  * A screen recording "taped" to the paper. Plays only while in view; under
  * reduced motion only the poster frame is shown.
  */
-export function TapedMedia({ media, href, title, tilt }: Props) {
+export function TapedMedia({ media, href, title, titleId, tilt }: Props) {
   const reduced = usePrefersReducedMotion()
   const videoRef = useRef<HTMLVideoElement>(null)
   const frameRef = useRef<HTMLElement & HTMLAnchorElement>(null)
 
-  // "Stuck on" when its project enters view. Doesn't wait for typing. Set
-  // before first paint so a below-the-fold photo never flashes in.
+  // Hidden before first paint (only when text reveal is on, so the photo
+  // can never be stranded invisible)...
   useLayoutEffect(() => {
     const el = frameRef.current
-    if (!el) return
-    el.dataset.stick = 'pending'
-    return reveal.watch(el, (instant) => {
+    if (el && reveal.textEnabled) el.dataset.stick = 'pending'
+  }, [])
+
+  // ...then "stuck on" the moment the project's title starts typing. A plain
+  // effect, so it runs after every <Reveal> on the page has registered.
+  useEffect(() => {
+    const el = frameRef.current
+    const titleEl = document.getElementById(titleId)
+    if (!el || !titleEl) return
+    return reveal.whenStarts(titleEl, (instant) => {
       if (instant) {
         el.dataset.stick = 'done'
         return
@@ -37,7 +46,7 @@ export function TapedMedia({ media, href, title, tilt }: Props) {
         once: true,
       })
     })
-  }, [])
+  }, [titleId])
 
   useEffect(() => {
     const video = videoRef.current

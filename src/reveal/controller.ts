@@ -21,7 +21,7 @@ export type RevealMode = 'type' | 'lines'
 export type RevealOptions = {
   /** 'type' = character by character; 'lines' = one visual line per step. */
   mode: RevealMode
-  /** Type this element on page load even though it's already in view. */
+  /** Always type this element on load (the intro), even if it isn't in view yet. */
   onLoad?: boolean
   /** Nominal duration for the whole element (ms), instead of the default pace. */
   duration?: number
@@ -53,7 +53,7 @@ type Job = {
   state: 'hidden' | 'queued' | 'active' | 'done'
 }
 
-type Watcher = (instant: boolean) => void
+type StartHook = (instant: boolean) => void
 
 // —— Pace ——————————————————————————————————————————————————————————————
 /** Default pace for typed characters. */
@@ -64,12 +64,14 @@ const MAX_LINE_MS = 600
 const MS_PER_LINE = 130
 /** Whatever is queued always finishes within this long after the last join. */
 const QUEUE_BUDGET_MS = 1200
+/** The first screen (intro + everything in view below it) finishes within this. */
+const LOAD_BUDGET_MS = 1500
 
 class RevealController {
   private jobs = new Map<HTMLElement, Job>()
   private queue: Job[] = []
   private active: Job | null = null
-  private watchers = new Map<Element, Watcher>()
+  private startHooks = new Map<Element, StartHook>()
   private listeners = new Set<Listener>()
 
   private entryObserver: IntersectionObserver | null = null
@@ -83,6 +85,10 @@ class RevealController {
   /** Accumulated (speed-scaled) time not yet spent on steps. */
   private clock = 0
   private deadline = 0
+  /** Budget applied when fonts become ready (the load batch's budget). */
+  private startBudget = QUEUE_BUDGET_MS
+  /** Elements in view at load, collected during the first commit. */
+  private loadBatch: Job[] = []
   private initialized = false
 
   // —— Public API ————————————————————————————————————————————————————
@@ -113,48 +119,65 @@ class RevealController {
     const job: Job = { el, options, map, range, offset: 0, lineStarts: null, state: 'hidden' }
     this.jobs.set(el, job)
 
-    // Already above the platen line at registration (i.e. visible on load):
-    // leave it alone, unless it's the one element typed on load.
-    if (!options.onLoad && el.getBoundingClientRect().top < this.triggerLine()) {
-      job.state = 'done'
-      return () => this.unregister(el)
-    }
-
+    // Hidden before first paint. Typewriter logic: nothing may be visible
+    // before the line above it has been typed, so text that's already in
+    // view at load isn't left showing; it joins the load batch and is typed
+    // after the intro, in document order.
     this.setHiddenFrom(job, 0)
     hide(range)
-    if (options.onLoad) this.enqueue([job])
-    else this.entryObserver?.observe(el)
+    if (options.onLoad || el.getBoundingClientRect().top < this.triggerLine()) {
+      this.addToLoadBatch(job)
+    } else {
+      this.entryObserver?.observe(el)
+    }
     return () => this.unregister(el)
   }
 
   /**
-   * Call `onReveal` once when `el` first enters the view (instant=false), or
-   * immediately if it's already on screen / above it (instant=true).
+   * All registrations from the first React commit happen in the same task;
+   * flush them as one batch in a microtask, with the first-screen budget.
    */
-  watch(el: Element, onReveal: Watcher): () => void {
-    if (!this.motionEnabled) {
-      onReveal(true)
+  private addToLoadBatch(job: Job) {
+    job.state = 'queued'
+    if (this.loadBatch.length === 0) {
+      queueMicrotask(() => {
+        // StrictMode registers twice; keep only the live job per element.
+        const batch = this.loadBatch.filter((j) => this.jobs.get(j.el) === j)
+        this.loadBatch = []
+        if (batch.length) this.enqueue(batch, LOAD_BUDGET_MS)
+      })
+    }
+    this.loadBatch.push(job)
+  }
+
+  /**
+   * Call `hook` once, when the registered element `el` starts typing
+   * (instant=false), or when it's revealed without being typed: scrolled
+   * past, focused, reduced motion, not registered at all (instant=true).
+   * Taped photos use this to stick on exactly when their title starts.
+   */
+  whenStarts(el: Element, hook: StartHook): () => void {
+    const job = this.jobs.get(el as HTMLElement)
+    if (!job || job.state === 'done' || job.state === 'active') {
+      hook(job?.state !== 'active')
       return () => {}
     }
-    if (el.getBoundingClientRect().top < this.triggerLine()) {
-      onReveal(true)
-      return () => {}
-    }
-    this.watchers.set(el, onReveal)
-    this.entryObserver?.observe(el)
+    this.startHooks.set(el, hook)
     return () => {
-      this.watchers.delete(el)
-      this.entryObserver?.unobserve(el)
+      this.startHooks.delete(el)
     }
+  }
+
+  private fireStartHook(el: Element, instant: boolean) {
+    const hook = this.startHooks.get(el)
+    if (!hook) return
+    this.startHooks.delete(el)
+    hook(instant)
   }
 
   /** Reveal everything now (reduced motion switched on, tests, etc.). */
   flushAll() {
     for (const job of this.jobs.values()) this.complete(job)
-    for (const [el, watcher] of this.watchers) {
-      this.watchers.delete(el)
-      watcher(true)
-    }
     this.queue = []
     this.active = null
   }
@@ -179,8 +202,9 @@ class RevealController {
     document.fonts.ready.then(() => {
       this.fontsReady = true
       this.invalidateLines()
-      // Anything queued while fonts loaded (the intro) gets its full budget.
-      this.deadline = performance.now() + QUEUE_BUDGET_MS
+      // Anything queued while fonts loaded (the first screen) gets its full
+      // budget from the moment typing can actually start.
+      this.deadline = performance.now() + this.startBudget
       this.kick()
     })
     document.fonts.addEventListener('loadingdone', () => this.invalidateLines())
@@ -206,12 +230,6 @@ class RevealController {
       const target = event.target as Node
       for (const job of this.jobs.values()) {
         if (job.state !== 'done' && job.el.contains(target)) this.complete(job)
-      }
-      for (const [el, watcher] of this.watchers) {
-        if (el.contains(target)) {
-          this.watchers.delete(el)
-          watcher(true)
-        }
       }
     })
   }
@@ -246,10 +264,9 @@ class RevealController {
     })
 
     for (const job of this.jobs.values()) {
-      if (job.state === 'hidden' && !job.options.onLoad) this.entryObserver.observe(job.el)
+      if (job.state === 'hidden') this.entryObserver.observe(job.el)
       if (job.state === 'queued' || job.state === 'active') this.passObserver.observe(job.el)
     }
-    for (const el of this.watchers.keys()) this.entryObserver.observe(el)
   }
 
   private onEntries(entries: IntersectionObserverEntry[]) {
@@ -259,12 +276,6 @@ class RevealController {
       const el = entry.target as HTMLElement
       this.entryObserver?.unobserve(el)
       const above = entry.boundingClientRect.bottom <= 0
-
-      const watcher = this.watchers.get(el)
-      if (watcher) {
-        this.watchers.delete(el)
-        watcher(above)
-      }
 
       const job = this.jobs.get(el)
       if (!job || job.state !== 'hidden') continue
@@ -276,7 +287,7 @@ class RevealController {
 
   // —— Queue ———————————————————————————————————————————————————————————
 
-  private enqueue(jobs: Job[]) {
+  private enqueue(jobs: Job[], budget = QUEUE_BUDGET_MS) {
     for (const job of jobs) {
       job.state = 'queued'
       this.passObserver?.observe(job.el)
@@ -289,7 +300,8 @@ class RevealController {
     // Compression: whenever something joins, everything outstanding must
     // finish within the budget from *now*. The speed itself is recomputed
     // every frame from the remaining work (see tick).
-    this.deadline = performance.now() + QUEUE_BUDGET_MS
+    this.deadline = performance.now() + budget
+    if (!this.fontsReady) this.startBudget = budget
     this.kick()
   }
 
@@ -355,6 +367,7 @@ class RevealController {
       this.ensureLines(next)
       this.active = next
       this.emit({ type: 'start', element: next.el, mode: next.options.mode })
+      this.fireStartHook(next.el, false)
       return next
     }
     return null
@@ -434,6 +447,7 @@ class RevealController {
     job.state = 'done'
     job.offset = job.map.length
     show(job.range)
+    this.fireStartHook(job.el, true)
     this.passObserver?.unobserve(job.el)
     this.entryObserver?.unobserve(job.el)
     if (this.active === job) this.active = null

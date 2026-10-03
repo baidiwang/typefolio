@@ -11,7 +11,7 @@ import {
 import { site } from '../content'
 import { reveal } from '../reveal/controller'
 import { playBell, playKey, playReturn, setSoundEnabled } from './sound'
-import { NAV_KEYS, RIG_VIEWBOX, type NavKey } from './rig'
+import { DESKTOP_VIEWBOX, NAV_KEYS, type NavKey } from './rig'
 import { TypewriterRig } from './TypewriterRig'
 
 /** Carriage travel per typed character, in SVG user units. */
@@ -87,7 +87,7 @@ export function Typewriter() {
         `${keys.x - pad} ${top} ${keys.width + pad * 2} ${keys.y + keys.height + 14 - top}`,
       )
     } else {
-      const { x, y, width, height } = RIG_VIEWBOX
+      const { x, y, width, height } = DESKTOP_VIEWBOX
       svg.setAttribute('viewBox', `${x} ${y} ${width} ${height}`)
     }
     measureKeys()

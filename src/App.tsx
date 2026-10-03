@@ -1,14 +1,14 @@
 import { Divider } from './components/Divider'
+import { ExternalLink } from './components/ExternalLink'
 import { Letterhead } from './components/Letterhead'
 import { OneLiners } from './components/OneLiners'
 import { Project } from './components/Project'
 import {
   experience,
   featuredProjects,
-  gameProjects,
+  gamesNote,
   otherProjects,
   site,
-  xrProjects,
 } from './content'
 import { useHashScroll } from './hooks/useHashScroll'
 import { Reveal } from './reveal/Reveal'
@@ -33,6 +33,18 @@ export default function App() {
 
           <Divider />
 
+
+          <section aria-labelledby="work-heading">
+            <Reveal as="h2" id="work-heading">
+              Selected work
+            </Reveal>
+            {featuredProjects.map((project, i) => (
+              <Project key={project.id} project={project} index={i} />
+            ))}
+          </section>
+
+          <Divider />
+
           <section aria-labelledby="experience-heading">
             <Reveal as="h2" id="experience-heading">
               Experience
@@ -48,17 +60,6 @@ export default function App() {
 
           <Divider />
 
-          <section aria-labelledby="work-heading">
-            <Reveal as="h2" id="work-heading">
-              Selected work
-            </Reveal>
-            {featuredProjects.map((project, i) => (
-              <Project key={project.id} project={project} index={i} />
-            ))}
-          </section>
-
-          <Divider />
-
           <section aria-labelledby="other-heading">
             <Reveal as="h2" id="other-heading">
               Other
@@ -68,22 +69,25 @@ export default function App() {
 
           <Divider />
 
-          <section aria-labelledby="games-heading">
-            <Reveal as="h2" id="games-heading">
-              Games &amp; XR
-            </Reveal>
-            {gameProjects.map((project, i) => (
-              <Project key={project.id} project={project} index={i} />
-            ))}
-            <OneLiners items={xrProjects} />
-          </section>
+          <Reveal mode="lines" className="games-note">
+            {gamesNote.before}
+            <ExternalLink href={gamesNote.steam.href}>{gamesNote.steam.label}</ExternalLink>
+            {gamesNote.middle}
+            <ExternalLink href={gamesNote.medium.href}>{gamesNote.medium.label}</ExternalLink>
+            {gamesNote.after}
+          </Reveal>
 
           <Divider />
 
-          <footer className="signature">
-            <Reveal>{site.signature}</Reveal>
+          {/* The page ends like a letter. */}
+          <footer className="ending">
+            <Reveal mode="lines">{site.ending.closing}</Reveal>
+            <Reveal className="ending__signature">{site.ending.signature}</Reveal>
             <Reveal>
               <a href={site.links.email.href}>{site.links.email.display}</a>
+            </Reveal>
+            <Reveal mode="lines" className="ending__ps">
+              {site.ending.ps}
             </Reveal>
           </footer>
         </main>

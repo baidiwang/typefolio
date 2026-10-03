@@ -22,10 +22,12 @@
   --margin: clamp(1.25rem, 6vw, 4.5rem);
   --line: 1.6;
 
-  /* Height of the fixed typewriter at each breakpoint. The rig is 5:1, so
-     20vw of height fills the width. The paper's bottom padding and the
-     scroll padding both use it, so the last line clears the platen. */
-  --typewriter-height: min(20vw, 220px, 30vh);
+  /* Height of the fixed typewriter at each breakpoint. Desktop shows the
+     rig's 1400x240 crop (DESKTOP_VIEWBOX), so 240/1400 of the width fills
+     it edge to edge; capped at 160px (~18% of a 900px viewport). The
+     paper's bottom padding and the scroll padding both use it, so the last
+     line clears the platen. */
+  --typewriter-height: min(calc(100vw * 240 / 1400), 160px, 30vh);
 
   /* Typewriter colours (used by the placeholder rig). */
   --tw-body: #27322c;
@@ -34,6 +36,75 @@
   --tw-platen: #141414;
   --tw-key: #efe7d2;
   --tw-key-edge: #3a3a34;
+  /* Keycap focus ring: drawn over the typewriter body, not the paper, so it
+     must contrast with --tw-body (3:1 for focus indicators). Cream on the
+     green body: 10.8:1. (Red ink here would only be 1.8:1.) */
+  --tw-focus: #efe7d2;
+}
+
+/* —— Design playground (dev only: see src/playground.ts) ——
+   ?theme=valentine|hermes|cobalt  ?font=cutive|space|plex
+   Each theme only overrides tokens; the default look above is untouched.
+   Contrast per theme is listed in the README (Design playground): text
+   needs 4.5:1 on paper, focus rings 3:1 on what they're drawn over. */
+
+/* Olivetti-red typewriter, deep charcoal desk, warm white paper.
+   ink 16.2 · ink-soft 7.1 · ink-red 6.4 on paper; key focus 5.7 on body */
+:root[data-theme='valentine'] {
+  --paper: #fbf8f2;
+  --paper-shadow: rgb(0 0 0 / 0.45);
+  --desk: #2b2a2c;
+  --ink-red: #b01e2f;
+  --tw-body: #c8202e;
+  --tw-body-dark: #8e1520;
+  --tw-chrome: #cfcbc2;
+  --tw-platen: #1a1a1a;
+  --tw-key: #f5f0e6;
+  --tw-key-edge: #3b2526;
+  --tw-focus: #ffffff;
+}
+
+/* Seafoam typewriter, walnut desk, ivory paper.
+   ink 16.0 · ink-soft 7.0 · ink-red 6.9 on paper; key focus 9.2 on body */
+:root[data-theme='hermes'] {
+  --paper: #fbf7ea;
+  --paper-shadow: rgb(30 15 5 / 0.45);
+  --desk: #5b3a29;
+  --tw-body: #8fc9b9;
+  --tw-body-dark: #6aa796;
+  --tw-chrome: #c0beb4;
+  --tw-platen: #1c2422;
+  --tw-key: #f7f3e8;
+  --tw-key-edge: #2e4a43;
+  --tw-focus: #1d1b18;
+}
+
+/* Cobalt-blue desk, white paper, cream typewriter.
+   ink 17.2 · ink-soft 7.5 · ink-red 6.5 on paper; key focus 5.3 on body */
+:root[data-theme='cobalt'] {
+  --paper: #ffffff;
+  --paper-shadow: rgb(0 15 60 / 0.4);
+  --desk: #0047ab;
+  --ink-red: #b3261e;
+  --tw-body: #efe6cf;
+  --tw-body-dark: #d6cab0;
+  --tw-chrome: #8e8c84;
+  --tw-platen: #1b1b1b;
+  --tw-key: #ffffff;
+  --tw-key-edge: #23345c;
+  --tw-focus: #b3261e;
+}
+
+:root[data-font='cutive'] {
+  --font-type: 'Cutive Mono', 'Courier New', ui-monospace, monospace;
+}
+
+:root[data-font='space'] {
+  --font-type: 'Space Mono', 'Courier New', ui-monospace, monospace;
+}
+
+:root[data-font='plex'] {
+  --font-type: 'IBM Plex Mono', 'Courier New', ui-monospace, monospace;
 }
 
 /* Mobile: a thin strip (platen edge + key row), at most 15% of the viewport. */
@@ -132,7 +203,7 @@ a:hover {
   width: min(100%, calc(var(--measure) + 2 * var(--margin)));
   min-height: 100vh;
   margin: 0 auto;
-  padding: calc(var(--margin) * 0.9) var(--margin)
+  padding: calc(var(--margin) * 0.6) var(--margin)
     calc(var(--typewriter-height) + 3rem);
   background: var(--paper);
   box-shadow:
@@ -154,14 +225,14 @@ h3 {
 }
 
 h2 {
-  margin: 0 0 1.6em;
+  margin: 0 0 1.2em;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-weight: 700;
 }
 
 .divider {
-  margin: 3.2em 0 !important;
+  margin: 2em 0 !important;
   text-align: center;
   letter-spacing: 0.4em;
 }
@@ -169,8 +240,8 @@ h2 {
 /* —— Letterhead —— */
 
 .letterhead {
-  padding-bottom: 1.6em;
-  margin-bottom: 3.2em;
+  padding-bottom: 1.2em;
+  margin-bottom: 2em;
   border-bottom: 1px solid var(--ink);
   text-align: center;
 }
@@ -183,15 +254,7 @@ h2 {
 }
 
 .letterhead__title {
-  margin: 0.2em 0 0.8em;
-}
-
-.letterhead__contact {
-  color: var(--ink-soft);
-}
-
-.letterhead__contact a {
-  color: var(--ink);
+  margin: 0.2em 0 0;
 }
 
 .intro {
@@ -247,7 +310,7 @@ h2 {
 }
 
 .project__kind {
-  margin-bottom: 1em;
+  margin-bottom: 0.6em;
 }
 
 .project__links {
@@ -323,8 +386,26 @@ a.taped:focus-visible {
 
 /* —— Signature —— */
 
-.signature p {
-  margin: 0 0 0.4em;
+/* —— Ending: a letter's sign-off —— */
+
+.games-note {
+  margin: 0 !important;
+}
+
+.ending p {
+  margin: 0 0 0.6em;
+}
+
+/* Placeholder until the handwritten SVG signature lands. */
+.ending__signature {
+  margin: 1.2em 0 0.4em !important;
+  font-size: 1.4em;
+  font-style: italic;
+}
+
+.ending__ps {
+  margin-top: 2em !important;
+  color: var(--ink-soft);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -394,7 +475,7 @@ a.taped:focus-visible {
 .typewriter__machine {
   position: relative;
   height: 100%;
-  aspect-ratio: 5 / 1;
+  aspect-ratio: 1400 / 240;
   max-width: 100%;
 }
 
@@ -497,7 +578,7 @@ a.taped:focus-visible {
 }
 
 .keycap:focus-visible {
-  outline: 3px solid var(--ink-red);
+  outline: 3px solid var(--tw-focus);
   outline-offset: 3px;
 }
 

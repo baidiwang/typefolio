@@ -13,6 +13,7 @@ export function Project({ project, index }: Props) {
     project
   const href = primaryHref(links)
   const titleId = `${id}-title`
+  const hasLinks = Boolean(links.live || links.code || links.writeup)
 
   return (
     <article id={id} className="project" aria-labelledby={titleId}>
@@ -21,6 +22,7 @@ export function Project({ project, index }: Props) {
           media={media}
           href={href}
           title={title}
+          titleId={titleId}
           tilt={index % 2 === 0 ? -1.6 : 1.2}
         />
       </div>
@@ -45,6 +47,7 @@ export function Project({ project, index }: Props) {
         <Reveal mode="lines" className="project__stack">
           Stack: {stack.join(', ')}
         </Reveal>
+        {hasLinks && (
         <Reveal className="project__links">
           {links.live && (
             <ExternalLink href={links.live}>{links.liveLabel ?? 'Live'} ↗</ExternalLink>
@@ -52,6 +55,7 @@ export function Project({ project, index }: Props) {
           {links.code && <ExternalLink href={links.code}>Code ↗</ExternalLink>}
           {links.writeup && <ExternalLink href={links.writeup}>Writeup ↗</ExternalLink>}
         </Reveal>
+        )}
       </div>
     </article>
   )

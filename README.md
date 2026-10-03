@@ -32,13 +32,18 @@ Project media are short screen recordings in `public/media/<id>.{mp4,webm,jpg}`
 (H.264 + VP9 + a poster frame). They play muted and looped only while in view;
 under `prefers-reduced-motion` only the poster is shown. Never ship GIFs.
 
-To regenerate them from the old site's GIFs:
+Each clip's start, duration and poster time (seconds in the source GIF),
+width and quality live in one table, [`scripts/media-clips.sh`](scripts/media-clips.sh).
+To choose them, look at the contact sheets in
+[`docs/contact-sheets/`](docs/contact-sheets): one frame every 0.5 s, each
+labelled with its timestamp.
 
 ```bash
-scripts/encode-media.sh ../3D-Portfolio/public/thumbnails
+# from the old site's GIFs (../3D-Portfolio/public/thumbnails)
+scripts/contact-sheets.sh ../3D-Portfolio/public/thumbnails        # regenerate sheets
+scripts/encode-media.sh  ../3D-Portfolio/public/thumbnails         # all clips
+scripts/encode-media.sh  ../3D-Portfolio/public/thumbnails lily    # just one
 ```
-
-Trim points, widths and quality are per-clip in the script's `JOBS` table.
 
 ## Type and colour
 
@@ -79,9 +84,14 @@ mid-visit flushes everything.
 `controller.ts` is a singleton. `<Reveal as="p" mode="lines">` registers its
 element in a layout effect (before first paint, so nothing flashes):
 
-- Already in view at load → left visible. The one exception is the intro
-  (`onLoad`, `duration={1000}`), typed on load in about 1 s.
-- Otherwise → hidden and observed.
+- In view at load (above the platen line) → hidden and put in the **load
+  batch**. All registrations from the first commit are flushed together in
+  a microtask: the intro first, then everything below it on the first screen,
+  in document order, compressed to finish within **1.5 s** of fonts being
+  ready. Typewriter logic: nothing below the line being typed is ever
+  visible early.
+- Otherwise → hidden and observed. (The letterhead isn't registered: it's
+  printed stationery, visible from the first frame.)
 
 The controller runs a single `requestAnimationFrame` loop over a queue of
 jobs, one active at a time, in document order. Two modes:
@@ -103,7 +113,7 @@ anything that scrolls above the viewport while it's still waiting. Never a
 page-wide timer, never a scroll percentage.
 
 **5. Nobody waits: compression, not skipping.** Whenever elements join, the
-deadline becomes *now + 1.2 s*. Each frame the speed is
+deadline becomes *now + 1.2 s* (*1.5 s* for the load batch). Each frame the speed is
 
 ```
 speed = max(1, nominal time remaining for the whole queue / time left to deadline)
@@ -119,9 +129,13 @@ and starting a new line when the glyph box drops. It runs after
 (width changes). A line-feed reveal in progress snaps to the new line
 boundaries.
 
-**7. Media.** Taped photos don't wait for text: `reveal.watch()` fires when
-their project enters, setting `data-stick="stuck"` for a short CSS "stuck
-on" animation (opacity and transform only). No motion under reduced motion.
+**7. One project at a time.** A taped photo sticks on (`data-stick="stuck"`,
+a short opacity/transform animation) exactly when its project's title
+starts typing: `reveal.whenStarts(titleEl, hook)` fires on the controller's
+`start` for that element, or immediately with `instant` if the title is
+revealed without typing (scrolled past, focused, reduced motion). Since one
+job types at a time in document order, a project's text, links included,
+finishes before the next project's title, and so its photo, starts.
 
 **8. The typewriter is a listener.** The controller emits an event for
 every step:
@@ -142,6 +156,31 @@ emerges: the controller reads the height of the element marked
 
 **9. Keyboard.** Focusing a link inside unrevealed text completes that
 element instantly.
+
+## Design playground (dev only)
+
+In `npm run dev`, try alternative looks from the URL. No UI, nothing in the
+production build ([`src/playground.ts`](src/playground.ts) is only imported
+behind `import.meta.env.DEV`).
+
+```
+/?theme=valentine | hermes | cobalt
+/?font=cutive | space | plex          (Cutive Mono, Space Mono, IBM Plex Mono)
+/?theme=hermes&font=plex
+```
+
+Themes only override CSS variables (`:root[data-theme=…]` in
+`src/index.css`), including the placeholder typewriter's colours.
+
+| Theme | Desk / paper / typewriter | ink | ink-soft | ink-red | key focus ring on body |
+| --- | --- | --- | --- | --- | --- |
+| default | warm grey / cream / green | 15.1 | 6.6 | 6.5 | 10.8 |
+| valentine | charcoal / warm white / Olivetti red | 16.2 | 7.1 | 6.4 | 5.7 |
+| hermes | walnut / ivory / seafoam | 16.0 | 7.0 | 6.9 | 9.2 |
+| cobalt | cobalt blue / white / cream | 17.2 | 7.5 | 6.5 | 5.3 |
+
+Text ratios are on the paper (AA needs 4.5); focus rings need 3. Keycap
+labels are ink on the key cap: 13.9 or more in every theme.
 
 ## Stack
 
