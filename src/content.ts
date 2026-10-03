@@ -192,7 +192,7 @@ export const otherProjects: OtherProject[] = [
   },
 ]
 
-/** GAMES & 3D: full entries, after Selected work. */
+/** GAMES & 3D: full entries, after Other, before the closing. */
 export const gameProjects: Project[] = [
   {
     id: 'little-helper',

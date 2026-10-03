@@ -2,6 +2,9 @@ import { useEffect, useLayoutEffect, useRef, type CSSProperties } from 'react'
 import { reveal } from '../reveal/controller'
 import {
   BELL_PIVOT,
+  BELL_SCALE,
+  BELL_SEAT,
+  CARRIAGE_SCALE,
   KNOB_L_PIVOT,
   KNOB_R_PIVOT,
   LAYERS,
@@ -23,14 +26,29 @@ type Box = { x: number; y: number; w: number; h: number }
 /** Reference px → css, in units of the body's displayed height, --tw-body. */
 const u = (n: number) => `calc(var(--tw-body) * ${(n / BODY.h).toFixed(5)})`
 
-/** Place a layer relative to an origin in the drawing; y is always measured
- *  from the roller's top edge (the top of the strip). */
-const at = ({ x, y, w, h }: Box, originX: number): CSSProperties => ({
-  left: u(x - originX),
-  top: u(y - ROLLER.top),
-  width: u(w),
-  height: u(h),
+/** Place a layer relative to an origin in the drawing, drawn k times its
+ *  size about that origin; y is always measured from the roller's top edge
+ *  (the top of the strip). */
+const at = ({ x, y, w, h }: Box, originX: number, k = 1): CSSProperties => ({
+  left: u((x - originX) * k),
+  top: u((y - ROLLER.top) * k),
+  width: u(w * k),
+  height: u(h * k),
 })
+
+/** Carriage parts are drawn larger than the body (CARRIAGE_SCALE). */
+const K = CARRIAGE_SCALE
+const uk = (n: number) => u(n * K)
+
+/** The bell on the body's shoulder: its foot at BELL_SEAT, at BELL_SCALE. */
+const BELL = LAYERS.bell
+const BELL_STYLE: CSSProperties = {
+  left: u(BELL_SEAT.x - ROLLER.centreX + (BELL.x - BELL_PIVOT.x) * BELL_SCALE),
+  top: u(BELL_SEAT.y - ROLLER.top + (BELL.y - BELL_PIVOT.y) * BELL_SCALE),
+  width: u(BELL.w * BELL_SCALE),
+  height: u(BELL.h * BELL_SCALE),
+  transformOrigin: `${(((BELL_PIVOT.x - BELL.x) / BELL.w) * 100).toFixed(2)}% ${(((BELL_PIVOT.y - BELL.y) / BELL.h) * 100).toFixed(2)}%`,
+}
 
 /** transform-origin for a pivot point, as % of a layer's box. */
 const origin = (p: { x: number; y: number }, b: Box) =>
@@ -38,12 +56,12 @@ const origin = (p: { x: number; y: number }, b: Box) =>
 
 /** The roller's middle fills the paper's width between the two end slices. */
 const MID_STYLE: CSSProperties = {
-  left: `calc(var(--pl) + ${u(ROLLER.seamL - ROLLER.x0)})`,
-  width: `calc(var(--pr) - var(--pl) - ${u(ROLLER.seamL - ROLLER.x0)} - ${u(ROLLER.x1 - ROLLER.seamR)})`,
-  top: u(ROLLER_MID.y - ROLLER.top),
-  height: u(ROLLER_MID.h),
+  left: `calc(var(--pl) + ${uk(ROLLER.seamL - ROLLER.x0)})`,
+  width: `calc(var(--pr) - var(--pl) - ${uk(ROLLER.seamL - ROLLER.x0)} - ${uk(ROLLER.x1 - ROLLER.seamR)})`,
+  top: uk(ROLLER_MID.y - ROLLER.top),
+  height: uk(ROLLER_MID.h),
   backgroundImage: `url('${ROLLER_MID.src}')`,
-  backgroundSize: `${u(ROLLER_MID.w)} 100%`,
+  backgroundSize: `${uk(ROLLER_MID.w)} 100%`,
 }
 
 /** The plant stands on the desk just right of the body, at half its height. */
@@ -107,7 +125,7 @@ export function Typewriter() {
     const moveCarriage = (column: number, ms: number, easing = 'linear') => {
       if (!carriage) return
       carriage.style.transition = `transform ${ms}ms ${easing}`
-      carriage.style.transform = `translateX(${-column * STEP * scaleRef.current}px)`
+      carriage.style.transform = `translateX(${-column * STEP * K * scaleRef.current}px)`
     }
     const carriageReturn = () => moveCarriage(0, 260, 'cubic-bezier(0.3, 0.8, 0.2, 1)')
     // Line feed: the platen knobs turn a notch.
@@ -175,40 +193,32 @@ export function Typewriter() {
 
   return (
     <div ref={sceneRef} className="typewriter" data-reveal-inset="" aria-hidden="true">
-      {/* Back to front: body and bell (static, centred under the paper),
-          then the carriage (slides). Each .tw-origin is a zero-size anchor. */}
+      {/* Back to front: body and bell (static, centred under the paper; all
+          below the roller's top edge), then the carriage (slides). Each
+          .tw-origin is a zero-size anchor. */}
       <div className="tw-origin tw-body" style={{ left: 'var(--pc)' }}>
         <img ref={bodyRef} className="tw-layer" src={BODY.src} style={at(BODY, ROLLER.centreX)} alt="" />
-        <img
-          ref={bellRef}
-          className="tw-layer"
-          src={LAYERS.bell.src}
-          style={{
-            ...at(LAYERS.bell, ROLLER.centreX),
-            transformOrigin: origin(BELL_PIVOT, LAYERS.bell),
-          }}
-          alt=""
-        />
+        <img ref={bellRef} className="tw-layer" src={BELL.src} style={BELL_STYLE} alt="" />
       </div>
       <div ref={carriageRef} className="tw-carriage">
         <div className="tw-roller-mid" style={MID_STYLE} />
         <div className="tw-origin" style={{ left: 'var(--pl)' }}>
-          <img className="tw-layer" src={LAYERS.rollerL.src} style={at(LAYERS.rollerL, ROLLER.x0)} alt="" />
+          <img className="tw-layer" src={LAYERS.rollerL.src} style={at(LAYERS.rollerL, ROLLER.x0, K)} alt="" />
           <img
             ref={knobLRef}
             className="tw-layer"
             src={LAYERS.knobL.src}
-            style={{ ...at(LAYERS.knobL, ROLLER.x0), transformOrigin: origin(KNOB_L_PIVOT, LAYERS.knobL) }}
+            style={{ ...at(LAYERS.knobL, ROLLER.x0, K), transformOrigin: origin(KNOB_L_PIVOT, LAYERS.knobL) }}
             alt=""
           />
         </div>
         <div className="tw-origin" style={{ left: 'var(--pr)' }}>
-          <img className="tw-layer" src={LAYERS.rollerR.src} style={at(LAYERS.rollerR, ROLLER.x1)} alt="" />
+          <img className="tw-layer" src={LAYERS.rollerR.src} style={at(LAYERS.rollerR, ROLLER.x1, K)} alt="" />
           <img
             ref={knobRRef}
             className="tw-layer"
             src={LAYERS.knobR.src}
-            style={{ ...at(LAYERS.knobR, ROLLER.x1), transformOrigin: origin(KNOB_R_PIVOT, LAYERS.knobR) }}
+            style={{ ...at(LAYERS.knobR, ROLLER.x1, K), transformOrigin: origin(KNOB_R_PIVOT, LAYERS.knobR) }}
             alt=""
           />
         </div>

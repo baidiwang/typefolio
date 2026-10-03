@@ -100,9 +100,9 @@ at ink ≥ 14.2, ink-soft ≥ 7.6, ink-red ≥ 5.5 in every theme.
   letter's closing ends with the email address. The resume is
   `public/BaidiWangResume.pdf`.
 - **The typewriter** is a hand-drawn wide-carriage machine split into
-  layers (static body, sliding carriage, turning knobs, ringing bell). Its
+  layers (static body, sliding carriage, turning knobs, a bell on the body's shoulder). Its
   roller spans the paper and the paper goes into it: below the roller there's
-  only the desk and the machine's body (`min(190px, 22.5vh)` tall, 100 px on
+  only the desk and the machine's body (`min(181px, 21.4vh)` tall, 95 px on
   phones), with a plant beside it on desktop. Details:
   [`docs/typewriter-rig.md`](docs/typewriter-rig.md).
 - **Sound** is off by default. The round speaker button

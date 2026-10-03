@@ -24,8 +24,8 @@ Layers (reference px, 1024x1024):
               to make the carriage as wide as the paper.
   roller-r    right end: the last stretch of roller and its collar.
   knob-l/r    the platen knobs, at the carriage's ends; turn on line feed.
-  bell        the bell on its stem (stem extended down behind the roller).
-              Rings about the stem's foot.
+  bell        the bell on its stem. Placed on the body's right shoulder,
+              below the roller; rings about the stem's foot.
 
 The roller's edges wobble a pixel or two in the drawing. For the middle
 slices to join, the roller is straightened to one band (its median edges);
@@ -61,7 +61,15 @@ BELL_BOX = (770, 205, 885, 312)   # x0, y0, x1, y1 around bell and stem
 BELL_SEED = (820, 250)
 KNOB_L_BOX = (148, 288, 214, 400)  # x0, y0, x1, y1
 KNOB_R_BOX = (866, 262, 912, 400)
-STEM_BOTTOM = 346                 # the bell's stem is extended down to here
+# The bell is moved off the roller (it would cover the line being typed)
+# onto the body's right shoulder, below the roller, smaller: its stem's
+# foot sits at BELL_SEAT, scaled by BELL_SCALE.
+BELL_SEAT = (812, 424)
+BELL_SCALE = 0.6
+# The carriage (roller, collars, lever, knobs) is drawn this much larger
+# than the body, about the roller's top edge, so the roller reads as a
+# cylinder rather than a bar.
+CARRIAGE_SCALE = 1.5
 OUTLINE = (30, 27, 28)
 POT_FILL = (246, 242, 234)        # inside the plant pot's outline
 ROLLER_INK = (26, 22, 24)         # paints out red streaks/fringe on the roller
@@ -324,13 +332,10 @@ def main():
     for c in range(3):
         carr[..., c][reddish] = ROLLER_INK[c]
 
-    # —— Bell layer, stem extended down behind the roller ————————————————————
+    # —— Bell layer: dome and stem, down to its foot ——————————————————————
     bl = np.where(bell[..., None], src, 0).astype(np.uint8)
     foot_row = int(np.max(np.nonzero(bell.any(axis=1))[0]))
     stem_cols = np.nonzero(bell[foot_row - 2])[0]
-    for y in range(foot_row - 1, STEM_BOTTOM):
-        bl[y, stem_cols] = src[foot_row - 3, stem_cols]
-        bl[y, stem_cols, 3] = 255
 
     # —— Straighten the roller, then slice it ——————————————————————————————
     inner = slice(ROLLER_X0 + END_W, ROLLER_X1 - END_W)
@@ -375,6 +380,9 @@ def main():
         order.pop()
     mid = np.concatenate([slices[i] for i in order], axis=1)
 
+    # Nothing of the body above the roller's top edge: the paper is there.
+    body[:T + 1] = 0
+
     roller_l = carr.copy()
     roller_l[:, seam_l:] = 0
     roller_r = carr.copy()
@@ -409,9 +417,12 @@ def main():
         layers[name] = dict(x=x0, y=y0, w=x1 - x0, h=y1 - y0, src=f'/art/{name}.webp',
                             bytes=path.stat().st_size, px=size)
 
+    # Each layer at 2x its own display size.
     for name, rgba in layers_rgba.items():
-        export(name, rgba, boxes[name], scale)
-    export('typewriter-roller-mid', mid, (0, 0, mid.shape[1], mid.shape[0]), scale)
+        k = BELL_SCALE if name == 'typewriter-bell' else 1 if name == 'typewriter-body' else CARRIAGE_SCALE
+        export(name, rgba, boxes[name], scale * k)
+    export('typewriter-roller-mid', mid, (0, 0, mid.shape[1], mid.shape[0]),
+           scale * CARRIAGE_SCALE)
 
     plant = load(PLANT_SRC)
     pbox = bbox(plant[..., 3] > 0)
@@ -441,7 +452,9 @@ def main():
 // to 1024x1024). The page scales it from the body's height.
 
 /** Where each layer image sits in the drawing. rollerL/knobL are placed
- *  from the roller's left end, rollerR/knobR from its right end. */
+ *  from the roller's left end, rollerR/knobR from its right end, all at
+ *  CARRIAGE_SCALE about the roller's top edge. The bell is placed by
+ *  BELL_SEAT instead. */
 export const LAYERS = {{
   body: {entry('typewriter-body')},
   bell: {entry('typewriter-bell')},
@@ -465,6 +478,14 @@ export const ROLLER = {{
   top: {roller_top},
   centreX: {centre_x},
 }} as const
+
+/** The carriage's size relative to the body. */
+export const CARRIAGE_SCALE = {CARRIAGE_SCALE}
+
+/** The bell stands on the body's right shoulder: its foot (BELL_PIVOT) at
+ *  BELL_SEAT, drawn at BELL_SCALE. */
+export const BELL_SEAT = {{ x: {BELL_SEAT[0]}, y: {BELL_SEAT[1]} }} as const
+export const BELL_SCALE = {BELL_SCALE}
 
 /** Pivots: the bell rings about its stem's foot; the knobs turn about
  *  their centres. */

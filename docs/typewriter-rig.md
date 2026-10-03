@@ -11,9 +11,12 @@ layers ship.
 
 ## The scene
 
-A wide-carriage machine: the body stays its drawn size, centred under the
-paper, and the carriage is extended so the roller spans the paper exactly,
-with a knob at each paper edge and the return lever at the left end.
+A wide-carriage machine: the body is centred under the paper, and the
+carriage is extended so the roller spans the paper exactly, with a knob at
+each paper edge and the return lever at the left end. The carriage (roller,
+collars, lever, knobs) is drawn 1.5× the body's scale (`CARRIAGE_SCALE`,
+about the roller's top edge), so the roller reads as a cylinder rather than
+a thin bar.
 
 The paper goes into the roller. `.typewriter` (fixed to the bottom of the
 viewport, marked `data-reveal-inset`) is a desk-coloured strip from the
@@ -21,17 +24,19 @@ roller's top edge down, so below that edge only the desk and the machine's
 body show, never paper or text. The edge is the platen line: the reveal
 controller types an element once its top crosses it. Lines of that element
 that are typed but still below the roller are under the strip, so they stay
-hidden until the paper feeds them out. Above the edge, the roller, lever,
-knobs, bell and the top of the body stand in front of the paper.
+hidden until the paper feeds them out. Nothing but the carriage's ends
+(lever, collars, knobs, at the paper's sides) rises above the edge: the body
+is cut at it, and the bell stands on the body's right shoulder, below the
+roller, so nothing covers the line being typed.
 
 | Breakpoint | Body height (`--tw-body`) | Gap below (`--tw-gap`) | Plant | Sound button |
 | --- | --- | --- | --- | --- |
-| desktop (≥ 720 px) | `min(190px, 22.5vh)` | 10 px | shown | top-right |
-| phones (< 720 px) | `min(100px, 12vh)` | `max(8px, safe-area-inset-bottom)` | hidden | bottom-right, on the desk |
+| desktop (≥ 720 px) | `min(181px, 21.4vh)` | 10 px | shown | top-right |
+| phones (< 720 px) | `min(95px, 11.4vh)` | `max(8px, safe-area-inset-bottom)` | hidden | bottom-right, on the desk |
 
 The strip is `--tw-body × --tw-below + --tw-gap` tall, where `--tw-below`
-(≈ 0.95, set by `Typewriter.tsx` from the drawing) is how far the body
-reaches below the roller's top edge. The paper's bottom padding and the
+(1, set by `Typewriter.tsx` from the drawing) is how far the body reaches
+below the roller's top edge; the body starts at that edge. The paper's bottom padding and the
 page's scroll padding use the strip height, so the last line and focused
 links clear the roller. On phones the strip is 103 px, 12% of a 390×844
 screen.
@@ -46,16 +51,16 @@ Back to front:
 
 | Layer | File | Contents | Motion |
 | --- | --- | --- | --- |
-| body | `public/art/typewriter-body.webp` | the machine minus the moving parts, keys included. The strip of body hidden behind the roller is filled in (red continued from below, the ribbon cover extended up, the side edges redrawn), so sliding the carriage never reveals a hole | static, centred on the paper |
-| bell | `public/art/typewriter-bell.webp` | the bell on its stem; the stem is extended down behind the roller | rings: `rotate(0 → 10 → −8 → 4 → 0deg)` over 420 ms about the stem's foot (`BELL_PIVOT`) whenever an element finishes (`bell: true`) |
+| body | `public/art/typewriter-body.webp` | the machine minus the moving parts, keys included, from the roller's top edge down. The strip of body hidden behind the roller is filled in (red continued from below, the ribbon cover extended up, the side edges redrawn), so sliding the carriage never reveals a hole | static, centred on the paper |
+| bell | `public/art/typewriter-bell.webp` | the bell on its stem, at 0.6× (`BELL_SCALE`), its foot on the body's right shoulder (`BELL_SEAT`), below the roller | rings: `rotate(0 → 10 → −8 → 4 → 0deg)` over 420 ms about the stem's foot (`BELL_PIVOT`) whenever an element finishes (`bell: true`) |
 | roller middle | `public/art/typewriter-roller-mid.webp` | a tile of the roller's middle (see below), repeated horizontally to fill the paper's width | slides with the carriage |
 | roller ends | `typewriter-roller-l.webp`, `-roller-r.webp` | left: return lever, collar and the first stretch of roller; right: the last stretch and its collar | slide with the carriage |
 | knob L / R | `typewriter-knob-l.webp`, `-knob-r.webp` | the platen knobs, outside the collars at the paper's edges | slide with the carriage; turn `rotate(0 → −14 → 3 → 0deg)` over 220 ms about their hubs on each line feed |
 | plant | `public/art/plant.webp` | potted plant | sways `rotate(±2deg)` about its base when the bell rings |
 
 The carriage (`.tw-carriage`: middle, ends and knobs) slides
-`translateX(−column × STEP × scale)` per typed character (`STEP` = 1.4
-reference px) and returns to 0 with a 260 ms ease on carriage return. Keys
+`translateX(−column × STEP × CARRIAGE_SCALE × scale)` per typed character
+(`STEP` = 1.4 reference px) and returns to 0 with a 260 ms ease on carriage return. Keys
 stay static. Under reduced motion nothing moves (the controller sends no
 events).
 
@@ -90,6 +95,8 @@ generated into [`src/typewriter/layers.ts`](../src/typewriter/layers.ts):
 - `ROLLER_MID` — the middle tile's rows and length.
 - `ROLLER` — the cylinder's ends (`x0`, `x1`), the seams, its top edge and
   centre.
+- `CARRIAGE_SCALE` — the carriage's size relative to the body.
+- `BELL_SEAT`, `BELL_SCALE` — where the bell's foot stands, and its size.
 - `BELL_PIVOT`, `KNOB_L_PIVOT`, `KNOB_R_PIVOT` — rotation centres.
 - `PLANT` — the plant's crop.
 
@@ -107,18 +114,18 @@ where the sound button stands there.
 
 ## Export
 
-- WebP at 2× the largest display size (body 380 px tall, plant 190 px),
-  quality 84. Current sizes:
+- WebP at 2× each layer's largest display size (the carriage at 1.5× the
+  body's scale, the bell at 0.6×), quality 84. Current sizes:
 
   | Layer | Pixels | Size |
   | --- | --- | --- |
-  | body | 562×380 | 53 KB |
-  | roller middle | 2066×25 | 10 KB |
-  | roller ends | 166×133 / 60×44 | 7 KB |
-  | knob L / R | 52×82 / 32×82 | 5 KB |
-  | bell | 65×108 | 3 KB |
+  | body | 590×380 | 53 KB |
+  | roller middle | 3255×40 | 19 KB |
+  | roller ends | 262×210 / 95×69 | 13 KB |
+  | knob L / R | 82×130 / 51×128 | 8 KB |
+  | bell | 41×50 | 2 KB |
   | plant | 78×190 | 8 KB |
-  | **total** | | **≈ 85 KB** |
+  | **total** | | **≈ 102 KB** |
 
 - `index.html` preloads the body and the roller's middle (they're on every
   first screen).
@@ -135,7 +142,7 @@ from cleaner pixels. It removes the old WebPs before writing new ones.
 2. Only for a *different* drawing: update the measured landmarks at the top
    of the script (roller ends and collars, the rows just above and below the
    roller, the body's columns above it, a column always inside the body, the
-   bell's box and a point on it, the knob boxes).
+   bell's box and a point on it and its seat on the body, the knob boxes).
 3. Run:
 
    ```bash

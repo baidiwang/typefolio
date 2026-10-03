@@ -42,6 +42,15 @@ export default function App() {
 
           <Divider variant={1} />
 
+          <section aria-labelledby="other-heading">
+            <Reveal as="h2" id="other-heading">
+              Other
+            </Reveal>
+            <OneLiners items={otherProjects} />
+          </section>
+
+          <Divider variant={2} />
+
           <section aria-labelledby="games-heading">
             <Reveal as="h2" id="games-heading">
               Games &amp; 3D
@@ -58,15 +67,6 @@ export default function App() {
                 </Fragment>
               ))}
             </Reveal>
-          </section>
-
-          <Divider variant={2} />
-
-          <section aria-labelledby="other-heading">
-            <Reveal as="h2" id="other-heading">
-              Other
-            </Reveal>
-            <OneLiners items={otherProjects} />
           </section>
 
           <Divider variant={3} />

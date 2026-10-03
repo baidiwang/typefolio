@@ -37,9 +37,9 @@
      the part of it below the roller (--tw-below, set by Typewriter.tsx from
      the drawing) plus the gap. The paper's bottom padding and the scroll
      padding use it, so the last line and focused links clear the roller. */
-  --tw-body: min(190px, 22.5vh);
+  --tw-body: min(181px, 21.4vh);
   --tw-gap: 10px;
-  --tw-below: 0.952;
+  --tw-below: 1;
   --tw-strip: calc(var(--tw-body) * var(--tw-below) + var(--tw-gap));
 }
 
@@ -109,7 +109,7 @@
    home indicator. */
 @media (max-width: 719px) {
   :root {
-    --tw-body: min(100px, 12vh);
+    --tw-body: min(95px, 11.4vh);
     --tw-gap: max(8px, env(safe-area-inset-bottom));
   }
 }
@@ -604,8 +604,9 @@ a.taped:focus-visible {
 /* —— Typewriter (src/typewriter; docs/typewriter-rig.md) ——
    A wide-carriage machine drawn from layered images, sized by --tw-body.
    The strip is the desk below the roller: the paper has gone into the
-   machine, so nothing of it shows below the roller's top edge. Above that
-   edge the roller, lever, knobs and bell stand in front of the paper.
+   machine, so nothing of it shows below the roller's top edge. Only the
+   carriage's ends (lever, collars, knobs) rise above that edge, at the
+   paper's sides; the body and bell stay below it.
    Layer boxes and the paper's edges (--pl, --pr, --pc) are set inline. */
 
 .typewriter {

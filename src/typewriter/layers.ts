@@ -3,10 +3,12 @@
 // to 1024x1024). The page scales it from the body's height.
 
 /** Where each layer image sits in the drawing. rollerL/knobL are placed
- *  from the roller's left end, rollerR/knobR from its right end. */
+ *  from the roller's left end, rollerR/knobR from its right end, all at
+ *  CARRIAGE_SCALE about the roller's top edge. The bell is placed by
+ *  BELL_SEAT instead. */
 export const LAYERS = {
-  body: { src: '/art/typewriter-body.webp', x: 174, y: 284, w: 710, h: 480 },
-  bell: { src: '/art/typewriter-bell.webp', x: 781, y: 209, w: 82, h: 137 },
+  body: { src: '/art/typewriter-body.webp', x: 174, y: 307, w: 710, h: 457 },
+  bell: { src: '/art/typewriter-bell.webp', x: 781, y: 209, w: 82, h: 100 },
   rollerL: { src: '/art/typewriter-roller-l.webp', x: 78, y: 264, w: 210, h: 168 },
   rollerR: { src: '/art/typewriter-roller-r.webp', x: 790, y: 306, w: 76, h: 55 },
   knobL: { src: '/art/typewriter-knob-l.webp', x: 148, y: 288, w: 66, h: 104 },
@@ -27,6 +29,14 @@ export const ROLLER = {
   top: 307,
   centreX: 539,
 } as const
+
+/** The carriage's size relative to the body. */
+export const CARRIAGE_SCALE = 1.5
+
+/** The bell stands on the body's right shoulder: its foot (BELL_PIVOT) at
+ *  BELL_SEAT, drawn at BELL_SCALE. */
+export const BELL_SEAT = { x: 812, y: 424 } as const
+export const BELL_SCALE = 0.6
 
 /** Pivots: the bell rings about its stem's foot; the knobs turn about
  *  their centres. */
