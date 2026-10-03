@@ -15,10 +15,12 @@
 
   /* Default theme: "valentine". Olivetti-red typewriter, deep charcoal
      desk, warm white paper. Contrast on --paper (WCAG AA needs 4.5:1):
-     --ink 17.8:1 · --ink-soft 9.5:1 · --ink-red 6.4:1 */
+     --ink 17.8:1 · --ink-soft 9.5:1 · --ink-red 6.4:1
+     The desk is a warm charcoal, a touch lighter than #2b2a2c, so the
+     typewriter's black outlines and knobs still read against it. */
   --paper: #fbf8f2;
   --paper-shadow: rgb(0 0 0 / 0.45);
-  --desk: #2b2a2c;
+  --desk: #3d3532;
   --ink: #121110;
   --ink-soft: #46413a;
   --ink-red: #b01e2f;
@@ -28,25 +30,19 @@
   --margin: clamp(1.25rem, 6vw, 4.5rem);
   --line: 1.6;
 
-  /* Height of the fixed typewriter at each breakpoint. Desktop shows the
-     rig's 1400x240 crop (DESKTOP_VIEWBOX), so 240/1400 of the width fills
-     it edge to edge; capped at 160px (~18% of a 900px viewport). The
-     paper's bottom padding and the scroll padding both use it, so the last
-     line clears the platen. */
-  --typewriter-height: min(calc(100vw * 240 / 1400), 160px, 30vh);
-
-  /* Typewriter colours (used by the placeholder rig). */
-  --tw-body: #c8202e;
-  --tw-body-dark: #8e1520;
-  --tw-chrome: #cfcbc2;
-  --tw-platen: #1a1a1a;
-  --tw-key: #f5f0e6;
-  --tw-key-edge: #3b2526;
+  /* The fixed typewriter: from the roller's top edge (where the paper
+     comes out) down to the bottom of the viewport. The bell and lever rise
+     above it by --typewriter-overhang (set by Typewriter.tsx from the
+     drawing's scale). The paper's bottom padding and the scroll padding use
+     both, so the last line and focused links clear the machine. */
+  --typewriter-height: min(200px, 30vh);
+  --typewriter-overhang: 150px;
 }
 
 /* —— Design playground (dev + preview deployments: src/playground.ts) ——
    ?theme=classic|hermes|cobalt  ?font=courier|space|plex
    Each theme only overrides tokens; the default (valentine) is above.
+   The typewriter drawing is the same red in every theme.
    Contrast per theme is listed in the README (Design playground). */
 
 /* The original look: cream paper, warm grey desk, green typewriter.
@@ -56,12 +52,6 @@
   --paper-shadow: rgb(60 45 20 / 0.18);
   --desk: #cbc2b0;
   --ink-red: #a3241b;
-  --tw-body: #27322c;
-  --tw-body-dark: #1b231f;
-  --tw-chrome: #a9a79c;
-  --tw-platen: #141414;
-  --tw-key: #efe7d2;
-  --tw-key-edge: #3a3a34;
 }
 
 /* Seafoam typewriter, walnut desk, ivory paper.
@@ -71,12 +61,6 @@
   --paper-shadow: rgb(30 15 5 / 0.45);
   --desk: #5b3a29;
   --ink-red: #a3241b;
-  --tw-body: #8fc9b9;
-  --tw-body-dark: #6aa796;
-  --tw-chrome: #c0beb4;
-  --tw-platen: #1c2422;
-  --tw-key: #f7f3e8;
-  --tw-key-edge: #2e4a43;
 }
 
 /* Cobalt-blue desk, white paper, cream typewriter.
@@ -86,12 +70,6 @@
   --paper-shadow: rgb(0 15 60 / 0.4);
   --desk: #0047ab;
   --ink-red: #b3261e;
-  --tw-body: #efe6cf;
-  --tw-body-dark: #d6cab0;
-  --tw-chrome: #8e8c84;
-  --tw-platen: #1b1b1b;
-  --tw-key: #ffffff;
-  --tw-key-edge: #23345c;
 }
 
 /* Alternative faces have real weights: no outline needed. */
@@ -111,10 +89,12 @@
   --text-stroke: 0px;
 }
 
-/* Mobile: a thin strip (platen edge + key row), at most 15% of the viewport. */
+/* Mobile: a thin strip (roller + the top of the body), at most 15% of the
+   viewport. The bell is hidden there, so nothing rises above it. */
 @media (max-width: 639px) {
   :root {
     --typewriter-height: min(20vw, 15vh);
+    --typewriter-overhang: 0px !important;
   }
 }
 
@@ -127,7 +107,7 @@
 html {
   background: var(--desk);
   /* Keyboard focus and in-page jumps never land under the typewriter. */
-  scroll-padding-bottom: calc(var(--typewriter-height) + 1rem);
+  scroll-padding-bottom: calc(var(--typewriter-height) + var(--typewriter-overhang) + 1rem);
   -webkit-text-size-adjust: 100%;
   /* Never fake a bold or italic the font doesn't have. */
   font-synthesis: none;
@@ -222,7 +202,7 @@ a:hover {
   min-height: 100vh;
   margin: 0 auto;
   padding: calc(var(--margin) * 0.6) var(--margin)
-    calc(var(--typewriter-height) + 3rem);
+    calc(var(--typewriter-height) + var(--typewriter-overhang) + 2rem);
   background: var(--paper);
   box-shadow:
     0 0 0 1px rgb(60 45 20 / 0.06),
@@ -600,79 +580,79 @@ a.taped:focus-visible {
   }
 }
 
-/* —— Typewriter (src/typewriter) —— */
+/* —— Typewriter (src/typewriter; docs/typewriter-rig.md) ——
+   Layered images of one drawing, scaled by --s (set from the paper's width
+   so the roller spans the paper). The strip is desk-coloured: below the
+   roller the paper has gone into the machine. */
 
 .typewriter {
   position: fixed;
   inset: auto 0 0;
   z-index: 10;
   height: var(--typewriter-height);
-  display: flex;
-  justify-content: center;
+  background: var(--desk);
   pointer-events: none;
+  /* The lever and knobs can hang past the window edges; never scroll. */
+  overflow-x: clip;
+}
+
+.typewriter img {
+  display: block;
+  max-width: none;
+  user-select: none;
 }
 
 .typewriter__machine {
-  position: relative;
-  height: 100%;
-  aspect-ratio: 1400 / 240;
-  max-width: 100%;
-}
-
-.typewriter__rig {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
+  left: var(--machine-left, 0);
+  top: var(--machine-top, 0);
+  z-index: 1;
 }
 
-@media (max-width: 639px) {
-  .typewriter {
-    background: var(--tw-body);
-    box-shadow: 0 -6px 18px rgb(40 30 15 / 0.18);
-  }
-
-  .typewriter__machine {
-    width: 100%;
-    aspect-ratio: auto;
-  }
-
-  /* Only the platen edge and the top key row are in the strip's crop. */
-  #typebar,
-  #bell {
-    display: none;
-  }
+.tw-layer {
+  position: absolute;
 }
 
-/* SVG groups animated by Typewriter.tsx. Pivots are relative to each
-   group's own box so they survive viewBox changes and new artwork. */
-#carriage {
+.tw-carriage {
   will-change: transform;
 }
 
-#typebar {
-  transform-box: fill-box;
+.tw-carriage img {
+  width: 100%;
+  height: 100%;
+}
+
+/* Shifted clear of the text column (--bell-shift, from Typewriter.tsx);
+   rings about the foot of its stem (transform-origin set inline). */
+.tw-bell {
+  translate: var(--bell-shift, 0) 0;
+}
+
+/* On the desk to the right of the paper, standing on the same line as the
+   machine; behind it if they overlap. Typewriter.tsx sizes it to the space
+   and hides it when there isn't room. */
+.desk-plant {
+  position: absolute;
+  bottom: 0;
+  left: var(--plant-left, 100%);
+  height: var(--plant-height, 0);
+  width: auto;
   transform-origin: 50% 100%;
 }
 
-#bell {
-  transform-box: fill-box;
-  transform-origin: 50% 0%;
+.typewriter[data-plant='off'] .desk-plant {
+  display: none;
 }
 
-[data-knob] {
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-  transition: transform 160ms ease-out;
-}
+/* Phones: just the strip (roller and the top of the body). The bell and
+   plant are hidden and nothing pokes above the strip. */
+@media (max-width: 639px) {
+  .typewriter {
+    overflow: clip;
+  }
 
-[data-key] {
-  transform-box: fill-box;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [data-knob] {
-    transition: none;
+  .typewriter .tw-bell,
+  .typewriter .desk-plant {
+    display: none;
   }
 }

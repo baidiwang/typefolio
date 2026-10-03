@@ -69,7 +69,8 @@ Hierarchy comes from size, caps and ink, never from tracking or weight:
 | Meta lines (type, stack, P.S.) | `--ink-soft` |
 
 Body text is 17px on phones, 19px on desktop, in near-black ink. The default
-theme is **valentine** (warm white paper, charcoal desk, Olivetti-red
+theme is **valentine** (warm white paper, warm charcoal desk #3d3532, so the
+typewriter's black outlines still read against it, Olivetti-red
 typewriter). Inks on `--paper` (#fbf8f2):
 
 | Token        | Use                    | Contrast on paper |
@@ -88,6 +89,10 @@ typewriter). Inks on `--paper` (#fbf8f2):
   letterhead and typed again at the end, under the email
   ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)). The resume is
   `public/BaidiWangResume.pdf`.
+- **The typewriter** is a hand-drawn image split into layers (static body,
+  sliding carriage, ringing bell) and scaled so its roller spans the paper;
+  a plant stands on the desk beside the paper when there's room. Details:
+  [`docs/typewriter-rig.md`](docs/typewriter-rig.md).
 - **Sound** is off by default. The round speaker button in the top-right
   corner ([`SoundToggle.tsx`](src/components/SoundToggle.tsx)) toggles it
   (`aria-pressed`), clear of notches via `env(safe-area-inset-*)`.
@@ -193,9 +198,9 @@ every step:
 
 | Event | Typewriter does |
 | --- | --- |
-| `char` (char, column) | carriage `translateX(−column × step)`, typebar strike, a random key dips, click sound |
-| `return` (bell?) | end of a typed line: carriage return, platen knob turns, bell at the end of an element |
-| `feed` (bell?) | a paragraph line appeared: line feed (knob turns), bell at the last line |
+| `char` (char, column) | carriage `translateX(−column × step)`, key click (space: carriage only) |
+| `return` (bell?) | end of a typed line: carriage return, the roller nudges (line feed), bell at the end of an element |
+| `feed` (bell?) | a paragraph line appeared: the roller nudges, bell at the last line |
 | `idle` | carriage returns home |
 
 Because the controller emits from the same frame loop that moves the
@@ -223,7 +228,7 @@ flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
 ```
 
 Themes only override CSS variables (`:root[data-theme=…]` in
-`src/index.css`), including the placeholder typewriter's colours. The
+`src/index.css`); the typewriter drawing stays red in every theme. The
 alternative faces have real weights, so they drop Cutive's outline
 (`--text-stroke: 0`); Plex is shown at weight 500.
 
