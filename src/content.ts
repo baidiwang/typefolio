@@ -40,6 +40,9 @@ export type Project = {
   media: ProjectMedia
   /** One sentence about a key decision, rendered in red ink. */
   decision?: string
+  /** A key phrase from `body` (or `oneLiner`), swiped with the highlighter
+   *  once it has typed. */
+  highlight?: string
 }
 
 export type OtherProject = {
@@ -48,6 +51,8 @@ export type OtherProject = {
   kind: string
   oneLiner: string
   stack?: string[]
+  /** A key phrase from `oneLiner`, swiped with the highlighter. */
+  highlight?: string
   href?: string
   linkLabel?: string
 }
@@ -93,6 +98,7 @@ export const featuredProjects: Project[] = [
       'Our team ran a prototyping platform for Google Play. I worked with designers from different product teams, turning their Figma files into working features, motion included, that went in front of real users for testing.',
     ],
     role: 'UX Engineer (contractor), prototyping team',
+    highlight: 'went in front of real users',
     stack: ['React', 'Redux', 'TypeScript', 'MUI', 'Framer Motion', 'Figma'],
     // Deliberately no links: title and photo aren't clickable.
     links: {},
@@ -105,6 +111,7 @@ export const featuredProjects: Project[] = [
   },
   {
     id: 'lily',
+    highlight: 'shows its work as a live document',
     title: 'Lily',
     kind: 'AI Voice Assistant',
     oneLiner:
@@ -135,6 +142,7 @@ export const featuredProjects: Project[] = [
   },
   {
     id: 'breadcrumb',
+    highlight: 'the train of thought you left behind',
     title: 'Breadcrumb',
     kind: 'AI Desktop App',
     oneLiner:
@@ -162,6 +170,7 @@ export const featuredProjects: Project[] = [
   },
   {
     id: 'look-closer',
+    highlight: 'tells you something new',
     title: 'Look Closer',
     kind: 'AI Hackathon · Art Viewer',
     oneLiner: 'An AI art viewer where your attention is the interface.',
@@ -187,6 +196,7 @@ export const featuredProjects: Project[] = [
 export const otherProjects: OtherProject[] = [
   {
     id: 'data-visualization',
+    highlight: 'I made the calls on chart type, colour and hierarchy',
     title: 'Data Visualization at Axios',
     kind: 'Data Visualization Engineer · Axios',
     oneLiner:

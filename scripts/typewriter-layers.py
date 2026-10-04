@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Split the hand-drawn typewriter (art/typewriter-wide.png) into rig layers
-and export them, plus the plant (art/plant.png), as WebP for the page.
+and export them as WebP for the page. The body is exported once per
+colour (red, olive), recoloured and lit from above.
 
     pip install pillow numpy
     python3 -B scripts/typewriter-layers.py
@@ -33,7 +34,6 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / 'art' / 'typewriter-wide.png'
-PLANT_SRC = ROOT / 'art' / 'plant.png'
 OUT = ROOT / 'public' / 'art'
 TS_OUT = ROOT / 'src' / 'typewriter' / 'layers.ts'
 
@@ -63,19 +63,14 @@ BELL_DOME_BOX = (1210, 150, 1280, 219)
 BELL_STEM_BOX = (1234, 219, 1250, 250)  # down to just above the axle
 EXTEND = 90                      # roller added past each end of the notch
 ALPHA_MIN = 16                   # faint alpha noise below this is transparent
-POT_FILL = (246, 242, 234)       # inside the plant pot's outline
-# The plant (art/plant.png at 1024 px): the pot's back rim starts at
-# POT_TOP; the stems pass in front of it down to STEM_BASE, within
-# STEM_COLS. The foliage sways about STEM_PIVOT.
-POT_TOP = 610
-STEM_BASE = 662
-STEM_COLS = (465, 560)
-STEM_PIVOT = (512, 660)
+# Body colours (?tw=red|olive) and the light from the lamp above: the body
+# is a little brighter at the top and falls into shadow toward the bottom.
+COLOURS = {'red': (175, 49, 43), 'olive': (138, 147, 88)}
+LIGHT_TOP, LIGHT_BOTTOM = 1.08, 0.7
 
 # Export: at most source resolution (the body shows at most ~820 css px
 # wide, so this is about 1.2x on desktop).
 EXPORT_SCALE = 1.0
-PLANT_DISPLAY_MAX = 320          # css px; exported at 2x
 WEBP_QUALITY = 84
 
 
@@ -111,27 +106,25 @@ def drop_specks(rgba, min_area=30):
                 rgba[y, x] = 0
 
 
-def fill_pot(rgba, box):
-    """The pot is drawn as an outline on paper; on the desk its inside would
-    read as desk. Fill transparent areas enclosed by the drawing in the
-    bottom quarter of the plant (the pot) with an off-white glaze."""
-    x0, y0, x1, y1 = box
-    clear = rgba[..., 3] == 0
-    outside = np.zeros_like(clear)
-    h, w = clear.shape
-    stack = [(y, x) for y in range(h) for x in (0, w - 1) if clear[y, x]]
-    stack += [(y, x) for x in range(w) for y in (0, h - 1) if clear[y, x]]
-    while stack:
-        y, x = stack.pop()
-        if outside[y, x] or not clear[y, x]:
-            continue
-        outside[y, x] = True
-        for yy, xx in ((y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)):
-            if 0 <= yy < h and 0 <= xx < w and not outside[yy, xx]:
-                stack.append((yy, xx))
-    hole = clear & ~outside
-    hole[:y0 + (y1 - y0) * 3 // 4] = False
-    rgba[hole] = (*POT_FILL, 255)
+def recolour(rgba, target, ref):
+    """Move the red paint to `target`, keeping its marker texture: each
+    pixel's shade relative to the paint's median (`ref`) scales the new
+    colour. Partly red pixels (anti-aliased edges) blend by how red they
+    are, so no red fringe is left."""
+    rgb = rgba[..., :3].astype(float)
+    redness = np.clip((rgb[..., 0] - np.maximum(rgb[..., 1], rgb[..., 2]) - 25) / 70, 0, 1)
+    shade = (rgb @ [0.299, 0.587, 0.114]) / ref
+    new = np.clip(np.array(target, float) * shade[..., None], 0, 255)
+    out = rgb * (1 - redness[..., None]) + new * redness[..., None]
+    return out
+
+
+def light_from_above(rgb, top, bottom):
+    """Brighter at the top of the drawing, into shadow at the bottom."""
+    h = rgb.shape[0]
+    t = np.clip((np.arange(h) - top) / max(bottom - top, 1), 0, 1)
+    factor = LIGHT_TOP + (LIGHT_BOTTOM - LIGHT_TOP) * t
+    return np.clip(rgb * factor[:, None, None], 0, 255)
 
 
 def box_mask(shape, box):
@@ -195,9 +188,21 @@ def main():
     body = src.copy()
     body[lever | knob_l | axle_r | knob_r | bell | roller] = 0
 
+    # One body per colour, recoloured and lit from above.
+    paint = body[..., :3][red & (body[..., 3] > 0)].astype(float) @ [0.299, 0.587, 0.114]
+    ref = float(np.median(paint))
+    body_top = int(np.nonzero((body[..., 3] > 0).any(axis=1))[0].min())
+    body_bottom = int(np.nonzero((body[..., 3] > 0).any(axis=1))[0].max())
+    bodies = {}
+    for name, colour in COLOURS.items():
+        b = body.copy()
+        lit = light_from_above(recolour(b, colour, ref), body_top, body_bottom)
+        b[..., :3] = np.round(lit).astype(np.uint8)
+        bodies[f'typewriter-body-{name}'] = b
+
     layers_rgba = {
         'typewriter-roller': roller_rgba,
-        'typewriter-body': body,
+        **bodies,
         'typewriter-bell': np.where(bell[..., None], src, 0).astype(np.uint8),
         'typewriter-lever': np.where(lever[..., None], src, 0).astype(np.uint8),
         'typewriter-axle-r': np.where(axle_r[..., None], src, 0).astype(np.uint8),
@@ -221,28 +226,6 @@ def main():
 
     for name, rgba in layers_rgba.items():
         export(name, rgba, bbox(rgba[..., 3] > 0), EXPORT_SCALE)
-
-    plant = load(PLANT_SRC, 1024)
-    pbox = bbox(plant[..., 3] > 0)
-    fill_pot(plant, pbox)
-    # Foliage: everything above the pot's back rim, plus the stems (green
-    # paint and the outlines within a few px of it) where they pass in front
-    # of the rim. The pot is the rest.
-    prgb = plant[..., :3].astype(int)
-    popaque = plant[..., 3] > 0
-    green = (prgb[..., 1] > prgb[..., 0] + 25) & (prgb[..., 1] > prgb[..., 2]) & popaque
-    near_green = green.copy()
-    for d in range(1, 5):
-        near_green |= np.roll(green, d, axis=1) | np.roll(green, -d, axis=1)
-    foliage = popaque.copy()
-    foliage[POT_TOP:] = False
-    band = np.zeros_like(foliage)
-    band[POT_TOP:STEM_BASE, STEM_COLS[0]:STEM_COLS[1]] = True
-    foliage |= band & popaque & near_green
-    pot = popaque & ~foliage
-    pscale = 2 * PLANT_DISPLAY_MAX / (pbox[3] - pbox[1])
-    for name, mask in (('plant-pot', pot), ('plant-foliage', foliage)):
-        export(name, np.where(mask[..., None], plant, 0).astype(np.uint8), bbox(mask), pscale)
 
     # Remove exports from earlier versions of the rig.
     for stale in OUT.glob('*.webp'):
@@ -274,7 +257,7 @@ def main():
 /** Where each layer image sits in the drawing. */
 export const LAYERS = {{
   roller: {entry('typewriter-roller')},
-  body: {entry('typewriter-body')},
+  body: {entry('typewriter-body-red')},
   bell: {entry('typewriter-bell')},
   lever: {entry('typewriter-lever')},
   axleR: {entry('typewriter-axle-r')},
@@ -306,12 +289,8 @@ export const BELL_PIVOT = {{ x: {int(stem.mean())}, y: {BELL_STEM_BOX[3]} }} as 
 export const KNOB_L_PIVOT = {centre(knob_l)} as const
 export const KNOB_R_PIVOT = {centre(knob_r)} as const
 
-/** The plant, a separate drawing (art/plant.png at 1024 px): its whole
- *  box, the pot and the foliage, which sways about the stems' base. */
-export const PLANT = {{ x: {pbox[0]}, y: {pbox[1]}, w: {pbox[2] - pbox[0]}, h: {pbox[3] - pbox[1]} }} as const
-export const PLANT_POT = {entry('plant-pot')}
-export const PLANT_FOLIAGE = {entry('plant-foliage')}
-export const STEM_PIVOT = {{ x: {STEM_PIVOT[0]}, y: {STEM_PIVOT[1]} }} as const
+/** The body in each colour (?tw=red|olive): same box as LAYERS.body. */
+export const BODY_SRC = {{ red: '{layers['typewriter-body-red']['src']}', olive: '{layers['typewriter-body-olive']['src']}' }} as const
 """)
     print('wrote', TS_OUT.relative_to(ROOT), f'(line {line}, body {body_x0}–{body_x1})')
 

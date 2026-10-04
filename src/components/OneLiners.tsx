@@ -1,6 +1,7 @@
 import type { OtherProject } from '../content'
 import { Reveal } from '../reveal/Reveal'
 import { ExternalLink } from './ExternalLink'
+import { Highlighted } from './Highlight'
 
 /** Short entries: title, type, a few sentences, stack, one link. */
 export function OneLiners({ items }: { items: OtherProject[] }) {
@@ -12,7 +13,9 @@ export function OneLiners({ items }: { items: OtherProject[] }) {
             <span className="label">{item.title}</span>
             <span className="project__kind"> — {item.kind}</span>
           </Reveal>
-          <Reveal mode="lines">{item.oneLiner}</Reveal>
+          <Reveal mode="lines">
+            <Highlighted text={item.oneLiner} phrase={item.highlight} />
+          </Reveal>
           {item.stack && (
             <Reveal mode="lines" className="project__stack">
               Stack: {item.stack.join(', ')}

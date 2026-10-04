@@ -1,6 +1,7 @@
 import { primaryHref, type Project as ProjectData } from '../content'
 import { Reveal } from '../reveal/Reveal'
 import { ExternalLink } from './ExternalLink'
+import { Highlighted } from './Highlight'
 import { TapedMedia } from './TapedMedia'
 
 type Props = {
@@ -15,7 +16,7 @@ type Props = {
  * (CSS grid areas), which keeps the DOM, tab order and typing order the same.
  */
 export function Project({ project, index }: Props) {
-  const { id, title, kind, oneLiner, body, role, stack, links, media, decision } =
+  const { id, title, kind, oneLiner, body, role, stack, links, media, decision, highlight } =
     project
   const href = primaryHref(links)
   const titleId = `${id}-title`
@@ -42,14 +43,14 @@ export function Project({ project, index }: Props) {
           title={title}
           titleId={titleId}
           leadId={leadId}
-          tilt={index % 2 === 0 ? -1.6 : 1.2}
+          tilt={index % 2 === 0 ? -0.9 : 0.7}
         />
       </div>
 
       <div className="project__rest">
         {body?.map((paragraph) => (
           <Reveal key={paragraph} mode="lines">
-            {paragraph}
+            <Highlighted text={paragraph} phrase={highlight} />
           </Reveal>
         ))}
         {decision && (

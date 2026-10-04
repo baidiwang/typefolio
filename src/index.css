@@ -3,35 +3,69 @@
 :root {
   color-scheme: light;
 
-  /* Type: swap the face here. Cutive Mono has ONE weight and no italic, so
-     the design uses regular only (font-synthesis: none below) and builds
-     hierarchy from size, caps and ink colour. Its strokes are thin, so every
-     glyph gets a hairline outline in its own colour (--text-stroke), which
-     reads as a heavier weight without changing layout. */
-  --font-type: 'Cutive Mono', 'Courier New', 'Liberation Mono', ui-monospace, monospace;
+  /* Type: Sometype Mono, self-hosted at 400 and 700: body 400, project
+     titles 700 (--title-weight), section labels 400 in spaced caps.
+     ?font=plex|dmmono|cutive on previews. --text-stroke thickens Cutive
+     only (it has a single, thin weight). */
+  --font-type: 'Sometype Mono', ui-monospace, monospace;
   --font-weight: 400;
-  --text-stroke: 0.4px;
-  --tracking: -0.02em;
+  --title-weight: 700;
+  --text-stroke: 0px;
+  --tracking: 0;
 
-  /* Default theme: "valentine". Olivetti-red typewriter, powder-blue
-     desk, warm white paper. Contrast on --paper (WCAG AA needs 4.5:1):
-     --ink 17.8:1 · --ink-soft 9.5:1 · --ink-red 6.4:1
-     --note-ink is the red pen on the desk ("ring for sound"): 5.0:1 on
-     powder blue. Other desks: ?desk= (playground, below). */
-  /* Aged letter paper (the default sheet, below): warmer and yellowed. */
+  /* A lamp-lit night desk. Ink on aged paper (README, Colour); WCAG AA
+     needs 4.5:1, measured on the page under the lamp's falloff:
+     --ink warm near-black, --ink-soft warm grey (secondary text),
+     --ink-red a deep red for small red text (section labels).
+     --accent is the red for large marks only (pen dividers and circles).
+     --highlight is the highlighter swiped over one phrase per project.
+     --rose is the light pen on the dark desk ("ring for sound") and the
+     focus rings there. */
   --paper: #f3e7cc;
-  --paper-shadow: rgb(30 50 80 / 0.3);
-  --desk: #a9c2d9;
-  --note-ink: #8f1424;
-  --ink: #121110;
-  --ink-soft: #46413a;
-  --ink-red: #9c1a29;
+  --paper-shadow: rgb(8 6 10 / 0.55);
+  --room: #0e0f1a;
+  --desk: #4a2f1f;
+  --ink: #2a2520;
+  --ink-soft: #453d35;
+  --ink-red: #7a1f1a;
+  --accent: #af312b;
+  --highlight: #f6c1b4;
+  --rose: #f6c1b4;
   --tape: rgb(226 204 148 / 0.74);
   /* Darkening toward the sheet's worn edges. */
   --paper-edge: rgb(150 105 45 / 0.13);
+  /* The typewriter's colour (?tw=red|olive). */
+  --tw-colour: #af312b;
 
-  /* The name and signature's hand lettering (?name= on previews). */
-  --font-script: 'Damion', cursive;
+  /* The desk lamp (.lamp, fixed to the viewport, so the paper slides under
+     it): one warm light from the upper left. Two gradients on one layer:
+     a mild radial falloff over everything, kept light enough on the paper
+     for AA text, and a falloff that starts at the paper's edges and runs
+     to near-black navy at the screen's sides (darker on the right, away
+     from the lamp). --paper-l/--paper-r are the
+     paper's edges in viewport px (set by Typewriter.tsx). */
+  --lamp-radial: radial-gradient(
+    ellipse 90% 80% at 30% 12%,
+    rgb(255 210 150 / 0.06) 0%,
+    rgb(255 210 150 / 0) 32%,
+    rgb(14 15 26 / 0) 42%,
+    rgb(14 15 26 / 0.14) 100%
+  );
+  --lamp-desk: linear-gradient(
+    90deg,
+    rgb(14 15 26 / 0.72) 0,
+    rgb(14 15 26 / 0.2) calc(var(--paper-l, 50%) - 24px),
+    rgb(14 15 26 / 0.06) var(--paper-l, 50%),
+    transparent var(--paper-l, 50%),
+    transparent var(--paper-r, 50%),
+    rgb(14 15 26 / 0.12) var(--paper-r, 50%),
+    rgb(14 15 26 / 0.38) calc(var(--paper-r, 50%) + 24px),
+    rgb(14 15 26 / 0.92) 100%
+  );
+
+  /* The name and signature's hand lettering (?name=damion on previews). */
+  --font-script: 'Caveat', cursive;
+  --script-weight: 700;
 
   --measure: 50rem;
   --margin: clamp(1.25rem, 6vw, 4.5rem);
@@ -53,7 +87,8 @@
 }
 
 /* —— Design playground (dev + preview deployments: src/playground.ts) ——
-   ?theme=classic|hermes|cobalt  ?font=courier|space|plex
+   ?machine=drawn|roller  ?tw=red|olive  ?paper=folded|grain|plain
+   ?font=plex|dmmono|cutive  ?name=damion  ?theme=classic|hermes|cobalt
    Each theme only overrides tokens; the default (valentine) is above.
    The typewriter drawing is the same red in every theme.
    Contrast per theme is listed in the README (Design playground). */
@@ -85,8 +120,6 @@
   --ink-red: #b3261e;
 }
 
-/* ?paper=plain|grain (playground; the default is folded, on .paper below).
-   grain drops the folds; plain drops the texture. */
 /* ?paper=folded|grain|plain: the earlier, new-stationery sheets, for
    comparison with the aged default: white paper, clean tape, straight
    edges. */
@@ -116,63 +149,33 @@
   background: var(--paper);
 }
 
-/* ?name=pacifico|satisfy: other scripts for the name and signature. */
-:root[data-name='pacifico'] {
-  --font-script: 'Pacifico', cursive;
+/* ?name=damion: the earlier script for the name and signature. */
+:root[data-name='damion'] {
+  --font-script: 'Damion', cursive;
+  --script-weight: 400;
 }
 
-:root[data-name='satisfy'] {
-  --font-script: 'Satisfy', cursive;
+/* ?tw=olive: the typewriter in olive, like the reference photo. */
+:root[data-tw='olive'] {
+  --tw-colour: #8a9358;
 }
 
-/* ?desk=teal|sage|oak|navy|charcoal. The note ink (red pen on the desk)
-   stays ≥ 4.7:1 on each: a darker red on the light desks, a light red on
-   the dark ones. The bell's focus ring (paper inside ink) reads on all. */
-:root[data-desk='teal'] {
-  --desk: #1f4b4a;
-  --paper-shadow: rgb(0 0 0 / 0.4);
-  --note-ink: #ffb3a8;
-}
-
-:root[data-desk='sage'] {
-  --desk: #9fb08e;
-  --paper-shadow: rgb(40 50 30 / 0.3);
-  --note-ink: #7a1020;
-}
-
-:root[data-desk='oak'] {
-  --desk: #c39a6b;
-  --paper-shadow: rgb(60 35 10 / 0.35);
-  --note-ink: #6e0d1b;
-}
-
-:root[data-desk='navy'] {
-  --desk: #1f2a44;
-  --paper-shadow: rgb(0 0 0 / 0.45);
-  --note-ink: #ffb3a8;
-}
-
-:root[data-desk='charcoal'] {
-  --desk: #3d3532;
-  --paper-shadow: rgb(0 0 0 / 0.45);
-  --note-ink: #ffb3a8;
-}
-
-/* Alternative faces have real weights: no outline needed. */
-:root[data-font='courier'] {
-  --font-type: 'Courier Prime', 'Courier New', ui-monospace, monospace;
-  --text-stroke: 0px;
-}
-
-:root[data-font='space'] {
-  --font-type: 'Space Mono', 'Courier New', ui-monospace, monospace;
-  --text-stroke: 0px;
-}
-
+/* Alternative faces. Cutive Mono has one thin weight: a hairline outline
+   thickens it, and titles stay regular. DM Mono's heaviest is 500. */
 :root[data-font='plex'] {
-  --font-type: 'IBM Plex Mono', 'Courier New', ui-monospace, monospace;
-  --font-weight: 500;
-  --text-stroke: 0px;
+  --font-type: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+:root[data-font='dmmono'] {
+  --font-type: 'DM Mono', ui-monospace, monospace;
+  --title-weight: 500;
+}
+
+:root[data-font='cutive'] {
+  --font-type: 'Cutive Mono', 'Courier New', ui-monospace, monospace;
+  --title-weight: 400;
+  --text-stroke: 0.4px;
+  --tracking: -0.02em;
 }
 
 /* Desktop: the paper is only as wide as the machine (≈ 700–820 px), so a
@@ -203,7 +206,7 @@
 }
 
 html {
-  background: var(--desk);
+  background: var(--room);
   /* Keyboard focus and in-page jumps never land under the typewriter. */
   scroll-padding-bottom: calc(var(--tw-strip) + 1rem);
   -webkit-text-size-adjust: 100%;
@@ -213,15 +216,19 @@ html {
 
 h1,
 h2,
-h3,
 strong,
 b {
   font-weight: var(--font-weight);
 }
 
+h3 {
+  font-weight: var(--title-weight);
+}
+
 body {
   margin: 0;
   min-height: 100vh;
+  /* The walnut desk; the lamp darkens it toward the room at the edges. */
   background: var(--desk);
   color: var(--ink);
   font-family: var(--font-type);
@@ -247,12 +254,9 @@ a {
   text-underline-offset: 0.2em;
 }
 
-a:hover {
-  color: var(--ink-red);
-}
-
+/* Focus on the paper: a dashed ring in ink (red is kept for marks). */
 :focus-visible {
-  outline: 2px dashed var(--ink-red);
+  outline: 2px dashed var(--ink);
   outline-offset: 3px;
 }
 
@@ -345,9 +349,33 @@ a:hover {
   position: absolute;
   inset: 0 4px;
   z-index: -2;
+  /* The lamp is upper left: the sheet's shadow falls down and right. */
   box-shadow:
     0 0 0 1px rgb(60 45 20 / 0.06),
-    0 10px 40px var(--paper-shadow);
+    10px 14px 40px var(--paper-shadow);
+}
+
+/* —— Highlighter (Highlight.tsx) ——
+   One phrase per project, swiped on left to right once it has typed.
+   Before that the swipe is empty (background-size 0). */
+.hl {
+  background: linear-gradient(var(--highlight), var(--highlight)) no-repeat 0 55% / 0% 78%;
+  color: inherit;
+  padding: 0 0.08em;
+  margin: 0 -0.08em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.hl[data-swiped] {
+  background-size: 100% 78%;
+  transition: background-size 650ms cubic-bezier(0.3, 0.6, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hl[data-swiped] {
+    transition: none;
+  }
 }
 
 .sheet p,
@@ -363,11 +391,12 @@ h3 {
   margin: 0;
 }
 
-/* Section labels: caps and red ink. */
+/* Section labels: regular weight, spaced caps, deep red. */
 h2 {
   margin: 0 0 1.2em;
   color: var(--ink-red);
   text-transform: uppercase;
+  letter-spacing: 0.14em;
 }
 
 /* Inline labels (employer, short-entry titles): caps. */
@@ -389,7 +418,7 @@ h2 {
   height: auto;
   overflow: visible;
   fill: none;
-  stroke: var(--ink-red);
+  stroke: var(--accent);
   stroke-width: 2.1;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -413,7 +442,7 @@ h2 {
 .signature {
   display: inline-block;
   font-family: var(--font-script);
-  font-weight: 400;
+  font-weight: var(--script-weight);
   letter-spacing: 0;
   -webkit-text-stroke: 0;
   text-transform: none;
@@ -435,8 +464,6 @@ h2 {
 
 .pen-link:focus-visible {
   outline: none;
-  /* Red at once, while the circle draws in. */
-  color: var(--ink-red);
 }
 
 .pen-link__circle {
@@ -448,7 +475,7 @@ h2 {
   overflow: visible;
   pointer-events: none;
   fill: none;
-  stroke: var(--ink-red);
+  stroke: var(--accent);
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-dasharray: 1 2;
@@ -474,7 +501,7 @@ h2 {
 /* Touch screens can't hover: a dotted red underline says "link". */
 @media (hover: none) {
   .pen-link {
-    text-decoration: underline dotted var(--ink-red) 1.5px;
+    text-decoration: underline dotted var(--accent) 1.5px;
     text-underline-offset: 0.25em;
   }
 }
@@ -485,6 +512,13 @@ h2 {
 
 .letterhead__links {
   margin-top: 0.5em;
+}
+
+/* Phones: the four links fit on one line. */
+@media (max-width: 719px) {
+  .letterhead__links {
+    font-size: 0.88em;
+  }
 }
 
 .intro {
@@ -592,9 +626,10 @@ h2 {
   margin: 0;
   padding: 0.45em;
   background: #fff;
+  /* Lit from the upper left: a small, soft shadow falling down-right. */
   box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.12),
-    0 6px 16px rgb(60 45 20 / 0.16);
+    1px 1px 1px rgb(40 25 10 / 0.12),
+    3px 5px 9px rgb(40 25 10 / 0.14);
   transform: rotate(var(--tilt, -1.5deg));
   transition:
     transform 220ms ease,
@@ -656,8 +691,8 @@ a.taped:hover,
 a.taped:focus-visible {
   transform: rotate(calc(var(--tilt, -1.5deg) * 0.3)) translateY(-3px);
   box-shadow:
-    0 2px 4px rgb(0 0 0 / 0.12),
-    0 12px 26px rgb(60 45 20 / 0.22);
+    1px 2px 2px rgb(40 25 10 / 0.12),
+    5px 9px 16px rgb(40 25 10 / 0.18);
 }
 
 /* —— Ending: a letter's sign-off —— */
@@ -736,19 +771,32 @@ a.taped:focus-visible {
   }
 }
 
+/* —— The lamp —— */
+
+.lamp {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  background: var(--lamp-radial), var(--lamp-desk);
+}
+
 /* —— Typewriter (src/typewriter; docs/typewriter-rig.md) ——
-   A wide, low machine drawn from layered images, scaled by --tw-s so its
-   body matches the paper. The strip is the desk below the body's top edge:
-   the paper has gone into the machine, so nothing of it shows below that
-   edge. On desktop the red band under the keyboard runs off the bottom of
-   the screen. Layer boxes are set inline; --pl is the paper's left edge. */
+   The strip from the paper's entry line to the bottom of the screen is the
+   desk: the paper has gone into the machine, so nothing of it shows below
+   that line. The strip sits above the lamp layer, so it paints the same
+   lamp itself (the radial positioned against the viewport). The machines
+   bring their own lighting. */
 
 .typewriter {
   position: fixed;
   inset: auto 0 0;
   z-index: 10;
   height: var(--tw-strip);
-  background: var(--desk);
+  background:
+    var(--lamp-radial) 0 calc(var(--tw-strip) - 100vh) / 100% 100vh no-repeat,
+    var(--lamp-desk),
+    var(--desk);
   pointer-events: none;
   /* The lever and knobs can reach past a narrow window's edges. */
   overflow-x: clip;
@@ -759,6 +807,11 @@ a.taped:focus-visible {
   max-width: none;
   user-select: none;
 }
+
+/* —— Drawn machine: layered images, scaled by --tw-s so the body matches
+   the paper. On desktop the band under the keyboard runs off the bottom
+   of the screen. Layer boxes are set inline; --pl is the paper's left
+   edge. */
 
 /* A zero-size anchor at the body's top-left corner. */
 .tw-origin {
@@ -778,7 +831,8 @@ a.taped:focus-visible {
 }
 
 .tw-carriage,
-.tw-notch .tw-layer {
+.tw-notch .tw-layer,
+.tw-rcarriage {
   will-change: transform;
 }
 
@@ -803,21 +857,147 @@ a.taped:focus-visible {
   pointer-events: none;
 }
 
-.tw-bell:focus-visible {
-  outline: none;
-  box-shadow:
-    0 0 0 3px var(--paper),
-    0 0 0 6px var(--ink);
+/* On the dark desk, focus rings are light rose. */
+.tw-bell:focus-visible,
+.tw-light:focus-visible {
+  outline: 2px solid var(--rose);
+  outline-offset: 1px;
 }
 
-/* "ring for sound", in red pen on the desk right of the paper, with an
-   arrow down to the bell. Until the bell is first used; hidden where there
-   isn't room (and on phones, where the wiggle has to do). */
+/* —— Roller machine (?machine=roller): no body. A rendered platen roller
+   spans the paper at the bottom of the screen, gunmetal, lit from the
+   upper left, with end caps just outside the paper; a small carriage in
+   the typewriter's colour rides along it, with the sound toggle (an
+   indicator light) on it. --roller-h sets the scale. */
+
+:root[data-machine='roller'] {
+  --roller-h: 60px;
+  --tw-paper: 900px;
+  --tw-strip: calc(var(--roller-h) + 16px + env(safe-area-inset-bottom, 0px));
+}
+
+.tw-platen {
+  position: absolute;
+  top: 0;
+  left: var(--pl, 0);
+  width: var(--pw, 100%);
+  height: var(--roller-h);
+  border-radius: calc(var(--roller-h) * 0.12);
+  /* A cylinder: dark at the top and bottom edges, a soft highlight band
+     toward the lamp (upper left), brighter at the left end. */
+  background:
+    linear-gradient(90deg, rgb(255 225 185 / 0.16), rgb(255 225 185 / 0) 45%, rgb(0 0 0 / 0.22)),
+    linear-gradient(
+      180deg,
+      #1d1f23 0%,
+      #4b5058 14%,
+      #9aa0a7 27%,
+      #6f757d 40%,
+      #464b52 62%,
+      #2a2d32 84%,
+      #151618 100%
+    );
+  box-shadow:
+    0 calc(var(--roller-h) * 0.12) calc(var(--roller-h) * 0.25) rgb(0 0 0 / 0.5);
+}
+
+/* End caps: darker metal hubs, a touch taller than the roller. */
+.tw-platen::before,
+.tw-platen::after {
+  content: '';
+  position: absolute;
+  top: calc(var(--roller-h) * -0.08);
+  width: calc(var(--roller-h) * 0.38);
+  height: calc(var(--roller-h) * 1.16);
+  border-radius: calc(var(--roller-h) * 0.12) / calc(var(--roller-h) * 0.3);
+  background:
+    linear-gradient(90deg, rgb(255 225 185 / 0.18), rgb(0 0 0 / 0.25)),
+    linear-gradient(180deg, #121315, #3a3e44 22%, #6c7178 34%, #2c2f34 70%, #0e0f11);
+}
+
+.tw-platen::before {
+  right: 100%;
+}
+
+.tw-platen::after {
+  left: 100%;
+}
+
+/* The carriage: a small block in the typewriter's colour on the roller's
+   lower half, resting at the right end of the paper. */
+.tw-rcarriage {
+  position: absolute;
+  top: calc(var(--roller-h) * 0.42);
+  left: calc(var(--pr, 100%) - var(--roller-h) * 1.9 - 10px);
+  width: calc(var(--roller-h) * 1.9);
+  height: calc(var(--roller-h) * 0.7);
+  border-radius: calc(var(--roller-h) * 0.1);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--tw-colour), white 22%),
+    var(--tw-colour) 40%,
+    color-mix(in oklab, var(--tw-colour), black 35%)
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.25),
+    0 3px 6px rgb(0 0 0 / 0.45);
+}
+
+/* The indicator light: the sound toggle (44 px hit area; dim = off, lit =
+   on), near the carriage's right end. */
+.tw-light {
+  position: absolute;
+  top: 50%;
+  right: calc(var(--roller-h) * 0.32);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  margin-right: -22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.tw-light__lamp {
+  width: clamp(7px, calc(var(--roller-h) * 0.2), 12px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #8a6a45, #3b2a19 70%);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.5);
+  transition:
+    background 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.tw-light[aria-pressed='true'] .tw-light__lamp {
+  background: radial-gradient(circle at 35% 35%, #fff4d6, #ffb347 55%, #e0782a);
+  box-shadow:
+    0 0 6px 2px rgb(255 175 80 / 0.75),
+    0 0 16px 4px rgb(255 160 60 / 0.35);
+}
+
+/* Phones: a thinner roller, in proportion to the paper. */
+@media (max-width: 719px) {
+  :root[data-machine='roller'] {
+    --roller-h: 26px;
+  }
+}
+
+/* —— "ring for sound" —— in light-rose pen on the desk right of the
+   paper, with an arrow down to the toggle. Until the toggle is first used;
+   hidden where there isn't room (and on phones, where the wiggle has to
+   do). */
 .tw-note {
   position: absolute;
-  color: var(--note-ink);
+  color: var(--rose);
   font-family: 'Caveat', cursive;
   font-size: 1.45rem;
+  font-weight: 400;
   line-height: 1;
   letter-spacing: 0;
   -webkit-text-stroke: 0;
@@ -839,53 +1019,27 @@ a.taped:focus-visible {
   stroke-linejoin: round;
 }
 
+/* Roller: the note stands above the desk right of the paper; the arrow
+   reaches down to the light at the carriage's right end. */
+.typewriter--roller .tw-note {
+  left: calc(var(--pr, 100%) + 18px);
+  top: -48px;
+}
+
+.typewriter--roller .tw-note__arrow {
+  left: -60px;
+  top: 16px;
+  width: 70px;
+  height: 90px;
+}
+
 .typewriter[data-note='off'] .tw-note {
   display: none;
 }
 
-/* On the desk to the right of the machine, as tall as the visible
-   typewriter, standing on the bottom of the screen (box inline). */
-.desk-plant {
-  position: absolute;
-}
-
-.plant-sway {
-  position: absolute;
-}
-
-.plant-sway img {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-/* The foliage sways gently about the stems' base; the bell sets off a
-   bigger sway on the image inside (Typewriter.tsx). */
-@media (prefers-reduced-motion: no-preference) {
-  .plant-sway {
-    animation: plant-sway 6s ease-in-out infinite alternate;
-  }
-}
-
-@keyframes plant-sway {
-  from {
-    rotate: -1.5deg;
-  }
-
-  to {
-    rotate: 1.5deg;
-  }
-}
-
-.typewriter[data-plant='off'] .desk-plant {
-  display: none;
-}
-
-/* Phones: the machine fills the width; no room for the plant or note.
-   The bell sits at the screen's edge, so its hit area leans left to stay
-   on screen (the bell itself stays inside it). */
+/* Phones: no room for the note. The bell sits at the screen's edge, so its
+   hit area leans left to stay on screen (the bell itself stays inside). */
 @media (max-width: 719px) {
-  .typewriter .desk-plant,
   .typewriter .tw-note {
     display: none;
   }

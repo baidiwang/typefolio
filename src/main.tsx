@@ -1,11 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-// Cutive Mono has a single weight; index.css sets font-synthesis: none so
-// the browser never fakes bold or italic.
-import '@fontsource/cutive-mono/400.css'
-// The name and signature's lettering, and the red-pen note by the bell.
-import '@fontsource/damion/400.css'
+// Sometype Mono at the two weights the design uses (body 400, titles 700);
+// index.css sets font-synthesis: none so the browser never fakes others.
+import '@fontsource/sometype-mono/400.css'
+import '@fontsource/sometype-mono/700.css'
+// Caveat: 700 for the name and signature, 400 for the note by the toggle.
 import '@fontsource/caveat/400.css'
+import '@fontsource/caveat/700.css'
 import './index.css'
 import App from './App.tsx'
 

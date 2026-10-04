@@ -47,37 +47,51 @@ scripts/encode-media.sh  ../3D-Portfolio/public/thumbnails lily    # just one
 
 ## Type and colour
 
-The face is **Cutive Mono**, self-hosted via `@fontsource/cutive-mono`, set
-once as `--font-type` in `src/index.css`.
-
-Cutive Mono has a single weight and no italic, so the page never asks for
-bold or italic and sets `font-synthesis: none` (no faux styles). Its strokes
-are thin, so every glyph gets a hairline outline in its own ink
-(`-webkit-text-stroke: var(--text-stroke) currentColor`, 0.4px), which reads
-as a heavier weight without touching layout, and body tracking is a little
-tight (`--tracking: -0.02em`). Hidden text hides its outline too:
-`::highlight(unrevealed)` sets `-webkit-text-stroke-color: transparent`.
-
-Hierarchy comes from size, caps and ink, never from tracking or weight:
+The face is **Sometype Mono**, self-hosted via `@fontsource/sometype-mono`
+at the two weights the design uses (400 and 700), set once as
+`--font-type` in `src/index.css`; `font-synthesis: none` means the browser
+never fakes others. Hierarchy:
 
 | Element | Treatment |
 | ------- | --------- |
-| Name (letterhead) | 3.4em, hand lettering (Damion), written on with a clip |
-| Section labels | caps, red ink |
-| Project titles | 1.4em |
-| Inline labels (employer, short entries) | caps |
-| Meta lines (type, stack) | `--ink-soft` |
+| Name (letterhead) | 3.4em, hand lettering (Caveat 700), written on with a clip |
+| Section labels | 400, spaced caps, deep red (`--ink-red`) |
+| Project titles | 1.4em, 700 |
+| Body, meta lines | 400; meta lines (type, role, stack) in `--ink-soft` |
 
-Body text is 17px on phones, 18px on desktop, in near-black ink. The default
-theme is **valentine** (aged letter paper, powder-blue desk #a9c2d9,
-Olivetti-red typewriter). Inks on the white paper of `?paper=plain`
-(#fbf8f2); see **Paper** for the aged default:
+Body text is 17px on phones, 18px on desktop.
 
-| Token        | Use                    | Contrast on paper |
-| ------------ | ---------------------- | ----------------- |
-| `--ink`      | body                   | 17.8 : 1          |
-| `--ink-soft` | meta lines             | 9.5 : 1           |
-| `--ink-red`  | section labels, pen dividers, focus | 6.4 : 1 |
+**The scene** is a quiet, lamp-lit night desk: a near-black warm navy room
+(`--room`), a walnut desk (`--desk`, plain: no fake grain) and one warm
+desk lamp from the upper left. The lamp is a single fixed layer (`.lamp`)
+with two gradients: a mild radial falloff over everything, and a falloff
+that starts at the paper's edges and runs to near-black at the screen's
+sides (darker on the right, away from the lamp). It's fixed to the
+viewport, so the paper slides under it as you scroll; the paper stays the
+brightest thing on screen. Scrolling on a phone-sized viewport with the CPU
+throttled 4× holds 60 fps with or without it.
+
+**Colour.** Ink is a warm near-black, `--ink` #2a2520, with a warm grey,
+`--ink-soft` #453d35, for secondary text. Red is only for marks: the pen
+dividers and pen circles use `--accent` #af312b; small red text (the
+section labels) uses a deeper `--ink-red` #7a1f1a. One key phrase per
+project gets the highlighter, `--highlight` #f6c1b4, swiped on left to
+right once that phrase has typed
+([`Highlight.tsx`](src/components/Highlight.tsx),
+[`useHighlighterSwipe`](src/hooks/useHighlighterSwipe.ts)). On the dark
+desk, the "ring for sound" note and the focus rings are light rose
+(`--rose`, the same #f6c1b4: 7.7:1 on walnut). Focus on the paper is a
+dashed ink ring.
+
+Contrast is measured on the page itself, under the lamp: with the text
+hidden, the darkest paper pixel behind every fully revealed line (stains,
+foxing, folds, edges and the lamp's falloff included), viewport by
+viewport down the whole page at 1440×900, 1280×800 and 390×844, for both
+machines, gives ink ≥ 7.1, ink-soft ≥ 5.1, ink-red ≥ 5.0, and ink on the
+highlighter ≥ 7.1 (AA text needs 4.5).
+
+**Photos** are tilted at most 1°, with a small, soft shadow falling down
+and to the right, away from the lamp.
 
 **Paper.** The sheet is an old letter from the 1960s: yellowed paper
 (#f3e7cc), fine grain, two clearly visible creases per letter-sized page
@@ -97,12 +111,8 @@ match. All of it comes from
   edges (edge masks of coprime heights, so the nicks don't line up), and
   its shadow by `::after`, just inside, so the desk shows through a nick.
 
-Contrast is measured on the page itself: with the text hidden, the darkest
-paper pixel behind every text line (stains, foxing, folds and edges
-included) still gives ink ≥ 11.2, ink-soft ≥ 6.3 and ink-red ≥ 5.3 at
-1440×900 and 390×844. The red ink is a little deeper on aged paper
-(#9c1a29; 6.6 on the plain base) to keep that margin. `?paper=folded|grain|plain`
-(previews) shows the earlier, new-stationery sheets for comparison.
+`?paper=folded|grain|plain` (previews) shows the earlier, new-stationery
+sheets for comparison.
 
 ## Sections, links and sound
 
@@ -112,33 +122,42 @@ included) still gives ink ≥ 11.2, ink-soft ≥ 6.3 and ink-red ≥ 5.3 at
   typing reaches it; static under reduced motion.
 - **The name** (and "Baidi" under "Yours in type," at the end) is hand
   lettering ([`Signature.tsx`](src/components/Signature.tsx)): real text in
-  a script face (Damion; `?name=` on previews), written on left to right by
+  a script face (Caveat 700; `?name=damion` on previews), written on left to right by
   a clip that runs as a drawing job in the reveal queue, so it happens in
   reading order. Static under reduced motion.
 - **Contact links** (Resume · Email · LinkedIn · GitHub) are printed in the
   letterhead as plain typed words
   ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)). On hover or
   keyboard focus a red pen circle (three hand-drawn variants) draws around
-  the word, and the word turns red; touch screens, which can't hover, get a
-  dotted red underline. The letter's closing ends with the email address.
+  the word; touch screens, which can't hover, get a dotted red underline. The letter's closing ends with the email address.
   The resume is `public/BaidiWangResume.pdf`.
-- **The typewriter** is a hand-drawn wide, low machine split into layers
-  (static body, a roller sliding behind the body's shoulders with the lever
-  and knobs, turning knobs, a ringing bell). The paper is exactly as wide as
-  its red body and disappears behind the body's top edge. On desktop the
-  machine shows from that edge to just below the keyboard,
-  `min(230px, 26vh)`, with the body drawn 10% wider than the drawing, which
-  sets the paper's width (≈ 900 px at 1440×900); on phones the paper keeps
-  its width and the whole machine shows, scaled to it, unstretched. A plant
-  about 80% as tall as the visible typewriter stands beside it on desktop, its
-  foliage swaying gently. Details:
-  [`docs/typewriter-rig.md`](docs/typewriter-rig.md).
-- **Sound** is off by default. **The bell is the toggle**: a real button
-  (aria-label "Sound", `aria-pressed`, at least 44 × 44 px, a paper-and-ink
-  focus ring). Turning sound on plays one ding. Until it's first used, a
-  red-pen note beside it says "ring for sound" (where there's desk room;
-  never over text), and the bell gives one small wiggle when the intro
-  finishes typing (phones get only the wiggle).
+- **The typewriter** comes in two variants (`?machine=` on previews; drawn
+  is the default), each in red #af312b or olive #8a9358 (`?tw=`):
+  - **drawn**: the hand-drawn wide, low machine split into layers (static
+    body, a roller sliding behind the body's shoulders with the lever and
+    knobs, turning knobs, a ringing bell), recoloured and lit from above
+    (brighter on top, into shadow toward the bottom). The paper is exactly
+    as wide as its body and disappears behind the body's top edge. On
+    desktop the machine shows from that edge to just below the keyboard,
+    `min(230px, 26vh)`, with the body drawn 10% wider than the drawing,
+    which sets the paper's width (898 px at 1440×900); on phones the paper
+    keeps its width and the whole machine shows, scaled to it.
+  - **roller**: no body. A rendered platen roller (gunmetal, a soft
+    highlight toward the lamp, end caps) spans the paper at the bottom,
+    60 px tall on desktop and 26 px on phones, with a small carriage in the
+    typewriter's colour that slides as text types. The paper isn't limited
+    by a machine: 900 px on desktop.
+
+  Either way the paper goes in at the top edge, and text reveals there.
+  Details: [`docs/typewriter-rig.md`](docs/typewriter-rig.md).
+- **Sound** is off by default. The toggle is a real button (aria-label
+  "Sound", `aria-pressed`, at least 44 × 44 px, a light-rose focus ring):
+  the bell on the drawn machine, an indicator light on the roller's
+  carriage (dim = off, lit = on). Turning sound on plays one ding. Until
+  it's first used, a light-rose pen note beside it says "ring for sound"
+  (where there's desk room; never over text), and the toggle gives one
+  small wiggle when the intro finishes typing (phones get only the
+  wiggle).
 
 ## How the reveal engine works
 
@@ -269,36 +288,21 @@ flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
 `VERCEL_ENV=preview`, or `PLAYGROUND=1`).
 
 ```
-/?theme=classic | hermes | cobalt     (default: valentine)
-/?font=courier | space | plex         (Courier Prime, Space Mono, IBM Plex Mono 500)
+/?machine=drawn | roller              (default: drawn)
+/?tw=red | olive                      (default: red)
 /?paper=folded | grain | plain        (default: aged)
-/?desk=teal | sage | oak | navy | charcoal   (default: powder blue)
-/?name=pacifico | satisfy             (default: Damion)
-/?desk=navy&name=satisfy
+/?font=plex | dmmono | cutive         (default: Sometype Mono)
+/?name=damion                         (default: Caveat 700)
+/?theme=classic | hermes | cobalt     (earlier colour themes)
+/?machine=roller&tw=olive
 ```
 
-Themes only override CSS variables (`:root[data-theme=…]` in
-`src/index.css`); the typewriter drawing stays red in every theme. The
-alternative faces have real weights, so they drop Cutive's outline
-(`--text-stroke: 0`); Plex is shown at weight 500.
-
-| Theme | Desk / paper / typewriter | ink | ink-soft | ink-red |
-| --- | --- | --- | --- | --- |
-| valentine (default) | powder blue / warm white / Olivetti red | 17.8 | 9.5 | 6.4 |
-| classic | warm grey / cream / green | 16.6 | 8.9 | 6.5 |
-| hermes | walnut / ivory / seafoam | 17.6 | 9.4 | 6.9 |
-| cobalt | cobalt blue / white / cream | 18.9 | 10.1 | 6.5 |
-
-Ratios are on plain paper (AA text needs 4.5); see **Paper** above for the
-textured default.
-
-`?desk=` swaps only the desk colour: teal #1f4b4a, sage #9fb08e, oak
-#c39a6b, navy #1f2a44, charcoal #3d3532 (default powder blue #a9c2d9). The
-"ring for sound" note uses `--note-ink`, at least 4.7:1 on each desk: dark
-reds on the light desks (#8f1424 on powder blue, 5.0; #7a1020 on sage;
-#6e0d1b on oak), a light red #ffb3a8 on the dark ones. The bell's focus
-ring is a paper ring inside an ink ring, so one of the two always stands
-out.
+Options are `data-*` attributes on `<html>` that `src/index.css` reads
+(the machine and colour are also read by `Typewriter.tsx`). DM Mono's
+heaviest weight is 500, so its titles use 500; Cutive Mono has one thin
+weight, so it gets the hairline outline (`--text-stroke`) and regular
+titles. The earlier colour themes still override the paper and desk
+colours, but they were made for the daytime desk.
 
 ## Stack
 

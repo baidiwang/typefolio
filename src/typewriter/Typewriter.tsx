@@ -3,31 +3,39 @@ import { reveal } from '../reveal/controller'
 import {
   BELL_PIVOT,
   BODY,
+  BODY_SRC,
   KNOB_L_PIVOT,
   KNOB_R_PIVOT,
   LAYERS,
-  MACHINE,
   NOTCH,
-  PLANT,
-  PLANT_FOLIAGE,
-  PLANT_POT,
-  STEM_PIVOT,
 } from './layers'
 import { playBell, playKey, playReturn, setSoundEnabled } from './sound'
 
-/** Carriage travel per typed character, in reference px of the drawing. */
+/**
+ * Two machines (?machine= on previews; drawn is the default):
+ * - drawn: the hand-drawn typewriter, recoloured (?tw=red|olive) and lit
+ *   from above; the paper goes in behind its body's top edge.
+ * - roller: no body, just a rendered platen roller spanning the paper at
+ *   the bottom of the screen, with a small carriage in the typewriter's
+ *   colour that slides as text types.
+ * Either way the paper's entry line (the strip's top edge) is where text
+ * appears (`data-reveal-inset`).
+ */
+type Machine = 'drawn' | 'roller'
+const machineOf = (): Machine =>
+  document.documentElement.dataset.machine === 'roller' ? 'roller' : 'drawn'
+const colourOf = (): 'red' | 'olive' =>
+  document.documentElement.dataset.tw === 'olive' ? 'olive' : 'red'
+
+/** Carriage travel per typed character: drawn, in reference px of the
+ *  drawing; roller, as a fraction of the paper's width. */
 const STEP = 0.5
-/** On desktop the body and roller are drawn 10% wider than the drawing
- *  (--tw-sx in index.css), so the paper, which matches the body, is wider.
- *  Small parts (bell, lever, axle, knobs) keep their proportions and only
- *  move outwards with it. Phones keep the drawing's proportions. */
+const ROLLER_STEP = 1 / 150
+/** The drawn body's width in the drawing (desktop draws it 10% wider:
+ *  --tw-sx in index.css). */
 const BODY_W = BODY.x1 - BODY.x0
-/** The plant is about 80% as tall as the visible typewriter (its top to
- *  the bottom of the keyboard frame). */
-const PLANT_H = 0.8 * (BODY.keyboardBottom - MACHINE.y0)
-const PLANT_W = (PLANT_H * PLANT.w) / PLANT.h
-/** Whether the reader has used the bell yet (hides the "ring for sound"
- *  note). Per browser; the page works the same without storage. */
+/** Whether the reader has used the sound toggle yet (hides the "ring for
+ *  sound" note). Per browser; the page works the same without storage. */
 const USED_KEY = 'typefolio:sound-used'
 
 type Box = { x: number; y: number; w: number; h: number }
@@ -65,39 +73,19 @@ const part = ({ x, y, w, h }: Box, side: 'left' | 'right'): CSSProperties => ({
 const origin = (p: { x: number; y: number }, b: Box) =>
   `${(((p.x - b.x) / b.w) * 100).toFixed(2)}% ${(((p.y - b.y) / b.h) * 100).toFixed(2)}%`
 
-/** A plant layer, as % of the whole plant's box. */
-const inPlant = ({ x, y, w, h }: Box): CSSProperties => ({
-  left: `${(((x - PLANT.x) / PLANT.w) * 100).toFixed(2)}%`,
-  top: `${(((y - PLANT.y) / PLANT.h) * 100).toFixed(2)}%`,
-  width: `${((w / PLANT.w) * 100).toFixed(2)}%`,
-  height: `${((h / PLANT.h) * 100).toFixed(2)}%`,
-})
-
 const NOTCH_BOX = { x: NOTCH.x0, y: NOTCH.y0, w: NOTCH.x1 - NOTCH.x0, h: NOTCH.y1 - NOTCH.y0 }
 const KNOB_R = LAYERS.knobR
-/** Right edge of the machine (the right knob), from the body's left edge:
- *  stretched part + unstretched part. */
-const MACHINE_RIGHT: [number, number] = [
-  ANCHOR.right - BODY.x0,
-  KNOB_R.x + KNOB_R.w - ANCHOR.right,
-]
 const BELL = LAYERS.bell
-/** The bell's centre, likewise. */
+/** The bell's centre, from the body's left edge: stretched + unstretched. */
 const BELL_CX: [number, number] = [ANCHOR.right - BODY.x0, BELL.x + BELL.w / 2 - ANCHOR.right]
-
-const PLANT_STYLE: CSSProperties = {
-  left: `calc(${ux(...MACHINE_RIGHT)} + 10px)`,
-  top: u(BODY.keyboardBottom - PLANT_H - BODY.top),
-  width: u(PLANT_W),
-  height: u(PLANT_H),
-}
 
 const BELL_BUTTON_STYLE: CSSProperties = {
   left: ux(...BELL_CX),
   top: u(BELL.y + BELL.h / 2 - BODY.top),
 }
 
-/** The note sits on the desk to the right of the paper, above the bell. */
+/** Drawn: the note sits on the desk to the right of the paper, above the
+ *  bell. (Roller: placed in CSS, beside the carriage's light.) */
 const NOTE_STYLE: CSSProperties = {
   left: `calc(${ux(...BELL_CX)} + 18px)`,
   top: `calc(${u(BELL.y - BODY.top)} - 64px)`,
@@ -114,37 +102,36 @@ function storedUsed(): boolean {
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /**
- * The desk scene fixed to the bottom of the viewport: a wide, low
- * typewriter drawn from layered images (see docs/typewriter-rig.md). Its
- * body is exactly as wide as the paper, and the paper disappears behind
- * the body's top edge: below it there's only the desk (this strip) and the
- * machine. That edge is where text appears (`data-reveal-inset`).
+ * The desk scene fixed to the bottom of the viewport (see
+ * docs/typewriter-rig.md). Motion is imperative, driven by the reveal
+ * controller: the carriage slides per character and returns at line end;
+ * on the drawn machine the knobs turn on each line feed and the bell rings
+ * at the end of an element; on the roller the carriage's light blinks.
  *
- * Motion is imperative, driven by the reveal controller: the roller slides
- * (with the lever, axle and knobs) per character and returns at line end,
- * the knobs turn on each line feed, the bell rings at the end of an element
- * and the plant's foliage sways with it.
- *
- * The bell is the sound toggle (a real button). Until it's first used, a
- * red-pen note beside it says "ring for sound" (where there's room on the
- * desk), and it gives one small wiggle when the intro finishes typing.
- * Everything else is decorative (empty alt, nothing else focusable).
+ * The sound toggle is a real button: the bell (drawn) or the carriage's
+ * indicator light (roller). Until it's first used, a light-rose note beside
+ * it says "ring for sound" (where there's room on the desk), and it gives
+ * one small wiggle when the intro finishes typing. Everything else is
+ * decorative (empty alt, nothing else focusable).
  */
 export function Typewriter() {
+  const [machine] = useState(machineOf)
+  const [colour] = useState(colourOf)
   const sceneRef = useRef<HTMLDivElement>(null)
-  const rollerRef = useRef<HTMLImageElement>(null)
-  const carriageRef = useRef<HTMLDivElement>(null)
+  /** Everything that slides with the carriage. */
+  const movingRefs = useRef<(HTMLElement | null)[]>([])
   const knobLRef = useRef<HTMLImageElement>(null)
   const knobRRef = useRef<HTMLImageElement>(null)
-  const bellRef = useRef<HTMLImageElement>(null)
-  const foliageRef = useRef<HTMLImageElement>(null)
-  /** css px per reference px. */
-  const scaleRef = useRef(1)
+  /** The sound toggle's moving part: the bell, or the light's lamp. */
+  const toggleRef = useRef<HTMLElement | null>(null)
+  /** css px per carriage step. */
+  const stepRef = useRef(1)
   const [soundOn, setSoundOn] = useState(false)
   const [used, setUsed] = useState(storedUsed)
 
-  // Scale the machine to the paper: track the paper's left edge (--pl) and
-  // set --tw-s; hide the plant and the note where they don't fit.
+  // Track the paper: its edges (--pl/--pr on the scene; --paper-l/--paper-r
+  // on the root, for the lamp's falloff), the drawn machine's scale, the
+  // carriage step, and whether the note fits on the desk.
   useLayoutEffect(() => {
     const scene = sceneRef.current
     const paper = document.querySelector<HTMLElement>('.paper')
@@ -154,41 +141,47 @@ export function Typewriter() {
     root.setProperty('--tw-rows-desk', String(BODY.keyboardBottom - BODY.top))
     root.setProperty('--tw-rows-phone', String(BODY.bottom - BODY.top))
     const measure = () => {
-      const sx = parseFloat(getComputedStyle(scene).getPropertyValue('--tw-sx')) || 1
       const r = paper.getBoundingClientRect()
-      const s = r.width / (BODY_W * sx)
-      scaleRef.current = s
-      root.setProperty('--tw-s', s.toFixed(5))
+      root.setProperty('--paper-l', `${r.left}px`)
+      root.setProperty('--paper-r', `${r.right}px`)
       scene.style.setProperty('--pl', `${r.left}px`)
+      scene.style.setProperty('--pr', `${r.right}px`)
+      scene.style.setProperty('--pw', `${r.width}px`)
       const room = document.documentElement.clientWidth - 8
-      const machineRight = (MACHINE_RIGHT[0] * sx + MACHINE_RIGHT[1]) * s
-      scene.dataset.plant = r.left + machineRight + 10 + PLANT_W * s <= room ? 'on' : 'off'
-      // The note needs about 150 px of desk right of the paper.
-      const bellX = (BELL_CX[0] * sx + BELL_CX[1]) * s
-      scene.dataset.note = r.left + bellX + 18 + 150 <= room ? 'on' : 'off'
+      if (machine === 'drawn') {
+        const sx = parseFloat(getComputedStyle(scene).getPropertyValue('--tw-sx')) || 1
+        const s = r.width / (BODY_W * sx)
+        stepRef.current = STEP * s
+        root.setProperty('--tw-s', s.toFixed(5))
+        const bellX = (BELL_CX[0] * sx + BELL_CX[1]) * s
+        // The note needs about 150 px of desk right of the paper.
+        scene.dataset.note = r.left + bellX + 18 + 150 <= room ? 'on' : 'off'
+      } else {
+        stepRef.current = r.width * ROLLER_STEP
+        scene.dataset.note = r.right + 16 + 150 <= room ? 'on' : 'off'
+      }
     }
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(paper)
     ro.observe(document.documentElement)
     return () => ro.disconnect()
-  }, [])
+  }, [machine])
 
   useEffect(() => {
-    const moving = [rollerRef.current, carriageRef.current]
+    const moving = movingRefs.current
     const knobs = [knobLRef.current, knobRRef.current]
-    const bell = bellRef.current
-    const foliage = foliageRef.current
+    const toggle = toggleRef.current
 
     const moveCarriage = (column: number, ms: number, easing = 'linear') => {
       for (const el of moving) {
         if (!el) continue
         el.style.transition = `transform ${ms}ms ${easing}`
-        el.style.transform = `translateX(${-column * STEP * scaleRef.current}px)`
+        el.style.transform = `translateX(${-column * stepRef.current}px)`
       }
     }
     const carriageReturn = () => moveCarriage(0, 260, 'cubic-bezier(0.3, 0.8, 0.2, 1)')
-    // Line feed: the platen knobs turn a notch.
+    // Line feed: the platen knobs turn a notch (drawn only).
     const lineFeed = () => {
       for (const knob of knobs) {
         knob?.animate(
@@ -202,19 +195,18 @@ export function Typewriter() {
         )
       }
     }
-    const ringBell = () => {
-      animateBell(bell, 10)
-      swayPlant(foliage)
+    const ring = () => {
+      cue(toggle, machine, 1)
       playBell()
     }
 
-    // One small wiggle when the intro has finished typing, so the bell
+    // One small wiggle when the intro has finished typing, so the toggle
     // reads as something to touch.
     const intro = document.querySelector('.intro > :last-child')
     const stopWiggle =
       intro && !reducedMotion()
         ? reveal.whenDone(intro, () => {
-            if (!storedUsed()) animateBell(bell, 6, 700)
+            if (!storedUsed()) cue(toggle, machine, 0.6, 700)
           })
         : undefined
 
@@ -228,12 +220,12 @@ export function Typewriter() {
           carriageReturn()
           lineFeed()
           playReturn()
-          if (event.bell) ringBell()
+          if (event.bell) ring()
           break
         case 'feed':
           lineFeed()
           playReturn()
-          if (event.bell) ringBell()
+          if (event.bell) ring()
           break
         case 'idle':
           carriageReturn()
@@ -244,7 +236,7 @@ export function Typewriter() {
       stopWiggle?.()
       unsubscribe()
     }
-  }, [])
+  }, [machine])
 
   const toggleSound = () => {
     const next = !soundOn
@@ -252,10 +244,7 @@ export function Typewriter() {
     setSoundOn(next)
     if (next) {
       playBell()
-      if (!reducedMotion()) {
-        animateBell(bellRef.current, 10)
-        swayPlant(foliageRef.current)
-      }
+      if (!reducedMotion()) cue(toggleRef.current, machine, 1)
     }
     if (!used) {
       setUsed(true)
@@ -267,23 +256,74 @@ export function Typewriter() {
     }
   }
 
+  const moving = (i: number) => (el: HTMLElement | null) => {
+    movingRefs.current[i] = el
+  }
+
+  const note = !used && (
+    <div className="tw-note" style={machine === 'drawn' ? NOTE_STYLE : undefined} aria-hidden="true">
+      <span className="tw-note__text">ring for sound</span>
+      {machine === 'drawn' ? (
+        <svg className="tw-note__arrow" viewBox="0 0 60 50" focusable="false">
+          <path d="M52 6C40 10 22 18 12 38" />
+          <path d="M5 30L12 39L20 33" />
+        </svg>
+      ) : (
+        // Longer: from the note down past the roller's end to the light.
+        <svg className="tw-note__arrow" viewBox="0 0 70 90" focusable="false">
+          <path d="M64 6C46 12 24 34 17 78" />
+          <path d="M9 69L17 80L25 71" />
+        </svg>
+      )}
+    </div>
+  )
+
+  const toggleProps = {
+    type: 'button' as const,
+    'aria-label': 'Sound',
+    'aria-pressed': soundOn,
+    title: soundOn ? 'Sound on' : 'Sound off',
+    onClick: toggleSound,
+  }
+
+  if (machine === 'roller') {
+    return (
+      <div ref={sceneRef} className="typewriter typewriter--roller" data-reveal-inset="">
+        {/* The platen roller spans the paper; its end caps sit just
+            outside it. The carriage rides along it, starting at the right. */}
+        <div className="tw-platen" aria-hidden="true" />
+        <div ref={moving(0)} className="tw-rcarriage">
+          <button {...toggleProps} className="tw-light">
+            <span
+              ref={(el) => {
+                toggleRef.current = el
+              }}
+              className="tw-light__lamp"
+            />
+          </button>
+        </div>
+        {note}
+      </div>
+    )
+  }
+
   return (
-    <div ref={sceneRef} className="typewriter" data-reveal-inset="">
+    <div ref={sceneRef} className="typewriter typewriter--drawn" data-reveal-inset="">
       {/* A zero-size anchor at the body's top-left corner. Back to front:
           the roller (clipped to the notch between the shoulders), the body,
           the lever, axle and knobs, then the bell (a button). */}
       <div className="tw-origin">
         <div className="tw-notch" style={stretched(NOTCH_BOX)}>
           <img
-            ref={rollerRef}
+            ref={moving(0)}
             className="tw-layer"
             src={LAYERS.roller.src}
             style={stretched(LAYERS.roller, NOTCH.x0, NOTCH.y0)}
             alt=""
           />
         </div>
-        <img className="tw-layer" src={LAYERS.body.src} style={stretched(LAYERS.body)} alt="" />
-        <div ref={carriageRef} className="tw-carriage">
+        <img className="tw-layer" src={BODY_SRC[colour]} style={stretched(LAYERS.body)} alt="" />
+        <div ref={moving(1)} className="tw-carriage">
           <img className="tw-layer" src={LAYERS.lever.src} style={part(LAYERS.lever, 'left')} alt="" />
           <img className="tw-layer" src={LAYERS.axleR.src} style={part(LAYERS.axleR, 'right')} alt="" />
           <img
@@ -301,17 +341,11 @@ export function Typewriter() {
             alt=""
           />
         </div>
-        <button
-          type="button"
-          className="tw-bell"
-          style={BELL_BUTTON_STYLE}
-          aria-label="Sound"
-          aria-pressed={soundOn}
-          title={soundOn ? 'Sound on' : 'Sound off'}
-          onClick={toggleSound}
-        >
+        <button {...toggleProps} className="tw-bell" style={BELL_BUTTON_STYLE}>
           <img
-            ref={bellRef}
+            ref={(el) => {
+              toggleRef.current = el
+            }}
             src={BELL.src}
             style={{
               width: u(BELL.w),
@@ -321,58 +355,36 @@ export function Typewriter() {
             alt=""
           />
         </button>
-        {!used && (
-          <div className="tw-note" style={NOTE_STYLE} aria-hidden="true">
-            <span className="tw-note__text">ring for sound</span>
-            <svg className="tw-note__arrow" viewBox="0 0 60 50" focusable="false">
-              <path d="M52 6C40 10 22 18 12 38" />
-              <path d="M5 30L12 39L20 33" />
-            </svg>
-          </div>
-        )}
-        <div className="desk-plant" style={PLANT_STYLE} aria-hidden="true">
-          <img className="tw-layer" src={PLANT_POT.src} style={inPlant(PLANT_POT)} alt="" />
-          <div
-            className="plant-sway"
-            style={{ ...inPlant(PLANT_FOLIAGE), transformOrigin: origin(STEM_PIVOT, PLANT_FOLIAGE) }}
-          >
-            <img
-              ref={foliageRef}
-              src={PLANT_FOLIAGE.src}
-              style={{ transformOrigin: origin(STEM_PIVOT, PLANT_FOLIAGE) }}
-              alt=""
-            />
-          </div>
-        </div>
+        {note}
       </div>
     </div>
   )
 }
 
-/** The bell rings (or wiggles, with a smaller swing) about its stem. */
-function animateBell(bell: HTMLElement | null, deg: number, ms = 420) {
-  bell?.animate(
-    [
-      { transform: 'rotate(0deg)' },
-      { transform: `rotate(${deg}deg)` },
-      { transform: `rotate(${-deg * 0.8}deg)` },
-      { transform: `rotate(${deg * 0.4}deg)` },
-      { transform: 'rotate(0deg)' },
-    ],
-    { duration: ms, easing: 'ease-out' },
-  )
-}
-
-/** The bell shakes the desk: a bigger sway on top of the idle one. */
-function swayPlant(foliage: HTMLElement | null) {
-  foliage?.animate(
-    [
-      { transform: 'rotate(0deg)' },
-      { transform: 'rotate(4deg)' },
-      { transform: 'rotate(-3deg)' },
-      { transform: 'rotate(1.2deg)' },
-      { transform: 'rotate(0deg)' },
-    ],
-    { duration: 1400, easing: 'ease-out' },
-  )
+/** The toggle answers: the bell swings about its stem (drawn), or the
+ *  carriage's light blinks (roller). `amount` 1 = a ring, less = a wiggle. */
+function cue(el: HTMLElement | null, machine: Machine, amount: number, ms = 420) {
+  if (!el) return
+  if (machine === 'drawn') {
+    const deg = 10 * amount
+    el.animate(
+      [
+        { transform: 'rotate(0deg)' },
+        { transform: `rotate(${deg}deg)` },
+        { transform: `rotate(${-deg * 0.8}deg)` },
+        { transform: `rotate(${deg * 0.4}deg)` },
+        { transform: 'rotate(0deg)' },
+      ],
+      { duration: ms, easing: 'ease-out' },
+    )
+  } else {
+    el.animate(
+      [
+        { transform: 'scale(1)', filter: 'brightness(1)' },
+        { transform: `scale(${1 + 0.35 * amount})`, filter: `brightness(${1 + 1.2 * amount})` },
+        { transform: 'scale(1)', filter: 'brightness(1)' },
+      ],
+      { duration: ms + 200, easing: 'ease-out' },
+    )
+  }
 }

@@ -6,7 +6,7 @@
 /** Where each layer image sits in the drawing. */
 export const LAYERS = {
   roller: { src: '/art/typewriter-roller.webp', x: 299, y: 222, w: 918, h: 56 },
-  body: { src: '/art/typewriter-body.webp', x: 259, y: 216, w: 1012, h: 342 },
+  body: { src: '/art/typewriter-body-red.webp', x: 259, y: 216, w: 1012, h: 342 },
   bell: { src: '/art/typewriter-bell.webp', x: 1215, y: 163, w: 59, h: 87 },
   lever: { src: '/art/typewriter-lever.webp', x: 251, y: 158, w: 38, h: 126 },
   axleR: { src: '/art/typewriter-axle-r.webp', x: 1250, y: 250, w: 28, h: 36 },
@@ -38,9 +38,5 @@ export const BELL_PIVOT = { x: 1240, y: 250 } as const
 export const KNOB_L_PIVOT = { x: 236, y: 272 } as const
 export const KNOB_R_PIVOT = { x: 1295, y: 277 } as const
 
-/** The plant, a separate drawing (art/plant.png at 1024 px): its whole
- *  box, the pot and the foliage, which sways about the stems' base. */
-export const PLANT = { x: 367, y: 133, w: 309, h: 757 } as const
-export const PLANT_POT = { src: '/art/plant-pot.webp', x: 370, y: 610, w: 292, h: 280 }
-export const PLANT_FOLIAGE = { src: '/art/plant-foliage.webp', x: 367, y: 133, w: 309, h: 526 }
-export const STEM_PIVOT = { x: 512, y: 660 } as const
+/** The body in each colour (?tw=red|olive): same box as LAYERS.body. */
+export const BODY_SRC = { red: '/art/typewriter-body-red.webp', olive: '/art/typewriter-body-olive.webp' } as const

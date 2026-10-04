@@ -7,11 +7,13 @@ import { Project } from './components/Project'
 import { Signature } from './components/Signature'
 import { featuredProjects, gameProjects, otherProjects, site, xrExperiments } from './content'
 import { useHashScroll } from './hooks/useHashScroll'
+import { useHighlighterSwipe } from './hooks/useHighlighterSwipe'
 import { Reveal } from './reveal/Reveal'
 import { Typewriter } from './typewriter/Typewriter'
 
 export default function App() {
   useHashScroll()
+  useHighlighterSwipe()
 
   return (
     <div className="desk">
@@ -22,6 +24,8 @@ export default function App() {
       {/* Fixed to the bottom of the screen; first in the DOM so its bell
           (the sound toggle) comes right after the skip link. */}
       <Typewriter />
+      {/* The desk lamp: one fixed light over everything but the machine. */}
+      <div className="lamp" aria-hidden="true" />
 
       <div className="paper" id="top">
         <Letterhead />
