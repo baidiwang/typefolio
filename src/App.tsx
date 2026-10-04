@@ -4,7 +4,7 @@ import { ExternalLink } from './components/ExternalLink'
 import { Letterhead } from './components/Letterhead'
 import { OneLiners } from './components/OneLiners'
 import { Project } from './components/Project'
-import { SoundToggle } from './components/SoundToggle'
+import { Signature } from './components/Signature'
 import { featuredProjects, gameProjects, otherProjects, site, xrExperiments } from './content'
 import { useHashScroll } from './hooks/useHashScroll'
 import { Reveal } from './reveal/Reveal'
@@ -19,7 +19,9 @@ export default function App() {
         Skip to content
       </a>
 
-      <SoundToggle />
+      {/* Fixed to the bottom of the screen; first in the DOM so its bell
+          (the sound toggle) comes right after the skip link. */}
+      <Typewriter />
 
       <div className="paper" id="top">
         <Letterhead />
@@ -44,7 +46,7 @@ export default function App() {
 
           <section aria-labelledby="other-heading">
             <Reveal as="h2" id="other-heading">
-              Other
+              Data visualization
             </Reveal>
             <OneLiners items={otherProjects} />
           </section>
@@ -53,7 +55,7 @@ export default function App() {
 
           <section aria-labelledby="games-heading">
             <Reveal as="h2" id="games-heading">
-              Games &amp; 3D
+              Games &amp; XR
             </Reveal>
             {gameProjects.map((project, i) => (
               <Project key={project.id} project={project} index={i} />
@@ -71,18 +73,19 @@ export default function App() {
 
           <Divider variant={3} />
 
-          {/* The page ends like a letter: closing, then the signature. */}
+          {/* The page ends like a letter: closing, sign-off, signature. */}
           <footer className="ending">
             <Reveal mode="lines">
               {site.ending.closing}{' '}
               <a href={site.links.email.href}>{site.links.email.display}</a>
             </Reveal>
-            <Reveal className="ending__signature">{site.ending.signature}</Reveal>
+            <Reveal className="ending__signoff">{site.ending.signOff}</Reveal>
+            <Signature className="ending__signature" duration={700}>
+              {site.ending.signature}
+            </Signature>
           </footer>
         </main>
       </div>
-
-      <Typewriter />
     </div>
   )
 }

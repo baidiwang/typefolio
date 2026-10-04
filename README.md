@@ -62,16 +62,15 @@ Hierarchy comes from size, caps and ink, never from tracking or weight:
 
 | Element | Treatment |
 | ------- | --------- |
-| Name (letterhead) | 2em, caps |
+| Name (letterhead) | 3.4em, hand lettering (Damion), written on with a clip |
 | Section labels | caps, red ink |
 | Project titles | 1.4em |
 | Inline labels (employer, short entries) | caps |
 | Meta lines (type, stack) | `--ink-soft` |
 
 Body text is 17px on phones, 18px on desktop, in near-black ink. The default
-theme is **valentine** (warm white paper, warm charcoal desk #3d3532, so the
-typewriter's black outlines still read against it, Olivetti-red
-typewriter). Inks on `--paper` (#fbf8f2):
+theme is **valentine** (warm white paper, powder-blue desk #a9c2d9,
+Olivetti-red typewriter). Inks on `--paper` (#fbf8f2):
 
 | Token        | Use                    | Contrast on paper |
 | ------------ | ---------------------- | ----------------- |
@@ -95,22 +94,35 @@ at ink ≥ 14.2, ink-soft ≥ 7.6, ink-red ≥ 5.5 in every theme.
   ([`Divider.tsx`](src/components/Divider.tsx)): three hand-drawn variants,
   mirrored after the third. Each one draws itself (stroke offset) when
   typing reaches it; static under reduced motion.
+- **The name** (and "Baidi" under "Yours in type," at the end) is hand
+  lettering ([`Signature.tsx`](src/components/Signature.tsx)): real text in
+  a script face (Damion; `?name=` on previews), written on left to right by
+  a clip that runs as a drawing job in the reveal queue, so it happens in
+  reading order. Static under reduced motion.
 - **Contact links** (Resume · Email · LinkedIn · GitHub) are printed in the
-  letterhead ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)); the
-  letter's closing ends with the email address. The resume is
-  `public/BaidiWangResume.pdf`.
+  letterhead as plain typed words
+  ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)). On hover or
+  keyboard focus a red pen circle (three hand-drawn variants) draws around
+  the word, and the word turns red; touch screens, which can't hover, get a
+  dotted red underline. The letter's closing ends with the email address.
+  The resume is `public/BaidiWangResume.pdf`.
 - **The typewriter** is a hand-drawn wide, low machine split into layers
   (static body, a roller sliding behind the body's shoulders with the lever
   and knobs, turning knobs, a ringing bell). The paper is exactly as wide as
   its red body and disappears behind the body's top edge. On desktop the
   machine shows from that edge to just below the keyboard,
-  `min(230px, 26vh)`, which sets the paper's width (≈ 700–820 px); on phones
-  the paper keeps its width and the whole machine shows, scaled to it. A
-  plant stands beside it on desktop. Details:
+  `min(230px, 26vh)`, with the body drawn 10% wider than the drawing, which
+  sets the paper's width (≈ 900 px at 1440×900); on phones the paper keeps
+  its width and the whole machine shows, scaled to it, unstretched. A plant
+  as tall as the visible typewriter stands beside it on desktop, its
+  foliage swaying gently. Details:
   [`docs/typewriter-rig.md`](docs/typewriter-rig.md).
-- **Sound** is off by default. The round speaker button in the top-right
-  corner ([`SoundToggle.tsx`](src/components/SoundToggle.tsx)) toggles it
-  (`aria-pressed`), clear of notches via `env(safe-area-inset-*)`.
+- **Sound** is off by default. **The bell is the toggle**: a real button
+  (aria-label "Sound", `aria-pressed`, at least 44 × 44 px, a paper-and-ink
+  focus ring). Turning sound on plays one ding. Until it's first used, a
+  red-pen note beside it says "ring for sound" (where there's desk room;
+  never over text), and the bell gives one small wiggle when the intro
+  finishes typing (phones get only the wiggle).
 
 ## How the reveal engine works
 
@@ -146,8 +158,9 @@ element in a layout effect (before first paint, so nothing flashes):
   in document order, compressed to finish within **1.5 s** of fonts being
   ready. Typewriter logic: nothing below the line being typed is ever
   visible early.
-- Otherwise → hidden and observed. (The letterhead isn't registered: it's
-  printed stationery, visible from the first frame.)
+- Otherwise → hidden and observed. (The letterhead's title and links aren't
+  registered: they're printed stationery, visible from the first frame. The
+  name is a drawing job, written on first.)
 
 The controller runs a single `requestAnimationFrame` loop over a queue of
 jobs, one active at a time, in document order. Two modes:
@@ -243,7 +256,9 @@ flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
 /?theme=classic | hermes | cobalt     (default: valentine)
 /?font=courier | space | plex         (Courier Prime, Space Mono, IBM Plex Mono 500)
 /?paper=plain | grain                 (default: folded)
-/?theme=hermes&font=plex&paper=plain
+/?desk=teal | sage | oak | navy | charcoal   (default: powder blue)
+/?name=pacifico | satisfy             (default: Damion)
+/?desk=navy&name=satisfy
 ```
 
 Themes only override CSS variables (`:root[data-theme=…]` in
@@ -253,16 +268,21 @@ alternative faces have real weights, so they drop Cutive's outline
 
 | Theme | Desk / paper / typewriter | ink | ink-soft | ink-red |
 | --- | --- | --- | --- | --- |
-| valentine (default) | charcoal / warm white / Olivetti red | 17.8 | 9.5 | 6.4 |
+| valentine (default) | powder blue / warm white / Olivetti red | 17.8 | 9.5 | 6.4 |
 | classic | warm grey / cream / green | 16.6 | 8.9 | 6.5 |
 | hermes | walnut / ivory / seafoam | 17.6 | 9.4 | 6.9 |
 | cobalt | cobalt blue / white / cream | 18.9 | 10.1 | 6.5 |
 
 Ratios are on plain paper (AA text needs 4.5); see **Paper** above for the
-textured default. The sound button is a paper
-disc with an ink icon (17.8) or, when on, paper on red ink (6.4); its focus
-ring is a paper ring inside an ink ring, so it stands out on the charcoal
-desk and on the paper alike.
+textured default.
+
+`?desk=` swaps only the desk colour: teal #1f4b4a, sage #9fb08e, oak
+#c39a6b, navy #1f2a44, charcoal #3d3532 (default powder blue #a9c2d9). The
+"ring for sound" note uses `--note-ink`, at least 4.7:1 on each desk: dark
+reds on the light desks (#8f1424 on powder blue, 5.0; #7a1020 on sage;
+#6e0d1b on oak), a light red #ffb3a8 on the dark ones. The bell's focus
+ring is a paper ring inside an ink ring, so one of the two always stands
+out.
 
 ## Stack
 

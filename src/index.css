@@ -13,19 +13,22 @@
   --text-stroke: 0.4px;
   --tracking: -0.02em;
 
-  /* Default theme: "valentine". Olivetti-red typewriter, deep charcoal
+  /* Default theme: "valentine". Olivetti-red typewriter, powder-blue
      desk, warm white paper. Contrast on --paper (WCAG AA needs 4.5:1):
      --ink 17.8:1 · --ink-soft 9.5:1 · --ink-red 6.4:1
-     The desk is a warm charcoal, a touch lighter than #2b2a2c, so the
-     typewriter's black feet and knobs still read where they stand on it
-     beside the paper. */
+     --note-ink is the red pen on the desk ("ring for sound"): 5.0:1 on
+     powder blue. Other desks: ?desk= (playground, below). */
   --paper: #fbf8f2;
-  --paper-shadow: rgb(0 0 0 / 0.45);
-  --desk: #3d3532;
+  --paper-shadow: rgb(30 50 80 / 0.3);
+  --desk: #a9c2d9;
+  --note-ink: #8f1424;
   --ink: #121110;
   --ink-soft: #46413a;
   --ink-red: #b01e2f;
   --tape: rgb(238 228 196 / 0.72);
+
+  /* The name and signature's hand lettering (?name= on previews). */
+  --font-script: 'Damion', cursive;
 
   --measure: 50rem;
   --margin: clamp(1.25rem, 6vw, 4.5rem);
@@ -40,7 +43,9 @@
      to the bottom of the viewport is --tw-strip tall; the paper's bottom
      padding and the scroll padding use it. Fallbacks match the drawing. */
   --tw-visible: min(230px, 26vh);
-  --tw-paper: calc(var(--tw-visible) * var(--tw-aspect, 3.5477));
+  /* Desktop draws the body 10% wider than the drawing (phones: 1). */
+  --tw-sx: 1.1;
+  --tw-paper: calc(var(--tw-visible) * var(--tw-aspect, 3.5477) * var(--tw-sx));
   --tw-strip: calc(var(--tw-s, 0.8127) * var(--tw-rows-desk, 283) * 1px);
 }
 
@@ -89,6 +94,48 @@
   background-image: none;
 }
 
+/* ?name=pacifico|satisfy: other scripts for the name and signature. */
+:root[data-name='pacifico'] {
+  --font-script: 'Pacifico', cursive;
+}
+
+:root[data-name='satisfy'] {
+  --font-script: 'Satisfy', cursive;
+}
+
+/* ?desk=teal|sage|oak|navy|charcoal. The note ink (red pen on the desk)
+   stays ≥ 4.7:1 on each: a darker red on the light desks, a light red on
+   the dark ones. The bell's focus ring (paper inside ink) reads on all. */
+:root[data-desk='teal'] {
+  --desk: #1f4b4a;
+  --paper-shadow: rgb(0 0 0 / 0.4);
+  --note-ink: #ffb3a8;
+}
+
+:root[data-desk='sage'] {
+  --desk: #9fb08e;
+  --paper-shadow: rgb(40 50 30 / 0.3);
+  --note-ink: #7a1020;
+}
+
+:root[data-desk='oak'] {
+  --desk: #c39a6b;
+  --paper-shadow: rgb(60 35 10 / 0.35);
+  --note-ink: #6e0d1b;
+}
+
+:root[data-desk='navy'] {
+  --desk: #1f2a44;
+  --paper-shadow: rgb(0 0 0 / 0.45);
+  --note-ink: #ffb3a8;
+}
+
+:root[data-desk='charcoal'] {
+  --desk: #3d3532;
+  --paper-shadow: rgb(0 0 0 / 0.45);
+  --note-ink: #ffb3a8;
+}
+
 /* Alternative faces have real weights: no outline needed. */
 :root[data-font='courier'] {
   --font-type: 'Courier Prime', 'Courier New', ui-monospace, monospace;
@@ -108,10 +155,10 @@
 
 /* Desktop: the paper is only as wide as the machine (≈ 700–820 px), so a
    slimmer margin keeps the text column readable. It still clears the bell,
-   which stands about 48 drawing px (≤ 40 css px) inside the paper. */
+   which stands about 48 drawing px (≤ 42 css px) inside the paper. */
 @media (min-width: 720px) {
   :root {
-    --margin: 2.75rem;
+    --margin: 3rem;
   }
 }
 
@@ -120,6 +167,7 @@
 @media (max-width: 719px) {
   :root {
     --tw-paper: 100%;
+    --tw-sx: 1;
     --tw-strip: calc(
       var(--tw-s, 0.3645) * var(--tw-rows-phone, 337) * 1px + env(safe-area-inset-bottom, 0px)
     );
@@ -226,7 +274,7 @@ a:hover {
 }
 
 .paper {
-  width: min(100%, calc(var(--measure) + 2 * var(--margin)), var(--tw-paper));
+  width: min(100%, var(--tw-paper));
   min-height: 100vh;
   margin: 0 auto;
   padding: calc(var(--margin) * 0.6) var(--margin)
@@ -304,9 +352,75 @@ h2 {
   text-align: center;
 }
 
+/* Hand lettering: the name at the top and the signature at the end
+   (Signature.tsx writes them on with a clip). */
+.signature {
+  display: inline-block;
+  font-family: var(--font-script);
+  font-weight: 400;
+  letter-spacing: 0;
+  -webkit-text-stroke: 0;
+  text-transform: none;
+}
+
 .letterhead__name {
-  font-size: 2em;
-  text-transform: uppercase;
+  margin: 0;
+  font-size: 3.4em;
+  line-height: 1.15;
+}
+
+/* Contact links: plain typed words; a red pen circle draws around one on
+   hover or keyboard focus (ContactLinks.tsx). The circle is the focus
+   indicator. */
+.pen-link {
+  position: relative;
+  text-decoration: none;
+}
+
+.pen-link:focus-visible {
+  outline: none;
+  /* Red at once, while the circle draws in. */
+  color: var(--ink-red);
+}
+
+.pen-link__circle {
+  position: absolute;
+  left: -0.6em;
+  top: -0.5em;
+  width: calc(100% + 1.2em);
+  height: calc(100% + 1em);
+  overflow: visible;
+  pointer-events: none;
+  fill: none;
+  stroke: var(--ink-red);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 450ms ease-out;
+}
+
+.pen-link__circle path {
+  vector-effect: non-scaling-stroke;
+}
+
+.pen-link:hover .pen-link__circle,
+.pen-link:focus-visible .pen-link__circle {
+  stroke-dashoffset: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pen-link__circle {
+    transition: none;
+  }
+}
+
+/* Touch screens can't hover: a dotted red underline says "link". */
+@media (hover: none) {
+  .pen-link {
+    text-decoration: underline dotted var(--ink-red) 1.5px;
+    text-underline-offset: 0.25em;
+  }
 }
 
 .letterhead__title {
@@ -334,6 +448,11 @@ h2 {
 
 .one-liner p {
   margin: 0;
+}
+
+.one-liner .project__stack,
+.one-liner .project__links {
+  margin-top: 0.8em;
 }
 
 /* —— Projects ——
@@ -489,10 +608,15 @@ a.taped:focus-visible {
   margin: 0 0 0.6em;
 }
 
-/* Placeholder until the handwritten SVG signature lands. */
-.ending__signature {
-  margin: 1.2em 0 0.4em !important;
-  font-size: 1.6em;
+/* "Yours in type," then "Baidi" in the name's lettering. */
+.ending p.ending__signoff {
+  margin: 1.6em 0 0;
+}
+
+.ending p.ending__signature {
+  margin: 0.1em 0 0.4em;
+  font-size: 2.6em;
+  line-height: 1.2;
 }
 
 
@@ -505,62 +629,6 @@ a.taped:focus-visible {
   a.taped:focus-visible {
     transform: rotate(var(--tilt, -1.5deg));
   }
-}
-
-/* —— Sound toggle (src/components/SoundToggle.tsx) ——
-   Fixed top-right, clear of notches and rounded corners (on phones the
-   machine fills the bottom edge). A paper disc with an ink rim reads on both
-   the dark desk and the paper; on = red. */
-
-.sound-toggle {
-  position: fixed;
-  top: max(0.75rem, calc(env(safe-area-inset-top) + 0.5rem));
-  right: max(0.75rem, calc(env(safe-area-inset-right) + 0.5rem));
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  padding: 0;
-  border: 1.5px solid var(--ink);
-  border-radius: 50%;
-  background: var(--paper);
-  color: var(--ink);
-  box-shadow: 0 2px 10px rgb(0 0 0 / 0.28);
-  cursor: pointer;
-}
-
-.sound-toggle svg {
-  width: 1.4rem;
-  height: 1.4rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.sound-toggle__speaker {
-  fill: currentColor;
-}
-
-.sound-toggle:hover {
-  color: var(--ink-red);
-}
-
-.sound-toggle[aria-pressed='true'] {
-  border-color: var(--ink-red);
-  background: var(--ink-red);
-  color: var(--paper);
-}
-
-/* Two rings, light then dark, so the focus indicator stands out on the
-   charcoal desk and on the paper alike. */
-.sound-toggle:focus-visible {
-  outline: none;
-  box-shadow:
-    0 0 0 3px var(--paper),
-    0 0 0 6px var(--ink);
 }
 
 /* —— Reveal engine (see src/reveal) ——
@@ -652,22 +720,119 @@ a.taped:focus-visible {
   will-change: transform;
 }
 
-/* On the desk to the right of the machine, at about 40% of its height,
-   standing on the bottom of the screen (left and height inline). */
+/* The bell is the sound toggle: a 44 px hit area at least, centred on the
+   bell (position inline). */
+.tw-bell {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  translate: -50% -50%;
+}
+
+.tw-bell img {
+  pointer-events: none;
+}
+
+.tw-bell:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 0 0 6px var(--ink);
+}
+
+/* "ring for sound", in red pen on the desk right of the paper, with an
+   arrow down to the bell. Until the bell is first used; hidden where there
+   isn't room (and on phones, where the wiggle has to do). */
+.tw-note {
+  position: absolute;
+  color: var(--note-ink);
+  font-family: 'Caveat', cursive;
+  font-size: 1.45rem;
+  line-height: 1;
+  letter-spacing: 0;
+  -webkit-text-stroke: 0;
+  white-space: nowrap;
+  rotate: -5deg;
+  pointer-events: none;
+}
+
+.tw-note__arrow {
+  position: absolute;
+  left: -26px;
+  top: 22px;
+  width: 44px;
+  height: 36px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.typewriter[data-note='off'] .tw-note {
+  display: none;
+}
+
+/* On the desk to the right of the machine, as tall as the visible
+   typewriter, standing on the bottom of the screen (box inline). */
 .desk-plant {
   position: absolute;
-  bottom: 0;
-  width: auto;
-  transform-origin: 50% 100%;
+}
+
+.plant-sway {
+  position: absolute;
+}
+
+.plant-sway img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The foliage sways gently about the stems' base; the bell sets off a
+   bigger sway on the image inside (Typewriter.tsx). */
+@media (prefers-reduced-motion: no-preference) {
+  .plant-sway {
+    animation: plant-sway 6s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes plant-sway {
+  from {
+    rotate: -1.5deg;
+  }
+
+  to {
+    rotate: 1.5deg;
+  }
 }
 
 .typewriter[data-plant='off'] .desk-plant {
   display: none;
 }
 
-/* Phones: the machine fills the width; no room for the plant. */
+/* Phones: the machine fills the width; no room for the plant or note.
+   The bell sits at the screen's edge, so its hit area leans left to stay
+   on screen (the bell itself stays inside it). */
 @media (max-width: 719px) {
-  .typewriter .desk-plant {
+  .typewriter .desk-plant,
+  .typewriter .tw-note {
     display: none;
+  }
+
+  .tw-bell {
+    translate: calc(-50% - 8px) -50%;
+  }
+
+  .tw-bell img {
+    translate: 8px 0;
   }
 }

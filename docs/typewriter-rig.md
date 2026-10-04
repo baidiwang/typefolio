@@ -25,26 +25,29 @@ strip until the paper feeds them out.
 
 | | Desktop (≥ 720 px) | Phones (< 720 px) |
 | --- | --- | --- |
-| Sizing | the body shows from its top edge to just below the keyboard frame, `--tw-visible: min(230px, 26vh)`; that fixes the scale, and the paper narrows to the body's width | the paper keeps its width (viewport − 2 × 12 px); the machine is scaled so the body matches it |
+| Sizing | the body shows from its top edge to just below the keyboard frame, `--tw-visible: min(230px, 26vh)`, and is drawn 10% wider than the drawing (`--tw-sx: 1.1`); that fixes the scale, and the paper matches the body's width | the paper keeps its width (viewport − 2 × 12 px); the machine is scaled so the body matches it, unstretched |
 | Shown | body top to keyboard frame; the plain red band below runs off the screen | the whole machine, ≈ 123 px of body at 390 px wide (146 px including the bell and lever above the edge) |
-| Paper width | ≈ 816 px at 1440×900, 738 at 1280×800, 708 at 1366×768 | 366 px at 390 |
-| Plant | beside the machine, if it fits | hidden |
-| Sound button | top-right | top-right (the machine fills the bottom edge) |
+| Paper width | 898 px at 1440×900, 812 at 1280×800, 779 at 1366×768 | 366 px at 390 |
+| Plant | beside the machine, as tall as the visible typewriter, if it fits | hidden |
+| Sound | the bell; "ring for sound" note beside it until first used, if there's room | the bell; no note (only the wiggle) |
 
 The scale is `--tw-s`, css px per drawing px, which `Typewriter.tsx` sets
-from the paper's measured width (body width ÷ drawing width). Every layer
-is placed with `calc(var(--tw-s) × n × 1px)` from the body's top-left
-corner, which sits at the paper's left edge (`--pl`) on the strip's top
-edge. CSS gets the paper's desktop width from `--tw-visible` and the
+from the paper's measured width (paper width ÷ (body width × `--tw-sx`)).
+Every layer is placed with `calc(var(--tw-s) × n × 1px)` from the body's
+top-left corner, which sits at the paper's left edge (`--pl`) on the
+strip's top edge. The stretch applies to the body, the roller and the
+notch; the small parts (lever, knobs, right axle, bell) keep their
+proportions and hang off the columns where the axles meet the body
+(x 289 left, 1250 right), so they stay attached and only move outwards. CSS gets the paper's desktop width from `--tw-visible` and the
 drawing's aspect (`--tw-aspect`); the strip height (`--tw-strip`) from the
 scale and the drawing's rows, and the paper's bottom padding and the scroll
 padding use it.
 
-Because the paper is narrower than before, desktop uses a 2.75rem paper
-margin, a 1.5em gap between photo and text, and 18 px body text, so the 45%
-text column holds about 25–29 characters per line at the sizes above (≈ 33
-on phones). The margin also keeps the text clear of the bell and lever,
-which reach about 48 and 30 drawing px inside the paper's edges.
+Desktop uses a 3rem paper margin, a 1.5em gap between photo and text, and
+18 px body text, so the 45% text column holds 32 characters per line at
+1440×900, 29 at 1280×800 and 27 at 1366×768 (33 on phones). The margin
+also keeps the text clear of the bell and lever, which reach about 48 and
+30 drawing px inside the paper's edges (7 px clearance at 1440×900).
 
 ## Layers
 
@@ -54,10 +57,11 @@ Back to front:
 | --- | --- | --- | --- |
 | roller | `public/art/typewriter-roller.webp` | the roller and its two paper guides, from the notch, extended 90 drawing px past both ends with stretches of roller from just inside it. Red streaks drawn on the roller are painted roller-black | slides; clipped to the notch (`.tw-notch`), so the extensions only ever show between the shoulders |
 | body | `public/art/typewriter-body.webp` | the red body, shoulders and keyboard, with the notch cut out so the roller shows through | static |
-| bell | `public/art/typewriter-bell.webp` | the bell on its stem, above the right shoulder | rings: `rotate(0 → 10 → −8 → 4 → 0deg)` over 420 ms about the stem's foot (`BELL_PIVOT`) whenever an element finishes |
+| bell | `public/art/typewriter-bell.webp` | the bell on its stem, above the right shoulder, inside a `<button>` (the sound toggle) | rings: `rotate(0 → 10 → −8 → 4 → 0deg)` over 420 ms about the stem's foot (`BELL_PIVOT`) whenever an element finishes and when sound is turned on; one smaller wiggle when the intro finishes typing, until the bell is first used |
 | lever, axle | `typewriter-lever.webp`, `typewriter-axle-r.webp` | the return lever with the left axle; the right axle | slide with the roller |
 | knob L / R | `typewriter-knob-l.webp`, `-knob-r.webp` | the platen knobs | slide with the roller; turn `rotate(0 → −14 → 3 → 0deg)` over 220 ms about their centres on each line feed |
-| plant | `public/art/plant.webp` | potted plant (its pot's inside filled, so it reads on the desk) | sways `rotate(±2deg)` about its base when the bell rings |
+| plant pot | `public/art/plant-pot.webp` | the pot (its inside filled, so it reads on the desk) | static |
+| plant foliage | `public/art/plant-foliage.webp` | leaves and stems, down to where they enter the pot (in front of the pot's back rim) | sways `rotate(±1.5deg)` about the stems' base (`STEM_PIVOT`), 6 s ease-in-out, alternating; a bigger sway (±4°, 1.4 s) when the bell rings. None under reduced motion |
 
 The roller, lever, axle and knobs slide together,
 `translateX(−column × STEP × scale)` per typed character (`STEP` = 0.5
@@ -67,11 +71,27 @@ return. Under reduced motion nothing moves (the controller sends no events).
 
 ## Plant
 
-On the desk to the right of the machine (8 px past the right knob), about
-40% of the machine's height (bell top to feet), standing on the bottom of
-the screen, which is where the machine's visible base is on desktop.
+On the desk to the right of the machine (10 px past the right knob), as
+tall as the visible typewriter (its top to the bottom of the keyboard
+frame), standing on the bottom of the screen, which is where the machine's
+visible base is on desktop. It's always right of the paper, never on it.
 `Typewriter.tsx` hides it when it would reach within 8 px of the window's
 right edge, and CSS hides it on phones.
+
+## The bell is the sound toggle
+
+A real `<button>` (aria-label "Sound", `aria-pressed`, at least 44 × 44 px,
+centred on the bell; on phones the hit area leans left so it stays on
+screen) with a paper-inside-ink focus ring. Off by default; turning sound
+on plays one ding. It's the first focus stop after the skip link (the
+typewriter comes first in the DOM).
+
+Until it's first used (remembered in `localStorage`), a red-pen note in
+Caveat says "ring for sound" with an arrow down to the bell. It sits on the
+desk right of the paper, above the plant, never over text, and is hidden
+where there isn't about 150 px of desk (and on phones). The bell also gives
+one small wiggle when the intro finishes typing, unless reduced motion is
+on.
 
 ## Geometry
 
@@ -85,23 +105,25 @@ and are generated into [`src/typewriter/layers.ts`](../src/typewriter/layers.ts)
 - `NOTCH` — the roller's window between the shoulders.
 - `MACHINE` — the box around everything drawn.
 - `BELL_PIVOT`, `KNOB_L_PIVOT`, `KNOB_R_PIVOT` — rotation centres.
-- `PLANT` — the plant's crop.
+- `PLANT`, `PLANT_POT`, `PLANT_FOLIAGE`, `STEM_PIVOT` — the plant's crop,
+  its two layers and the foliage's pivot (in the plant drawing's own px,
+  resampled to 1024).
 
 ## Export
 
-- WebP at the drawing's own resolution (the body shows at most ≈ 820 css px
-  wide, so about 1.2× on desktop), quality 84; the plant at 2× its largest
-  display size. Current sizes:
+- WebP at the drawing's own resolution (the body shows at most ≈ 900 css px
+  wide, so about 1.1× on desktop), quality 84; the plant at 2× its largest
+  display size (320 px). Current sizes:
 
   | Layer | Pixels | Size |
   | --- | --- | --- |
-  | body | 1012×342 | 73 KB |
-  | roller | 918×56 | 6 KB |
-  | lever, axle | 49×126, 34×40 | 4 KB |
-  | knob L / R | 35×88 / 45×114 | 4 KB |
-  | bell | 59×87 | 2 KB |
-  | plant | 139×340 | 18 KB |
-  | **total** | | **≈ 107 KB** |
+  | body | 1012×342 | 66 KB |
+  | roller | 918×56 | 13 KB |
+  | lever, axle | 38×126, 28×36 | 3 KB |
+  | knob L / R | 35×88 / 41×105 | 5 KB |
+  | bell | 59×87 | 3 KB |
+  | plant pot / foliage | 247×237 / 261×445 | 47 KB |
+  | **total** | | **≈ 136 KB** |
 
 - `index.html` preloads the body and the roller (they're on every first
   screen).
@@ -132,16 +154,14 @@ It removes old WebPs before writing new ones.
 4. Check the cut: compose the layers with the roller group slid ~60 px left
    and look for holes or pieces left behind.
 
-## Nothing interactive
+## Only the bell is interactive
 
-The typewriter is decorative: the strip is `aria-hidden`, every image has
-empty `alt`, and nothing on it is focusable or clickable
-(`pointer-events: none`). The contact links are printed on the paper
-(letterhead and closing), and the sound toggle is its own button in the
-top-right corner ([`SoundToggle.tsx`](../src/components/SoundToggle.tsx)).
+Everything else on the typewriter is decorative: every image has empty
+`alt`, the note and plant are `aria-hidden`, and the strip ignores the
+pointer (`pointer-events: none`) except for the bell.
 
 ## Sound
 
 `src/typewriter/sound.ts` synthesises keystroke, return and bell sounds with
-Web Audio. It's off on every visit; the speaker button toggles it. The
+Web Audio. It's off on every visit; the bell toggles it. The
 `AudioContext` is only created on that click.

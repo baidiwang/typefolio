@@ -51,20 +51,31 @@ ROLLER_INK = (24, 22, 26)        # paints those streaks out
 KEYBOARD_BOTTOM = 504            # just below the keyboard frame's outline
 # Moving parts, as boxes (x0, y0, x1, y1). The lever and left axle end where
 # the body's left edge begins; the right axle where its right edge ends.
-LEVER_BOX = (240, 150, 289, 284)
-KNOB_L_BOX = (214, 220, 259, 324)
-AXLE_R_BOX = (1250, 246, 1284, 286)
-KNOB_R_BOX = (1271, 221, 1320, 336)
+# Where the lever and left knob touch, the knob gets x < LEVER_SPLIT; above
+# the knob the lever takes everything in its box. On the right the axle
+# takes the joint and the knob the rest of its box.
+LEVER_BOX = (238, 150, 289, 284)
+LEVER_SPLIT = (253, 226)        # x, and the row where the knob begins
+KNOB_L_BOX = (214, 220, 256, 324)
+AXLE_R_BOX = (1250, 246, 1278, 286)
+KNOB_R_BOX = (1270, 221, 1320, 336)
 BELL_DOME_BOX = (1210, 150, 1280, 219)
 BELL_STEM_BOX = (1234, 219, 1250, 250)  # down to just above the axle
 EXTEND = 90                      # roller added past each end of the notch
 ALPHA_MIN = 16                   # faint alpha noise below this is transparent
 POT_FILL = (246, 242, 234)       # inside the plant pot's outline
+# The plant (art/plant.png at 1024 px): the pot's back rim starts at
+# POT_TOP; the stems pass in front of it down to STEM_BASE, within
+# STEM_COLS. The foliage sways about STEM_PIVOT.
+POT_TOP = 610
+STEM_BASE = 662
+STEM_COLS = (465, 560)
+STEM_PIVOT = (512, 660)
 
 # Export: at most source resolution (the body shows at most ~820 css px
 # wide, so this is about 1.2x on desktop).
 EXPORT_SCALE = 1.0
-PLANT_DISPLAY_MAX = 170          # css px; exported at 2x
+PLANT_DISPLAY_MAX = 320          # css px; exported at 2x
 WEBP_QUALITY = 84
 
 
@@ -154,9 +165,11 @@ def main():
     # —— Moving parts and the bell —————————————————————————————————————————
     shape = (h, w)
     lever = opaque & box_mask(shape, LEVER_BOX) & ~red
+    split_x, split_y = LEVER_SPLIT
+    lever[split_y:, :split_x] = False
     knob_l = opaque & box_mask(shape, KNOB_L_BOX) & ~lever
     axle_r = opaque & box_mask(shape, AXLE_R_BOX) & ~red
-    knob_r = opaque & box_mask(shape, KNOB_R_BOX) & ~axle_r
+    knob_r = opaque & box_mask(shape, KNOB_R_BOX) & ~axle_r & ~red
     bell = opaque & (box_mask(shape, BELL_DOME_BOX) | box_mask(shape, BELL_STEM_BOX)) & ~red
     bell &= ~knob_r
 
@@ -209,10 +222,27 @@ def main():
     for name, rgba in layers_rgba.items():
         export(name, rgba, bbox(rgba[..., 3] > 0), EXPORT_SCALE)
 
-    plant = load(PLANT_SRC)
+    plant = load(PLANT_SRC, 1024)
     pbox = bbox(plant[..., 3] > 0)
     fill_pot(plant, pbox)
-    export('plant', plant, pbox, 2 * PLANT_DISPLAY_MAX / (pbox[3] - pbox[1]))
+    # Foliage: everything above the pot's back rim, plus the stems (green
+    # paint and the outlines within a few px of it) where they pass in front
+    # of the rim. The pot is the rest.
+    prgb = plant[..., :3].astype(int)
+    popaque = plant[..., 3] > 0
+    green = (prgb[..., 1] > prgb[..., 0] + 25) & (prgb[..., 1] > prgb[..., 2]) & popaque
+    near_green = green.copy()
+    for d in range(1, 5):
+        near_green |= np.roll(green, d, axis=1) | np.roll(green, -d, axis=1)
+    foliage = popaque.copy()
+    foliage[POT_TOP:] = False
+    band = np.zeros_like(foliage)
+    band[POT_TOP:STEM_BASE, STEM_COLS[0]:STEM_COLS[1]] = True
+    foliage |= band & popaque & near_green
+    pot = popaque & ~foliage
+    pscale = 2 * PLANT_DISPLAY_MAX / (pbox[3] - pbox[1])
+    for name, mask in (('plant-pot', pot), ('plant-foliage', foliage)):
+        export(name, np.where(mask[..., None], plant, 0).astype(np.uint8), bbox(mask), pscale)
 
     # Remove exports from earlier versions of the rig.
     for stale in OUT.glob('*.webp'):
@@ -276,8 +306,12 @@ export const BELL_PIVOT = {{ x: {int(stem.mean())}, y: {BELL_STEM_BOX[3]} }} as 
 export const KNOB_L_PIVOT = {centre(knob_l)} as const
 export const KNOB_R_PIVOT = {centre(knob_r)} as const
 
-/** The plant, a separate drawing (art/plant.png). */
-export const PLANT = {entry('plant')}
+/** The plant, a separate drawing (art/plant.png at 1024 px): its whole
+ *  box, the pot and the foliage, which sways about the stems' base. */
+export const PLANT = {{ x: {pbox[0]}, y: {pbox[1]}, w: {pbox[2] - pbox[0]}, h: {pbox[3] - pbox[1]} }} as const
+export const PLANT_POT = {entry('plant-pot')}
+export const PLANT_FOLIAGE = {entry('plant-foliage')}
+export const STEM_PIVOT = {{ x: {STEM_PIVOT[0]}, y: {STEM_PIVOT[1]} }} as const
 """)
     print('wrote', TS_OUT.relative_to(ROOT), f'(line {line}, body {body_x0}–{body_x1})')
 

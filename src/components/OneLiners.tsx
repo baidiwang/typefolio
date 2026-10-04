@@ -2,7 +2,7 @@ import type { OtherProject } from '../content'
 import { Reveal } from '../reveal/Reveal'
 import { ExternalLink } from './ExternalLink'
 
-/** Short entries: title, type, one sentence, one link. */
+/** Short entries: title, type, a few sentences, stack, one link. */
 export function OneLiners({ items }: { items: OtherProject[] }) {
   return (
     <ul className="one-liners">
@@ -12,15 +12,17 @@ export function OneLiners({ items }: { items: OtherProject[] }) {
             <span className="label">{item.title}</span>
             <span className="project__kind"> — {item.kind}</span>
           </Reveal>
-          <Reveal mode="lines">
-            {item.oneLiner}
-            {item.href && (
-              <>
-                {' '}
-                <ExternalLink href={item.href}>{item.linkLabel ?? 'Link'} ↗</ExternalLink>
-              </>
-            )}
-          </Reveal>
+          <Reveal mode="lines">{item.oneLiner}</Reveal>
+          {item.stack && (
+            <Reveal mode="lines" className="project__stack">
+              Stack: {item.stack.join(', ')}
+            </Reveal>
+          )}
+          {item.href && (
+            <Reveal className="project__links">
+              <ExternalLink href={item.href}>{item.linkLabel ?? 'Link'} ↗</ExternalLink>
+            </Reveal>
+          )}
         </li>
       ))}
     </ul>
