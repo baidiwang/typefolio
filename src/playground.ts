@@ -1,25 +1,27 @@
 /**
  * Design playground: try variants from the URL.
  *
- *   ?machine=roller | drawn            (default: roller)
- *   ?desk=deep                         (default: mustard; a deeper mustard)
+ *   ?machine=drawn | roller            (default: drawn)
+ *   ?tw=red | olive                    (default: red; the typewriter's colour)
  *   ?paper=folded | grain | plain      (default: aged)
  *   ?font=plex | dmmono | cutive       (default: Sometype Mono)
  *   ?name=damion                       (default: Caveat 700; the name and the
  *                                       signature's lettering)
+ *   ?theme=classic | hermes | cobalt   (earlier colour themes; default: none)
  *
  * Enabled in dev and on preview deployments: main.tsx imports this module
  * only when `__PLAYGROUND__` (vite.config.ts), so production builds contain
  * neither it nor the extra fonts. Each option is a `data-*` attribute on
- * <html> that index.css (and Typewriter.tsx, for the machine)
+ * <html> that index.css (and Typewriter.tsx, for the machine and colour)
  * reads. The default look is what you get with no parameters.
  */
 
 /** Allowed values per option; the first is the default (no attribute). */
 const OPTIONS = {
-  machine: ['roller', 'drawn'],
-  desk: ['mustard', 'deep'],
+  machine: ['drawn', 'roller'],
+  tw: ['red', 'olive'],
   paper: ['aged', 'folded', 'plain', 'grain'],
+  theme: ['none', 'classic', 'hermes', 'cobalt'],
 } as const
 
 /** Applies URL overrides. Resolves once any extra font CSS is loaded. */

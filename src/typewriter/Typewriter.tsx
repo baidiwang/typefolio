@@ -3,6 +3,7 @@ import { reveal } from '../reveal/controller'
 import {
   BELL_PIVOT,
   BODY,
+  BODY_SRC,
   KNOB_L_PIVOT,
   KNOB_R_PIVOT,
   LAYERS,
@@ -11,18 +12,20 @@ import {
 import { playBell, playKey, playReturn, setSoundEnabled } from './sound'
 
 /**
- * Two machines (roller is the default; ?machine=drawn on previews):
+ * Two machines (?machine= on previews; drawn is the default):
+ * - drawn: the hand-drawn typewriter, recoloured (?tw=red|olive) and lit
+ *   from above; the paper goes in behind its body's top edge.
  * - roller: no body, just a rendered platen roller spanning the paper at
- *   the bottom of the screen (knobs, a paper bail), with a slim pointer
- *   carriage that slides as text types.
- * - drawn: the hand-drawn typewriter in thread green, lit from above; the
- *   paper goes in behind its body's top edge.
+ *   the bottom of the screen, with a small carriage in the typewriter's
+ *   colour that slides as text types.
  * Either way the paper's entry line (the strip's top edge) is where text
  * appears (`data-reveal-inset`).
  */
 type Machine = 'drawn' | 'roller'
 const machineOf = (): Machine =>
-  document.documentElement.dataset.machine === 'drawn' ? 'drawn' : 'roller'
+  document.documentElement.dataset.machine === 'roller' ? 'roller' : 'drawn'
+const colourOf = (): 'red' | 'olive' =>
+  document.documentElement.dataset.tw === 'olive' ? 'olive' : 'red'
 
 /** Carriage travel per typed character: drawn, in reference px of the
  *  drawing; roller, as a fraction of the paper's width. */
@@ -31,6 +34,9 @@ const ROLLER_STEP = 1 / 150
 /** The drawn body's width in the drawing (desktop draws it 10% wider:
  *  --tw-sx in index.css). */
 const BODY_W = BODY.x1 - BODY.x0
+/** Whether the reader has used the sound toggle yet (hides the "ring for
+ *  sound" note). Per browser; the page works the same without storage. */
+const USED_KEY = 'typefolio:sound-used'
 
 type Box = { x: number; y: number; w: number; h: number }
 
@@ -85,6 +91,14 @@ const NOTE_STYLE: CSSProperties = {
   top: `calc(${u(BELL.y - BODY.top)} - 64px)`,
 }
 
+function storedUsed(): boolean {
+  try {
+    return localStorage.getItem(USED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /**
@@ -95,14 +109,14 @@ const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)'
  * at the end of an element; on the roller the carriage's light blinks.
  *
  * The sound toggle is a real button: the bell (drawn) or the carriage's
- * indicator light (roller). On every visit, until sound has been turned on,
- * a thread-green note beside it says "ring for sound" (where it fits on the
- * desk without covering text), and it gives one small wiggle when the
- * intro finishes typing. Nothing is remembered between visits. Everything
- * else is decorative (empty alt, nothing else focusable).
+ * indicator light (roller). Until it's first used, a light-rose note beside
+ * it says "ring for sound" (where there's room on the desk), and it gives
+ * one small wiggle when the intro finishes typing. Everything else is
+ * decorative (empty alt, nothing else focusable).
  */
 export function Typewriter() {
   const [machine] = useState(machineOf)
+  const [colour] = useState(colourOf)
   const sceneRef = useRef<HTMLDivElement>(null)
   /** Everything that slides with the carriage. */
   const movingRefs = useRef<(HTMLElement | null)[]>([])
@@ -113,9 +127,7 @@ export function Typewriter() {
   /** css px per carriage step. */
   const stepRef = useRef(1)
   const [soundOn, setSoundOn] = useState(false)
-  /** Sound has been turned on during this visit: the note goes. */
-  const [used, setUsed] = useState(false)
-  const usedRef = useRef(false)
+  const [used, setUsed] = useState(storedUsed)
 
   // Track the paper: its edges (--pl/--pr on the scene; --paper-l/--paper-r
   // on the root, for the lamp's falloff), the drawn machine's scale, the
@@ -194,7 +206,7 @@ export function Typewriter() {
     const stopWiggle =
       intro && !reducedMotion()
         ? reveal.whenDone(intro, () => {
-            if (!usedRef.current) cue(toggle, machine, 0.6, 700)
+            if (!storedUsed()) cue(toggle, machine, 0.6, 700)
           })
         : undefined
 
@@ -233,8 +245,14 @@ export function Typewriter() {
     if (next) {
       playBell()
       if (!reducedMotion()) cue(toggleRef.current, machine, 1)
-      usedRef.current = true
+    }
+    if (!used) {
       setUsed(true)
+      try {
+        localStorage.setItem(USED_KEY, '1')
+      } catch {
+        // Storage unavailable: the note just comes back next visit.
+      }
     }
   }
 
@@ -251,10 +269,10 @@ export function Typewriter() {
           <path d="M5 30L12 39L20 33" />
         </svg>
       ) : (
-        // Longer: from the note down past the knob to the pointer's light.
-        <svg className="tw-note__arrow" viewBox="0 0 92 80" focusable="false">
-          <path d="M86 6C62 10 30 30 19 74" />
-          <path d="M11 65L19 76L27 67" />
+        // Longer: from the note down past the roller's end to the light.
+        <svg className="tw-note__arrow" viewBox="0 0 70 90" focusable="false">
+          <path d="M64 6C46 12 24 34 17 78" />
+          <path d="M9 69L17 80L25 71" />
         </svg>
       )}
     </div>
@@ -271,25 +289,19 @@ export function Typewriter() {
   if (machine === 'roller') {
     return (
       <div ref={sceneRef} className="typewriter typewriter--roller" data-reveal-inset="">
-        {/* The platen spans the paper, a knob at each end just outside it,
-            the paper bail in front. The pointer carriage and its light ride
-            along it together, starting at the right. */}
+        {/* The platen roller spans the paper; its end caps sit just
+            outside it. The carriage rides along it, starting at the right. */}
         <div className="tw-platen" aria-hidden="true" />
-        <div className="tw-knob tw-knob--l" aria-hidden="true" />
-        <div className="tw-knob tw-knob--r" aria-hidden="true" />
-        <div className="tw-bail" aria-hidden="true">
-          <span className="tw-bail__roller" style={{ left: '30%' }} />
-          <span className="tw-bail__roller" style={{ left: '70%' }} />
+        <div ref={moving(0)} className="tw-rcarriage">
+          <button {...toggleProps} className="tw-light">
+            <span
+              ref={(el) => {
+                toggleRef.current = el
+              }}
+              className="tw-light__lamp"
+            />
+          </button>
         </div>
-        <div ref={moving(0)} className="tw-rcarriage" aria-hidden="true" />
-        <button {...toggleProps} ref={moving(1)} className="tw-light">
-          <span
-            ref={(el) => {
-              toggleRef.current = el
-            }}
-            className="tw-light__lamp"
-          />
-        </button>
         {note}
       </div>
     )
@@ -310,7 +322,7 @@ export function Typewriter() {
             alt=""
           />
         </div>
-        <img className="tw-layer" src={LAYERS.body.src} style={stretched(LAYERS.body)} alt="" />
+        <img className="tw-layer" src={BODY_SRC[colour]} style={stretched(LAYERS.body)} alt="" />
         <div ref={moving(1)} className="tw-carriage">
           <img className="tw-layer" src={LAYERS.lever.src} style={part(LAYERS.lever, 'left')} alt="" />
           <img className="tw-layer" src={LAYERS.axleR.src} style={part(LAYERS.axleR, 'right')} alt="" />

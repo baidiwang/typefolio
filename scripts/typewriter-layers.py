@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Split the hand-drawn typewriter (art/typewriter-wide.png) into rig layers
-and export them as WebP for the page. The body is recoloured to thread
-green and lit from above.
+and export them as WebP for the page. The body is exported once per
+colour (red, olive), recoloured and lit from above.
 
     pip install pillow numpy
     python3 -B scripts/typewriter-layers.py
@@ -63,10 +63,9 @@ BELL_DOME_BOX = (1210, 150, 1280, 219)
 BELL_STEM_BOX = (1234, 219, 1250, 250)  # down to just above the axle
 EXTEND = 90                      # roller added past each end of the notch
 ALPHA_MIN = 16                   # faint alpha noise below this is transparent
-# The body's colour (thread green) and the light from the lamp above: the
-# body is a little brighter at the top and falls into shadow toward the
-# bottom.
-COLOUR = (45, 59, 39)
+# Body colours (?tw=red|olive) and the light from the lamp above: the body
+# is a little brighter at the top and falls into shadow toward the bottom.
+COLOURS = {'red': (175, 49, 43), 'olive': (138, 147, 88)}
 LIGHT_TOP, LIGHT_BOTTOM = 1.08, 0.7
 
 # Export: at most source resolution (the body shows at most ~820 css px
@@ -189,17 +188,21 @@ def main():
     body = src.copy()
     body[lever | knob_l | axle_r | knob_r | bell | roller] = 0
 
-    # The body, recoloured and lit from above.
+    # One body per colour, recoloured and lit from above.
     paint = body[..., :3][red & (body[..., 3] > 0)].astype(float) @ [0.299, 0.587, 0.114]
     ref = float(np.median(paint))
     body_top = int(np.nonzero((body[..., 3] > 0).any(axis=1))[0].min())
     body_bottom = int(np.nonzero((body[..., 3] > 0).any(axis=1))[0].max())
-    lit = light_from_above(recolour(body, COLOUR, ref), body_top, body_bottom)
-    body[..., :3] = np.round(lit).astype(np.uint8)
+    bodies = {}
+    for name, colour in COLOURS.items():
+        b = body.copy()
+        lit = light_from_above(recolour(b, colour, ref), body_top, body_bottom)
+        b[..., :3] = np.round(lit).astype(np.uint8)
+        bodies[f'typewriter-body-{name}'] = b
 
     layers_rgba = {
         'typewriter-roller': roller_rgba,
-        'typewriter-body': body,
+        **bodies,
         'typewriter-bell': np.where(bell[..., None], src, 0).astype(np.uint8),
         'typewriter-lever': np.where(lever[..., None], src, 0).astype(np.uint8),
         'typewriter-axle-r': np.where(axle_r[..., None], src, 0).astype(np.uint8),
@@ -254,7 +257,7 @@ def main():
 /** Where each layer image sits in the drawing. */
 export const LAYERS = {{
   roller: {entry('typewriter-roller')},
-  body: {entry('typewriter-body')},
+  body: {entry('typewriter-body-red')},
   bell: {entry('typewriter-bell')},
   lever: {entry('typewriter-lever')},
   axleR: {entry('typewriter-axle-r')},
@@ -286,6 +289,8 @@ export const BELL_PIVOT = {{ x: {int(stem.mean())}, y: {BELL_STEM_BOX[3]} }} as 
 export const KNOB_L_PIVOT = {centre(knob_l)} as const
 export const KNOB_R_PIVOT = {centre(knob_r)} as const
 
+/** The body in each colour (?tw=red|olive): same box as LAYERS.body. */
+export const BODY_SRC = {{ red: '{layers['typewriter-body-red']['src']}', olive: '{layers['typewriter-body-olive']['src']}' }} as const
 """)
     print('wrote', TS_OUT.relative_to(ROOT), f'(line {line}, body {body_x0}–{body_x1})')
 
