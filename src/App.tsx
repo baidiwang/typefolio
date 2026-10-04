@@ -11,6 +11,10 @@ import { useHighlighterSwipe } from './hooks/useHighlighterSwipe'
 import { Reveal } from './reveal/Reveal'
 import { Typewriter } from './typewriter/Typewriter'
 
+/** Joins a line's last two words with a no-break space, so a sentence that
+ *  wraps never leaves one word alone on its last line. */
+const keepLastTwo = (line: string) => line.replace(/ (\S+)$/, '\u00a0$1')
+
 export default function App() {
   useHashScroll()
   useHighlighterSwipe()
@@ -34,7 +38,7 @@ export default function App() {
           <div className="intro">
             {site.intro.map((line) => (
               <Reveal key={line} onLoad duration={450}>
-                {line}
+                {keepLastTwo(line)}
               </Reveal>
             ))}
           </div>

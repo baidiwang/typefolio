@@ -40,7 +40,7 @@ The lever and knobs stand outside the paper, left and right.
 | Sizing | the body shows from its top edge to just below the keyboard frame, `--tw-visible: min(230px, 26vh)`, and is drawn 10% wider than the drawing (`--tw-sx: 1.1`); that fixes the scale, and the paper matches the body's width | the paper keeps its width (viewport − 2 × 12 px); the machine is scaled so the body matches it, unstretched |
 | Shown | body top to keyboard frame; the band below runs off the screen | the whole machine, ≈ 123 px of body at 390 px wide |
 | Paper width | 898 px at 1440×900, 812 at 1280×800, 779 at 1366×768 | 366 px at 390 |
-| Sound toggle | the bell; "ring for sound" note beside it until first used, if there's room | the bell; no note (only the wiggle) |
+| Sound toggle | the bell; "ring for sound" note beside it until sound is turned on, if there's room | the bell; no room for the note (only the wiggle) |
 
 The scale is `--tw-s`, css px per drawing px, which `Typewriter.tsx` sets
 from the paper's measured width (paper width ÷ (body width × `--tw-sx`)).
@@ -65,7 +65,7 @@ Back to front:
 | --- | --- | --- | --- |
 | roller | `public/art/typewriter-roller.webp` | the roller and its two paper guides, from the notch, extended 90 drawing px past both ends with stretches of roller from just inside it. Red streaks drawn on the roller are painted roller-black | slides; clipped to the notch (`.tw-notch`), so the extensions only ever show between the shoulders |
 | body | `public/art/typewriter-body-red.webp`, `-olive.webp` | the body, shoulders and keyboard, with the notch cut out so the roller shows through; one per colour | static |
-| bell | `public/art/typewriter-bell.webp` | the bell on its stem, above the right shoulder, inside a `<button>` (the sound toggle) | rings: `rotate(0 → 10 → −8 → 4 → 0deg)` over 420 ms about the stem's foot (`BELL_PIVOT`) whenever an element finishes and when sound is turned on; one smaller wiggle when the intro finishes typing, until it's first used |
+| bell | `public/art/typewriter-bell.webp` | the bell on its stem, above the right shoulder, inside a `<button>` (the sound toggle) | rings: `rotate(0 → 10 → −8 → 4 → 0deg)` over 420 ms about the stem's foot (`BELL_PIVOT`) whenever an element finishes and when sound is turned on; one smaller wiggle when the intro finishes typing, unless sound is already on |
 | lever, axle | `typewriter-lever.webp`, `typewriter-axle-r.webp` | the return lever with the left axle; the right axle | slide with the roller |
 | knob L / R | `typewriter-knob-l.webp`, `-knob-r.webp` | the platen knobs | slide with the roller; turn `rotate(0 → −14 → 3 → 0deg)` over 220 ms about their centres on each line feed |
 
@@ -111,12 +111,13 @@ leans left so it stays on screen) or the carriage's light (roller). Off by
 default; turning sound on plays one ding. It's the first focus stop after
 the skip link (the typewriter comes first in the DOM).
 
-Until it's first used (remembered in `localStorage`), a light-rose pen
-note in Caveat says "ring for sound", with an arrow down to the toggle. It
-sits on the desk right of the paper, never over text, and is hidden where
-there isn't about 150 px of desk (and on phones). The toggle also gives one
-small wiggle (a swing, or a blink) when the intro finishes typing, unless
-reduced motion is on.
+On every visit, until sound is turned on during it (nothing is
+remembered), a light-rose pen note in Caveat says "ring for sound", with an
+arrow down to the toggle. It sits on the desk right of the paper, never
+over text, and is hidden where there isn't about 150 px of desk (phones:
+the bell is at the screen's edge). The toggle also gives one small wiggle
+(a swing, or a blink) when the intro finishes typing, unless sound is
+already on or reduced motion is on.
 
 ## Geometry (drawn)
 

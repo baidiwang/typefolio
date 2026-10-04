@@ -531,6 +531,14 @@ h2 {
   margin: 0;
 }
 
+/* Desktop: 1 px smaller, so every sentence that can fits on one line on
+   the widest paper (898 px at 1440). */
+@media (min-width: 720px) {
+  .intro {
+    font-size: calc(1.15em - 1px);
+  }
+}
+
 /* —— Lists —— */
 
 .one-liners {
@@ -662,6 +670,9 @@ h2 {
   width: 100%;
   height: auto;
   background: #ddd6c6;
+  /* A little dimmer and less saturated, so no photo outshines the paper
+     under the lamp. Posters and video frames alike. */
+  filter: brightness(0.9) saturate(0.9);
 }
 
 /* Two strips of tape across the top corners. */
@@ -989,9 +1000,9 @@ a.taped:focus-visible {
 }
 
 /* —— "ring for sound" —— in light-rose pen on the desk right of the
-   paper, with an arrow down to the toggle. Until the toggle is first used;
-   hidden where there isn't room (and on phones, where the wiggle has to
-   do). */
+   paper, with an arrow down to the toggle. Every visit, until sound is
+   turned on; hidden where there isn't room (Typewriter.tsx measures it; on
+   phones the wiggle has to do). */
 .tw-note {
   position: absolute;
   color: var(--rose);
@@ -1037,13 +1048,9 @@ a.taped:focus-visible {
   display: none;
 }
 
-/* Phones: no room for the note. The bell sits at the screen's edge, so its
+/* Phones: the bell sits at the screen's edge, so its
    hit area leans left to stay on screen (the bell itself stays inside). */
 @media (max-width: 719px) {
-  .typewriter .tw-note {
-    display: none;
-  }
-
   .tw-bell {
     translate: calc(-50% - 8px) -50%;
   }

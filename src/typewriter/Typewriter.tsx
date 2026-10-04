@@ -34,9 +34,6 @@ const ROLLER_STEP = 1 / 150
 /** The drawn body's width in the drawing (desktop draws it 10% wider:
  *  --tw-sx in index.css). */
 const BODY_W = BODY.x1 - BODY.x0
-/** Whether the reader has used the sound toggle yet (hides the "ring for
- *  sound" note). Per browser; the page works the same without storage. */
-const USED_KEY = 'typefolio:sound-used'
 
 type Box = { x: number; y: number; w: number; h: number }
 
@@ -91,14 +88,6 @@ const NOTE_STYLE: CSSProperties = {
   top: `calc(${u(BELL.y - BODY.top)} - 64px)`,
 }
 
-function storedUsed(): boolean {
-  try {
-    return localStorage.getItem(USED_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /**
@@ -109,8 +98,8 @@ const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)'
  * at the end of an element; on the roller the carriage's light blinks.
  *
  * The sound toggle is a real button: the bell (drawn) or the carriage's
- * indicator light (roller). Until it's first used, a light-rose note beside
- * it says "ring for sound" (where there's room on the desk), and it gives
+ * indicator light (roller). Until sound is turned on (each visit; nothing
+ * is remembered), a light-rose note beside it says "ring for sound" (where there's room on the desk), and it gives
  * one small wiggle when the intro finishes typing. Everything else is
  * decorative (empty alt, nothing else focusable).
  */
@@ -127,7 +116,10 @@ export function Typewriter() {
   /** css px per carriage step. */
   const stepRef = useRef(1)
   const [soundOn, setSoundOn] = useState(false)
-  const [used, setUsed] = useState(storedUsed)
+  /** Sound has been turned on during this visit: hides the note and skips
+   *  the wiggle. Not remembered across visits. */
+  const [heard, setHeard] = useState(false)
+  const heardRef = useRef(false)
 
   // Track the paper: its edges (--pl/--pr on the scene; --paper-l/--paper-r
   // on the root, for the lamp's falloff), the drawn machine's scale, the
@@ -206,7 +198,7 @@ export function Typewriter() {
     const stopWiggle =
       intro && !reducedMotion()
         ? reveal.whenDone(intro, () => {
-            if (!storedUsed()) cue(toggle, machine, 0.6, 700)
+            if (!heardRef.current) cue(toggle, machine, 0.6, 700)
           })
         : undefined
 
@@ -245,14 +237,8 @@ export function Typewriter() {
     if (next) {
       playBell()
       if (!reducedMotion()) cue(toggleRef.current, machine, 1)
-    }
-    if (!used) {
-      setUsed(true)
-      try {
-        localStorage.setItem(USED_KEY, '1')
-      } catch {
-        // Storage unavailable: the note just comes back next visit.
-      }
+      heardRef.current = true
+      setHeard(true)
     }
   }
 
@@ -260,7 +246,7 @@ export function Typewriter() {
     movingRefs.current[i] = el
   }
 
-  const note = !used && (
+  const note = !heard && (
     <div className="tw-note" style={machine === 'drawn' ? NOTE_STYLE : undefined} aria-hidden="true">
       <span className="tw-note__text">ring for sound</span>
       {machine === 'drawn' ? (

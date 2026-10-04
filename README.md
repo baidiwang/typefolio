@@ -153,11 +153,11 @@ sheets for comparison.
 - **Sound** is off by default. The toggle is a real button (aria-label
   "Sound", `aria-pressed`, at least 44 × 44 px, a light-rose focus ring):
   the bell on the drawn machine, an indicator light on the roller's
-  carriage (dim = off, lit = on). Turning sound on plays one ding. Until
-  it's first used, a light-rose pen note beside it says "ring for sound"
-  (where there's desk room; never over text), and the toggle gives one
-  small wiggle when the intro finishes typing (phones get only the
-  wiggle).
+  carriage (dim = off, lit = on). Turning sound on plays one ding. On
+  every visit, until sound is turned on, a light-rose pen note beside it
+  says "ring for sound" (where there's desk room; never over text), and
+  the toggle gives one small wiggle when the intro finishes typing (phones,
+  with no desk beside the bell, get only the wiggle).
 
 ## How the reveal engine works
 
