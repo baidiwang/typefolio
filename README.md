@@ -69,8 +69,9 @@ Hierarchy comes from size, caps and ink, never from tracking or weight:
 | Meta lines (type, stack) | `--ink-soft` |
 
 Body text is 17px on phones, 18px on desktop, in near-black ink. The default
-theme is **valentine** (warm white paper, powder-blue desk #a9c2d9,
-Olivetti-red typewriter). Inks on `--paper` (#fbf8f2):
+theme is **valentine** (aged letter paper, powder-blue desk #a9c2d9,
+Olivetti-red typewriter). Inks on the white paper of `?paper=plain`
+(#fbf8f2); see **Paper** for the aged default:
 
 | Token        | Use                    | Contrast on paper |
 | ------------ | ---------------------- | ----------------- |
@@ -78,15 +79,30 @@ Olivetti-red typewriter). Inks on `--paper` (#fbf8f2):
 | `--ink-soft` | meta lines             | 9.5 : 1           |
 | `--ink-red`  | section labels, pen dividers, focus | 6.4 : 1 |
 
-**Paper.** The sheet is folded letter paper: fine grain plus two creases per
-letter-sized page (8.5 × 11, folded in thirds; the page scales with the
-sheet's width). The textures
-([`scripts/paper-textures.py`](scripts/paper-textures.py), `public/paper/`,
-15 KB) are seamless overlays of a warm shadow and a warm light at a few %
-alpha, so the paper stays warm white in every theme. The grain is two tiles
-of coprime sizes, so it doesn't visibly repeat. Worst case, with every
-layer's darkest pixel on the same spot, contrast on the textured paper stays
-at ink ≥ 14.2, ink-soft ≥ 7.6, ink-red ≥ 5.5 in every theme.
+**Paper.** The sheet is an old letter from the 1960s: yellowed paper
+(#f3e7cc), fine grain, two clearly visible creases per letter-sized page
+(8.5 × 11, folded in thirds; the page scales with the sheet's width), soft
+wrinkles, faint foxing spots and light tea-coloured stains with a tide
+line, a little darker toward the edges, and side edges that are worn and
+irregular with a few small nicks and tears. Photo tape is yellowed to
+match. All of it comes from
+[`scripts/paper-textures.py`](scripts/paper-textures.py) (`public/paper/`,
+58 KB), seeded, so it's the same on every visit:
+
+- grain, foxing and wrinkles are pairs of tiles of coprime sizes, so they
+  don't visibly repeat; the stains are one field drawn at a third of
+  display size (they're soft) and taller than the page, so no stain ever
+  repeats;
+- the sheet is drawn by `.paper::before` with a CSS mask for the worn
+  edges (edge masks of coprime heights, so the nicks don't line up), and
+  its shadow by `::after`, just inside, so the desk shows through a nick.
+
+Contrast is measured on the page itself: with the text hidden, the darkest
+paper pixel behind every text line (stains, foxing, folds and edges
+included) still gives ink ≥ 11.2, ink-soft ≥ 6.3 and ink-red ≥ 5.3 at
+1440×900 and 390×844. The red ink is a little deeper on aged paper
+(#9c1a29; 6.6 on the plain base) to keep that margin. `?paper=folded|grain|plain`
+(previews) shows the earlier, new-stationery sheets for comparison.
 
 ## Sections, links and sound
 
@@ -114,7 +130,7 @@ at ink ≥ 14.2, ink-soft ≥ 7.6, ink-red ≥ 5.5 in every theme.
   `min(230px, 26vh)`, with the body drawn 10% wider than the drawing, which
   sets the paper's width (≈ 900 px at 1440×900); on phones the paper keeps
   its width and the whole machine shows, scaled to it, unstretched. A plant
-  as tall as the visible typewriter stands beside it on desktop, its
+  about 80% as tall as the visible typewriter stands beside it on desktop, its
   foliage swaying gently. Details:
   [`docs/typewriter-rig.md`](docs/typewriter-rig.md).
 - **Sound** is off by default. **The bell is the toggle**: a real button
@@ -255,7 +271,7 @@ flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
 ```
 /?theme=classic | hermes | cobalt     (default: valentine)
 /?font=courier | space | plex         (Courier Prime, Space Mono, IBM Plex Mono 500)
-/?paper=plain | grain                 (default: folded)
+/?paper=folded | grain | plain        (default: aged)
 /?desk=teal | sage | oak | navy | charcoal   (default: powder blue)
 /?name=pacifico | satisfy             (default: Damion)
 /?desk=navy&name=satisfy

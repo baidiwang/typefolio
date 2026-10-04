@@ -55,8 +55,13 @@ export type OtherProject = {
 export const site = {
   name: 'Baidi Wang',
   title: 'Design Engineer',
-  intro:
-    'I’m a Design Engineer. I build frontends (most recently prototypes at Google), I picked up a designer’s eye making data visualizations at Axios, and games and XR taught me to think in space and motion. Lately I’ve been building AI interfaces, and right now I’m building my own iOS app. Investors: my inbox is open.',
+  /** Four lines, each on its own line, typed in order. */
+  intro: [
+    'Hey! I’m a Design Engineer.',
+    'I build web and mobile products, lately a lot of them with AI inside.',
+    'Making interactive graphics gave me a designer’s eye, and I’ve built games and XR too.',
+    'Right now I’m building my own iOS app, launching on the App Store soon!',
+  ],
   links: {
     resume: { label: 'Resume', href: '/BaidiWangResume.pdf' },
     email: {

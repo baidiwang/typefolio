@@ -22,9 +22,9 @@ const STEP = 0.5
  *  Small parts (bell, lever, axle, knobs) keep their proportions and only
  *  move outwards with it. Phones keep the drawing's proportions. */
 const BODY_W = BODY.x1 - BODY.x0
-/** The plant is as tall as the visible typewriter (its top to the bottom
- *  of the keyboard frame). */
-const PLANT_H = BODY.keyboardBottom - MACHINE.y0
+/** The plant is about 80% as tall as the visible typewriter (its top to
+ *  the bottom of the keyboard frame). */
+const PLANT_H = 0.8 * (BODY.keyboardBottom - MACHINE.y0)
 const PLANT_W = (PLANT_H * PLANT.w) / PLANT.h
 /** Whether the reader has used the bell yet (hides the "ring for sound"
  *  note). Per browser; the page works the same without storage. */
@@ -87,7 +87,7 @@ const BELL_CX: [number, number] = [ANCHOR.right - BODY.x0, BELL.x + BELL.w / 2 -
 
 const PLANT_STYLE: CSSProperties = {
   left: `calc(${ux(...MACHINE_RIGHT)} + 10px)`,
-  top: u(MACHINE.y0 - BODY.top),
+  top: u(BODY.keyboardBottom - PLANT_H - BODY.top),
   width: u(PLANT_W),
   height: u(PLANT_H),
 }
@@ -210,7 +210,7 @@ export function Typewriter() {
 
     // One small wiggle when the intro has finished typing, so the bell
     // reads as something to touch.
-    const intro = document.querySelector('.intro')
+    const intro = document.querySelector('.intro > :last-child')
     const stopWiggle =
       intro && !reducedMotion()
         ? reveal.whenDone(intro, () => {

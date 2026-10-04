@@ -3,7 +3,7 @@
  *
  *   ?theme=classic | hermes | cobalt   (default: valentine)
  *   ?font=courier | space | plex       (default: Cutive Mono; Plex at 500)
- *   ?paper=plain | grain               (default: folded)
+ *   ?paper=folded | grain | plain      (default: aged)
  *   ?desk=teal | sage | oak | navy | charcoal   (default: powder blue)
  *   ?name=pacifico | satisfy           (default: Damion; the name and the
  *                                       signature's lettering)
@@ -16,7 +16,7 @@
  */
 
 const THEMES = ['valentine', 'classic', 'hermes', 'cobalt'] as const
-const PAPERS = ['folded', 'plain', 'grain'] as const
+const PAPERS = ['aged', 'folded', 'plain', 'grain'] as const
 const DESKS = ['teal', 'sage', 'oak', 'navy', 'charcoal'] as const
 
 /** Applies URL overrides. Resolves once any extra font CSS is loaded. */
@@ -37,9 +37,9 @@ export async function applyPlayground(): Promise<void> {
     root.dataset.theme = theme
   }
 
-  // folded is the default: no attribute needed.
+  // aged is the default: no attribute needed.
   const paper = params.get('paper')
-  if (paper && paper !== 'folded' && (PAPERS as readonly string[]).includes(paper)) {
+  if (paper && paper !== 'aged' && (PAPERS as readonly string[]).includes(paper)) {
     root.dataset.paper = paper
   }
 

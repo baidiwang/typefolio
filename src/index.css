@@ -18,14 +18,17 @@
      --ink 17.8:1 · --ink-soft 9.5:1 · --ink-red 6.4:1
      --note-ink is the red pen on the desk ("ring for sound"): 5.0:1 on
      powder blue. Other desks: ?desk= (playground, below). */
-  --paper: #fbf8f2;
+  /* Aged letter paper (the default sheet, below): warmer and yellowed. */
+  --paper: #f3e7cc;
   --paper-shadow: rgb(30 50 80 / 0.3);
   --desk: #a9c2d9;
   --note-ink: #8f1424;
   --ink: #121110;
   --ink-soft: #46413a;
-  --ink-red: #b01e2f;
-  --tape: rgb(238 228 196 / 0.72);
+  --ink-red: #9c1a29;
+  --tape: rgb(226 204 148 / 0.74);
+  /* Darkening toward the sheet's worn edges. */
+  --paper-edge: rgb(150 105 45 / 0.13);
 
   /* The name and signature's hand lettering (?name= on previews). */
   --font-script: 'Damion', cursive;
@@ -84,14 +87,33 @@
 
 /* ?paper=plain|grain (playground; the default is folded, on .paper below).
    grain drops the folds; plain drops the texture. */
-:root[data-paper='grain'] .paper {
-  background-image: url('/paper/grain-a.webp'), url('/paper/grain-b.webp');
-  background-size: 128px, 97px;
-  background-repeat: repeat;
+/* ?paper=folded|grain|plain: the earlier, new-stationery sheets, for
+   comparison with the aged default: white paper, clean tape, straight
+   edges. */
+:root[data-paper] {
+  --paper: #fbf8f2;
+  --ink-red: #b01e2f;
+  --tape: rgb(238 228 196 / 0.72);
 }
 
-:root[data-paper='plain'] .paper {
-  background-image: none;
+:root[data-paper] .paper::before {
+  -webkit-mask: none;
+  mask: none;
+}
+
+:root[data-paper='folded'] .paper::before {
+  background: url('/paper/fold.webp') 0 0 / 100% auto repeat-y,
+    url('/paper/grain-a.webp') 0 0 / 128px repeat, url('/paper/grain-b.webp') 0 0 / 97px repeat,
+    var(--paper);
+}
+
+:root[data-paper='grain'] .paper::before {
+  background: url('/paper/grain-a.webp') 0 0 / 128px repeat,
+    url('/paper/grain-b.webp') 0 0 / 97px repeat, var(--paper);
+}
+
+:root[data-paper='plain'] .paper::before {
+  background: var(--paper);
 }
 
 /* ?name=pacifico|satisfy: other scripts for the name and signature. */
@@ -279,16 +301,50 @@ a:hover {
   margin: 0 auto;
   padding: calc(var(--margin) * 0.6) var(--margin)
     calc(var(--tw-strip) + 3rem);
-  /* Folded letter paper: overlays from scripts/paper-textures.py, a warm
-     shadow/light at a few % alpha, so they suit every theme's paper. The
-     grain is two tiles of coprime sizes, so it doesn't visibly repeat. The
-     fold tile is one letter page (8.5 × 11), sized to the sheet's width:
-     two creases per page, folded in thirds. Even if every layer's darkest
-     pixel landed on the same spot, ink-red stays AA in every theme
-     (README, Paper). */
-  background: url('/paper/fold.webp') 0 0 / 100% auto repeat-y,
-    url('/paper/grain-a.webp') 0 0 / 128px repeat, url('/paper/grain-b.webp') 0 0 / 97px repeat,
+  /* The sheet is drawn by ::before (masked, so its edges can be worn) and
+     its shadow by ::after (just inside, so the worn edge shows the desk). */
+  position: relative;
+  isolation: isolate;
+}
+
+/* An old letter (README, Paper): overlays from scripts/paper-textures.py,
+   warm shadow or light at a few % alpha, over yellowed paper. Back to front:
+   grain, the creases (one letter page, 8.5 × 11, folded in thirds, sized to
+   the sheet's width), wrinkles and foxing (coprime tile pairs), stains (one
+   field taller than the page), and darkening toward the edges. The mask
+   wears the side edges: a wobble, a few nicks and short tears. */
+.paper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, var(--paper-edge), transparent 70px, transparent calc(100% - 70px), var(--paper-edge)),
+    linear-gradient(var(--paper-edge), transparent 90px),
+    url('/paper/stains.webp') 0 0 / 960px 7200px repeat,
+    url('/paper/foxing-a.webp') 0 0 / 512px repeat,
+    url('/paper/foxing-b.webp') 37px 211px / 389px repeat,
+    url('/paper/wrinkles-a.webp') 0 0 / 633px repeat,
+    url('/paper/wrinkles-b.webp') 0 0 / 471px repeat,
+    url('/paper/fold-aged.webp') 0 0 / 100% auto repeat-y,
+    url('/paper/grain-a.webp') 0 0 / 128px repeat,
+    url('/paper/grain-b.webp') 0 0 / 97px repeat,
     var(--paper);
+  -webkit-mask:
+    url('/paper/edge-l.webp') left top / 18px 2400px repeat-y,
+    linear-gradient(#000 0 0) center / calc(100% - 36px) 100% no-repeat,
+    url('/paper/edge-r.webp') right top / 18px 2213px repeat-y;
+  mask:
+    url('/paper/edge-l.webp') left top / 18px 2400px repeat-y,
+    linear-gradient(#000 0 0) center / calc(100% - 36px) 100% no-repeat,
+    url('/paper/edge-r.webp') right top / 18px 2213px repeat-y;
+}
+
+.paper::after {
+  content: '';
+  position: absolute;
+  inset: 0 4px;
+  z-index: -2;
   box-shadow:
     0 0 0 1px rgb(60 45 20 / 0.06),
     0 10px 40px var(--paper-shadow);
@@ -432,7 +488,13 @@ h2 {
 }
 
 .intro {
+  margin-bottom: 1em;
   font-size: 1.15em;
+}
+
+/* One line per sentence, no gaps: a short typed note. */
+.sheet .intro p {
+  margin: 0;
 }
 
 /* —— Lists —— */

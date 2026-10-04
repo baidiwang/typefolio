@@ -27,9 +27,13 @@ export default function App() {
         <Letterhead />
 
         <main id="main" className="sheet">
-          <Reveal className="intro" onLoad duration={1000}>
-            {site.intro}
-          </Reveal>
+          <div className="intro">
+            {site.intro.map((line) => (
+              <Reveal key={line} onLoad duration={450}>
+                {line}
+              </Reveal>
+            ))}
+          </div>
 
           <Divider variant={0} />
 

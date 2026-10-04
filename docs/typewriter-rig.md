@@ -28,7 +28,7 @@ strip until the paper feeds them out.
 | Sizing | the body shows from its top edge to just below the keyboard frame, `--tw-visible: min(230px, 26vh)`, and is drawn 10% wider than the drawing (`--tw-sx: 1.1`); that fixes the scale, and the paper matches the body's width | the paper keeps its width (viewport − 2 × 12 px); the machine is scaled so the body matches it, unstretched |
 | Shown | body top to keyboard frame; the plain red band below runs off the screen | the whole machine, ≈ 123 px of body at 390 px wide (146 px including the bell and lever above the edge) |
 | Paper width | 898 px at 1440×900, 812 at 1280×800, 779 at 1366×768 | 366 px at 390 |
-| Plant | beside the machine, as tall as the visible typewriter, if it fits | hidden |
+| Plant | beside the machine, about 80% as tall as the visible typewriter, if it fits | hidden |
 | Sound | the bell; "ring for sound" note beside it until first used, if there's room | the bell; no note (only the wiggle) |
 
 The scale is `--tw-s`, css px per drawing px, which `Typewriter.tsx` sets
@@ -71,9 +71,9 @@ return. Under reduced motion nothing moves (the controller sends no events).
 
 ## Plant
 
-On the desk to the right of the machine (10 px past the right knob), as
-tall as the visible typewriter (its top to the bottom of the keyboard
-frame), standing on the bottom of the screen, which is where the machine's
+On the desk to the right of the machine (10 px past the right knob), about
+80% as tall as the visible typewriter (its top to the bottom of the
+keyboard frame), standing on the bottom of the screen, which is where the machine's
 visible base is on desktop. It's always right of the paper, never on it.
 `Typewriter.tsx` hides it when it would reach within 8 px of the window's
 right edge, and CSS hides it on phones.
