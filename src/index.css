@@ -13,54 +13,61 @@
   --text-stroke: 0px;
   --tracking: 0;
 
-  /* A lamp-lit night desk. Ink on aged paper (README, Colour); WCAG AA
-     needs 4.5:1, measured on the page under the lamp's falloff:
+  /* The sewing-box palette. Ink on aged paper (README, Colour); WCAG AA
+     needs 4.5:1, measured on the page under the lamp:
      --ink warm near-black, --ink-soft warm grey (secondary text),
      --ink-red a deep red for small red text (section labels).
-     --accent is the red for large marks only (pen dividers and circles).
-     --highlight is the highlighter swiped over one phrase per project.
-     --rose is the light pen on the dark desk ("ring for sound") and the
-     focus rings there. */
-  --paper: #f3e7cc;
-  --paper-shadow: rgb(8 6 10 / 0.55);
-  --room: #0e0f1a;
-  --desk: #4a2f1f;
+     --accent: red for marks on the paper only (link underlines, pen
+     dividers and circles). --highlight: the highlighter, nothing else.
+     --thread: thread green, the typewriter, and on the desk the "ring for
+     sound" note and the focus rings (4.4:1 on mustard).
+     --patch: patchwork olive, small details on the machine only.
+     --tape: photo tape only. */
+  --paper: #f7efdc;
+  --paper-shadow: rgb(92 52 8 / 0.45);
+  --desk: #cc913d;
   --ink: #2a2520;
   --ink-soft: #453d35;
   --ink-red: #7a1f1a;
   --accent: #af312b;
   --highlight: #f6c1b4;
-  --rose: #f6c1b4;
-  --tape: rgb(226 204 148 / 0.74);
+  --thread: #2d3b27;
+  --patch: #bca956;
+  --tape: rgb(175 189 185 / 0.82);
   /* Darkening toward the sheet's worn edges. */
   --paper-edge: rgb(150 105 45 / 0.13);
-  /* The typewriter's colour (?tw=red|olive). */
-  --tw-colour: #af312b;
 
   /* The desk lamp (.lamp, fixed to the viewport, so the paper slides under
-     it): one warm light from the upper left. Two gradients on one layer:
-     a mild radial falloff over everything, kept light enough on the paper
-     for AA text, and a falloff that starts at the paper's edges and runs
-     to near-black navy at the screen's sides (darker on the right, away
-     from the lamp). --paper-l/--paper-r are the
-     paper's edges in viewport px (set by Typewriter.tsx). */
+     it): one warm light from the upper left, its falloff kept inside the
+     desk's hue (lighter and warmer near the lamp and the paper, deeper
+     ochre toward the corners; never grey or black). Three gradients on one
+     layer: a soft warm glow on the upper left (it brightens the paper and
+     never darkens the text), a mild ochre falloff over everything, and a
+     falloff that starts at the paper's edges and runs to deep ochre at the
+     screen's sides (deeper on the right, away from the lamp).
+     --paper-l/--paper-r are the paper's edges in viewport px (set by
+     Typewriter.tsx). */
+  --lamp-glow: radial-gradient(
+    ellipse 60% 55% at 28% 10%,
+    rgb(255 240 205 / 0.2) 0%,
+    rgb(255 236 195 / 0.08) 45%,
+    rgb(255 236 195 / 0) 75%
+  );
   --lamp-radial: radial-gradient(
-    ellipse 90% 80% at 30% 12%,
-    rgb(255 210 150 / 0.06) 0%,
-    rgb(255 210 150 / 0) 32%,
-    rgb(14 15 26 / 0) 42%,
-    rgb(14 15 26 / 0.14) 100%
+    ellipse 95% 85% at 30% 12%,
+    rgb(150 95 25 / 0) 40%,
+    rgb(150 95 25 / 0.1) 100%
   );
   --lamp-desk: linear-gradient(
     90deg,
-    rgb(14 15 26 / 0.72) 0,
-    rgb(14 15 26 / 0.2) calc(var(--paper-l, 50%) - 24px),
-    rgb(14 15 26 / 0.06) var(--paper-l, 50%),
+    rgb(125 75 15 / 0.42) 0,
+    rgb(125 75 15 / 0.1) calc(var(--paper-l, 50%) - 24px),
+    rgb(125 75 15 / 0.02) var(--paper-l, 50%),
     transparent var(--paper-l, 50%),
     transparent var(--paper-r, 50%),
-    rgb(14 15 26 / 0.12) var(--paper-r, 50%),
-    rgb(14 15 26 / 0.38) calc(var(--paper-r, 50%) + 24px),
-    rgb(14 15 26 / 0.92) 100%
+    rgb(125 75 15 / 0.08) var(--paper-r, 50%),
+    rgb(125 75 15 / 0.2) calc(var(--paper-r, 50%) + 24px),
+    rgb(115 68 12 / 0.58) 100%
   );
 
   /* The name and signature's hand lettering (?name=damion on previews). */
@@ -71,14 +78,23 @@
   --margin: clamp(1.25rem, 6vw, 4.5rem);
   --line: 1.6;
 
-  /* The typewriter's body is exactly as wide as the paper, and the paper
-     disappears behind its top edge. On desktop the visible part (top edge
-     to just below the keyboard frame) is --tw-visible tall, which sets the
-     paper's width through the drawing's aspect (--tw-aspect). Typewriter.tsx
-     then sets --tw-s (css px per drawing px) from the paper's actual width,
-     and the drawing's rows (--tw-rows-*). The strip from the body's top edge
-     to the bottom of the viewport is --tw-strip tall; the paper's bottom
-     padding and the scroll padding use it. Fallbacks match the drawing. */
+  /* The machine (default: the roller). The strip from the paper's entry
+     line to the bottom of the viewport is --tw-strip tall; the paper's
+     bottom padding and the scroll padding use it. The roller is
+     --roller-h tall; the paper is --tw-paper wide. */
+  --roller-h: 60px;
+  --tw-paper: 900px;
+  --tw-strip: calc(var(--roller-h) + 16px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ?machine=drawn: the drawn typewriter's body is exactly as wide as the
+   paper, and the paper disappears behind its top edge. On desktop the
+   visible part (top edge to just below the keyboard frame) is
+   --tw-visible tall, which sets the paper's width through the drawing's
+   aspect (--tw-aspect). Typewriter.tsx then sets --tw-s (css px per
+   drawing px) from the paper's actual width, and the drawing's rows
+   (--tw-rows-*). Fallbacks match the drawing. */
+:root[data-machine='drawn'] {
   --tw-visible: min(230px, 26vh);
   /* Desktop draws the body 10% wider than the drawing (phones: 1). */
   --tw-sx: 1.1;
@@ -87,37 +103,13 @@
 }
 
 /* —— Design playground (dev + preview deployments: src/playground.ts) ——
-   ?machine=drawn|roller  ?tw=red|olive  ?paper=folded|grain|plain
-   ?font=plex|dmmono|cutive  ?name=damion  ?theme=classic|hermes|cobalt
-   Each theme only overrides tokens; the default (valentine) is above.
-   The typewriter drawing is the same red in every theme.
-   Contrast per theme is listed in the README (Design playground). */
+   ?machine=drawn  ?desk=deep  ?paper=folded|grain|plain
+   ?font=plex|dmmono|cutive  ?name=damion */
 
-/* The original look: cream paper, warm grey desk, green typewriter.
-   ink 16.6 · ink-soft 8.9 · ink-red 6.5 on paper */
-:root[data-theme='classic'] {
-  --paper: #f6f0e1;
-  --paper-shadow: rgb(60 45 20 / 0.18);
-  --desk: #cbc2b0;
-  --ink-red: #a3241b;
-}
-
-/* Seafoam typewriter, walnut desk, ivory paper.
-   ink 17.6 · ink-soft 9.4 · ink-red 6.9 on paper */
-:root[data-theme='hermes'] {
-  --paper: #fbf7ea;
-  --paper-shadow: rgb(30 15 5 / 0.45);
-  --desk: #5b3a29;
-  --ink-red: #a3241b;
-}
-
-/* Cobalt-blue desk, white paper, cream typewriter.
-   ink 18.9 · ink-soft 10.1 · ink-red 6.5 on paper */
-:root[data-theme='cobalt'] {
-  --paper: #ffffff;
-  --paper-shadow: rgb(0 15 60 / 0.4);
-  --desk: #0047ab;
-  --ink-red: #b3261e;
+/* ?desk=deep: a slightly darker, less saturated mustard. The thread-green
+   note and focus rings stay ≥ 3:1 on it (3.3). */
+:root[data-desk='deep'] {
+  --desk: #a37b43;
 }
 
 /* ?paper=folded|grain|plain: the earlier, new-stationery sheets, for
@@ -155,11 +147,6 @@
   --script-weight: 400;
 }
 
-/* ?tw=olive: the typewriter in olive, like the reference photo. */
-:root[data-tw='olive'] {
-  --tw-colour: #8a9358;
-}
-
 /* Alternative faces. Cutive Mono has one thin weight: a hairline outline
    thickens it, and titles stay regular. DM Mono's heaviest is 500. */
 :root[data-font='plex'] {
@@ -187,10 +174,16 @@
   }
 }
 
-/* Phones: the paper keeps its width and the whole machine shows, scaled
-   to it (≈ 123 px tall at 390 px), clear of the home indicator. */
+/* Phones: the paper keeps its width; the roller is thinner, in proportion;
+   the drawn machine shows whole, scaled to the paper (≈ 123 px tall at
+   390 px), clear of the home indicator. */
 @media (max-width: 719px) {
   :root {
+    --tw-paper: 100%;
+    --roller-h: 26px;
+  }
+
+  :root[data-machine='drawn'] {
     --tw-paper: 100%;
     --tw-sx: 1;
     --tw-strip: calc(
@@ -206,7 +199,7 @@
 }
 
 html {
-  background: var(--room);
+  background: var(--desk);
   /* Keyboard focus and in-page jumps never land under the typewriter. */
   scroll-padding-bottom: calc(var(--tw-strip) + 1rem);
   -webkit-text-size-adjust: 100%;
@@ -228,7 +221,7 @@ h3 {
 body {
   margin: 0;
   min-height: 100vh;
-  /* The walnut desk; the lamp darkens it toward the room at the edges. */
+  /* The mustard desk; the lamp deepens it toward the corners. */
   background: var(--desk);
   color: var(--ink);
   font-family: var(--font-type);
@@ -250,6 +243,8 @@ body {
 a {
   color: inherit;
   text-decoration-line: underline;
+  /* Red is only for marks on the paper: link underlines are one. */
+  text-decoration-color: var(--accent);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
 }
@@ -526,9 +521,11 @@ h2 {
   font-size: 1.15em;
 }
 
-/* One line per sentence, no gaps: a short typed note. */
+/* One line per sentence, no gaps: a short typed note. No line ends with
+   a single orphaned word. */
 .sheet .intro p {
   margin: 0;
+  text-wrap: pretty;
 }
 
 /* —— Lists —— */
@@ -662,6 +659,9 @@ h2 {
   width: 100%;
   height: auto;
   background: #ddd6c6;
+  /* Dimmed a little, so photos sit in the lamp light and are never
+     brighter than the paper. */
+  filter: brightness(0.91) saturate(0.9);
 }
 
 /* Two strips of tape across the top corners. */
@@ -778,7 +778,7 @@ a.taped:focus-visible {
   inset: 0;
   z-index: 9;
   pointer-events: none;
-  background: var(--lamp-radial), var(--lamp-desk);
+  background: var(--lamp-glow), var(--lamp-radial), var(--lamp-desk);
 }
 
 /* —— Typewriter (src/typewriter; docs/typewriter-rig.md) ——
@@ -857,24 +857,20 @@ a.taped:focus-visible {
   pointer-events: none;
 }
 
-/* On the dark desk, focus rings are light rose. */
+/* On the mustard desk, focus rings are thread green. */
 .tw-bell:focus-visible,
 .tw-light:focus-visible {
-  outline: 2px solid var(--rose);
+  outline: 2px solid var(--thread);
   outline-offset: 1px;
 }
 
-/* —— Roller machine (?machine=roller): no body. A rendered platen roller
-   spans the paper at the bottom of the screen, gunmetal, lit from the
-   upper left, with end caps just outside the paper; a small carriage in
-   the typewriter's colour rides along it, with the sound toggle (an
-   indicator light) on it. --roller-h sets the scale. */
-
-:root[data-machine='roller'] {
-  --roller-h: 60px;
-  --tw-paper: 900px;
-  --tw-strip: calc(var(--roller-h) + 16px + env(safe-area-inset-bottom, 0px));
-}
+/* —— Roller machine (the default): no body. A matte black rubber platen
+   spans the paper at the bottom of the screen, with a soft highlight on
+   the side facing the lamp; knurled thread-green knobs with an olive ring
+   at both ends; a paper bail (a thin metal bar with two small olive
+   rubber rollers) in front of it; a thin shadow where the paper goes in;
+   and a slim thread-green pointer (the carriage) that slides as text
+   types and carries the sound light. --roller-h sets the scale. */
 
 .tw-platen {
   position: absolute;
@@ -882,79 +878,144 @@ a.taped:focus-visible {
   left: var(--pl, 0);
   width: var(--pw, 100%);
   height: var(--roller-h);
-  border-radius: calc(var(--roller-h) * 0.12);
-  /* A cylinder: dark at the top and bottom edges, a soft highlight band
-     toward the lamp (upper left), brighter at the left end. */
+  border-radius: calc(var(--roller-h) * 0.14);
+  /* Matte rubber: near black, a soft broad sheen toward the upper left,
+     no metallic banding. */
   background:
-    linear-gradient(90deg, rgb(255 225 185 / 0.16), rgb(255 225 185 / 0) 45%, rgb(0 0 0 / 0.22)),
+    radial-gradient(ellipse 55% 140% at 18% 22%, rgb(255 235 205 / 0.13), rgb(255 235 205 / 0) 70%),
     linear-gradient(
       180deg,
-      #1d1f23 0%,
-      #4b5058 14%,
-      #9aa0a7 27%,
-      #6f757d 40%,
-      #464b52 62%,
-      #2a2d32 84%,
-      #151618 100%
+      #121110 0%,
+      #262321 18%,
+      #302c29 30%,
+      #23201e 52%,
+      #171514 78%,
+      #0c0b0a 100%
     );
-  box-shadow:
-    0 calc(var(--roller-h) * 0.12) calc(var(--roller-h) * 0.25) rgb(0 0 0 / 0.5);
+  box-shadow: 0 calc(var(--roller-h) * 0.1) calc(var(--roller-h) * 0.22) rgb(92 52 8 / 0.55);
 }
 
-/* End caps: darker metal hubs, a touch taller than the roller. */
-.tw-platen::before,
-.tw-platen::after {
+/* Where the paper goes in: a thin soft shadow on the paper just above the
+   platen. */
+.tw-platen::before {
   content: '';
   position: absolute;
-  top: calc(var(--roller-h) * -0.08);
-  width: calc(var(--roller-h) * 0.38);
-  height: calc(var(--roller-h) * 1.16);
-  border-radius: calc(var(--roller-h) * 0.12) / calc(var(--roller-h) * 0.3);
-  background:
-    linear-gradient(90deg, rgb(255 225 185 / 0.18), rgb(0 0 0 / 0.25)),
-    linear-gradient(180deg, #121315, #3a3e44 22%, #6c7178 34%, #2c2f34 70%, #0e0f11);
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 4px;
+  background: linear-gradient(rgb(60 35 10 / 0), rgb(60 35 10 / 0.3));
 }
 
-.tw-platen::before {
-  right: 100%;
-}
-
-.tw-platen::after {
-  left: 100%;
-}
-
-/* The carriage: a small block in the typewriter's colour on the roller's
-   lower half, resting at the right end of the paper. */
-.tw-rcarriage {
+/* Knurled knobs at both ends, outside the paper: thread green, fine
+   vertical knurling, shaded as a cylinder, with an olive ring on the side
+   facing the platen. */
+.tw-knob {
   position: absolute;
-  top: calc(var(--roller-h) * 0.42);
-  left: calc(var(--pr, 100%) - var(--roller-h) * 1.9 - 10px);
-  width: calc(var(--roller-h) * 1.9);
-  height: calc(var(--roller-h) * 0.7);
-  border-radius: calc(var(--roller-h) * 0.1);
-  background: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--tw-colour), white 22%),
-    var(--tw-colour) 40%,
-    color-mix(in oklab, var(--tw-colour), black 35%)
-  );
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.25),
-    0 3px 6px rgb(0 0 0 / 0.45);
+  top: calc(var(--roller-h) * -0.12);
+  width: calc(var(--roller-h) * 0.44);
+  height: calc(var(--roller-h) * 1.24);
+  border-radius: calc(var(--roller-h) * 0.1) / calc(var(--roller-h) * 0.24);
+  background:
+    linear-gradient(180deg, rgb(255 240 210 / 0.22), rgb(255 240 210 / 0) 35%, rgb(0 0 0 / 0.35)),
+    repeating-linear-gradient(
+      90deg,
+      rgb(255 255 255 / 0.1) 0 1px,
+      rgb(0 0 0 / 0.25) 1px 2px,
+      rgb(0 0 0 / 0) 2px 4px
+    ),
+    var(--thread);
+  box-shadow: 0 calc(var(--roller-h) * 0.08) calc(var(--roller-h) * 0.16) rgb(92 52 8 / 0.5);
 }
 
-/* The indicator light: the sound toggle (44 px hit area; dim = off, lit =
-   on), near the carriage's right end. */
-.tw-light {
+.tw-knob::after {
+  content: '';
+  position: absolute;
+  top: 6%;
+  bottom: 6%;
+  width: 18%;
+  border-radius: 2px;
+  background: linear-gradient(180deg, rgb(255 245 215 / 0.35), rgb(0 0 0 / 0) 40%, rgb(0 0 0 / 0.3)),
+    var(--patch);
+}
+
+.tw-knob--l {
+  left: calc(var(--pl, 0px) - var(--roller-h) * 0.44 - 2px);
+}
+
+.tw-knob--l::after {
+  right: 0;
+}
+
+.tw-knob--r {
+  left: calc(var(--pr, 100%) + 2px);
+}
+
+.tw-knob--r::after {
+  left: 0;
+}
+
+/* The paper bail: a thin metal bar in front of the platen, with two small
+   olive rubber rollers pressing on the paper. */
+.tw-bail {
+  position: absolute;
+  top: calc(var(--roller-h) * 0.3);
+  left: calc(var(--pl, 0px) + var(--pw, 100%) * 0.06);
+  width: calc(var(--pw, 100%) * 0.88);
+  height: max(2px, calc(var(--roller-h) * 0.05));
+  border-radius: 2px;
+  background: linear-gradient(180deg, #f1ece2, #b9b3a8 45%, #7d776d);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+}
+
+.tw-bail__roller {
   position: absolute;
   top: 50%;
-  right: calc(var(--roller-h) * 0.32);
+  width: calc(var(--roller-h) * 0.46);
+  height: calc(var(--roller-h) * 0.26);
+  translate: -50% -50%;
+  border-radius: calc(var(--roller-h) * 0.06);
+  background:
+    linear-gradient(180deg, rgb(255 248 220 / 0.45), rgb(0 0 0 / 0) 45%, rgb(0 0 0 / 0.3)),
+    var(--patch);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+}
+
+/* The carriage: a slim thread-green pointer, its tip at the paper's entry
+   line, resting near the paper's right end. It carries the sound light. */
+.tw-rcarriage {
+  position: absolute;
+  top: 0;
+  left: calc(var(--pr, 100%) - var(--roller-h) * 1.1);
+  width: calc(var(--roller-h) * 0.34);
+  height: calc(var(--roller-h) * 1.02);
+  clip-path: polygon(50% 0, 100% 22%, 100% 100%, 0 100%, 0 22%);
+  border-radius: 0 0 3px 3px;
+  background:
+    linear-gradient(90deg, rgb(255 245 215 / 0.22), rgb(0 0 0 / 0) 45%, rgb(0 0 0 / 0.3)),
+    linear-gradient(
+      180deg,
+      rgb(0 0 0 / 0) 26%,
+      var(--patch) 26%,
+      var(--patch) 31%,
+      rgb(0 0 0 / 0) 31%
+    ),
+    var(--thread);
+  filter: drop-shadow(0 2px 2px rgb(60 35 10 / 0.5));
+}
+
+/* The indicator light: the sound toggle (44 px hit area; dim = off, warm
+   lit = on), in the pointer's lower half. It sits outside the clipped
+   pointer (a sibling, moved with it) so the hit area isn't clipped. */
+.tw-light {
+  position: absolute;
+  top: calc(var(--roller-h) * 0.68);
+  left: calc(var(--pr, 100%) - var(--roller-h) * 1.1 + var(--roller-h) * 0.17);
   display: grid;
   place-items: center;
   width: 44px;
   height: 44px;
-  margin-top: -22px;
-  margin-right: -22px;
+  translate: -50% -50%;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -964,10 +1025,10 @@ a.taped:focus-visible {
 }
 
 .tw-light__lamp {
-  width: clamp(7px, calc(var(--roller-h) * 0.2), 12px);
+  width: clamp(6px, calc(var(--roller-h) * 0.17), 11px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #8a6a45, #3b2a19 70%);
+  background: radial-gradient(circle at 35% 35%, #7a5a35, #2e2010 70%);
   box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.5);
   transition:
     background 200ms ease,
@@ -977,26 +1038,20 @@ a.taped:focus-visible {
 .tw-light[aria-pressed='true'] .tw-light__lamp {
   background: radial-gradient(circle at 35% 35%, #fff4d6, #ffb347 55%, #e0782a);
   box-shadow:
-    0 0 6px 2px rgb(255 175 80 / 0.75),
-    0 0 16px 4px rgb(255 160 60 / 0.35);
+    0 0 6px 2px rgb(255 175 80 / 0.8),
+    0 0 16px 4px rgb(255 160 60 / 0.4);
 }
 
-/* Phones: a thinner roller, in proportion to the paper. */
-@media (max-width: 719px) {
-  :root[data-machine='roller'] {
-    --roller-h: 26px;
-  }
-}
-
-/* —— "ring for sound" —— in light-rose pen on the desk right of the
-   paper, with an arrow down to the toggle. Until the toggle is first used;
-   hidden where there isn't room (and on phones, where the wiggle has to
-   do). */
+/* —— "ring for sound" —— in thread-green pen on the desk right of the
+   paper, with an arrow down to the toggle. On every visit until sound is
+   turned on; hidden where it would cover text (Typewriter.tsx checks the
+   room), where the wiggle has to do. Large text (≥ 24 px), so 3:1 on the
+   desk is enough: 4.4 on mustard, 3.3 on ?desk=deep. */
 .tw-note {
   position: absolute;
-  color: var(--rose);
+  color: var(--thread);
   font-family: 'Caveat', cursive;
-  font-size: 1.45rem;
+  font-size: 1.55rem;
   font-weight: 400;
   line-height: 1;
   letter-spacing: 0;
@@ -1027,23 +1082,19 @@ a.taped:focus-visible {
 }
 
 .typewriter--roller .tw-note__arrow {
-  left: -60px;
-  top: 16px;
-  width: 70px;
-  height: 90px;
+  left: -92px;
+  top: 14px;
+  width: 92px;
+  height: 80px;
 }
 
 .typewriter[data-note='off'] .tw-note {
   display: none;
 }
 
-/* Phones: no room for the note. The bell sits at the screen's edge, so its
-   hit area leans left to stay on screen (the bell itself stays inside). */
+/* Phones: the bell sits at the screen's edge, so its hit area leans left
+   to stay on screen (the bell itself stays inside). */
 @media (max-width: 719px) {
-  .typewriter .tw-note {
-    display: none;
-  }
-
   .tw-bell {
     translate: calc(-50% - 8px) -50%;
   }
