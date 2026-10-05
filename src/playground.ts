@@ -7,7 +7,9 @@
  *   ?scene=light | night               (default: light; night = the earlier
  *                                       lamp-lit night desk)
  *   ?tw=red | olive                    (default: red; the typewriter's colour)
- *   ?paper=folded | grain | plain      (default: aged)
+ *   ?paper=aged | folded | grain | plain
+ *                                      (default: folded on the light desk,
+ *                                       aged at night)
  *   ?font=plex | dmmono | cutive       (default: Sometype Mono)
  *   ?name=damion                       (default: Caveat 700; the name and the
  *                                       signature's lettering)
@@ -26,7 +28,7 @@ const OPTIONS = {
   'machine-crop': ['half', 'full'],
   scene: ['light', 'night'],
   tw: ['red', 'olive'],
-  paper: ['aged', 'folded', 'plain', 'grain'],
+  paper: ['none', 'aged', 'folded', 'plain', 'grain'],
   theme: ['none', 'classic', 'hermes', 'cobalt'],
 } as const
 

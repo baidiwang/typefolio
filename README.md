@@ -62,10 +62,12 @@ never fakes others. Hierarchy:
 Body text is 17px on phones, 18px on desktop.
 
 **The scene** is a light, quiet room: a warm off-white greige desk
-(`--desk` and `--room`, #ece7df, plain), no lamp. The aged sheet is a little
-lighter than the desk (#fbf4e4 under its textures; it renders at a median
-luma of about 240 against the desk's 232), with a soft, low-contrast shadow
-all round, slightly lower (`--paper-drop`, `--paper-shadow`).
+(`--desk` and `--room`, #ece7df, plain), no lamp. The sheet is the folded
+one (see Paper): white paper, lighter than the desk (it renders at a
+median luma of about 245 against the desk's 232), with a soft,
+low-contrast shadow all round, slightly lower (`--paper-drop`,
+`--paper-shadow`). `?paper=aged` (previews) shows the aged sheet on the
+light desk instead (#fbf4e4, median about 240).
 
 `?scene=night` (previews) brings back the earlier lamp-lit night desk: a
 near-black warm navy room, a walnut desk, yellower paper (#f3e7cc) and one
@@ -88,19 +90,28 @@ red on the light desk (5.2:1), light rose #f6c1b4 on the night desk (7.7:1
 on walnut). Focus on the paper is a dashed ink ring.
 
 Contrast is measured on the page itself: with the text hidden, the darkest
-paper pixel behind every fully revealed line (stains, foxing, folds and
-edges included; at night, the lamp's falloff too), viewport by viewport down
-the whole page at 1440×900, 1280×800 and 390×844. On the light desk that
-gives ink ≥ 6.6, ink-soft ≥ 5.5, ink-red ≥ 6.3, and ink on the highlighter
-≥ 8.5 (AA text needs 4.5).
+paper pixel behind every fully revealed line (grain, folds, stains, foxing
+and edges included; at night, the lamp's falloff too), viewport by viewport
+down the whole page at 1440×900, 1280×800 and 390×844 (AA text needs 4.5):
+
+| Sheet | ink | ink-soft | section labels | ink on highlighter |
+| --- | --- | --- | --- | --- |
+| folded, light desk (default) | ≥ 9.5 | ≥ 8.9 | ≥ 5.8 (#b01e2f) | 9.5 |
+| aged, light desk (`?paper=aged`) | ≥ 9.5 | ≥ 7.3 | ≥ 7.4 (#7a1f1a) | 9.5 |
+| aged, night (`?scene=night`) | ≥ 7.1 | ≥ 5.1 | ≥ 5.5 (#7a1f1a) | ≥ 7.1 |
 
 **Photos** are tilted at most 1°, with a small, soft shadow falling down
 and to the right. Photos, posters and video frames are dimmed just enough
 that none is brighter than the paper (`--photo-filter`): brightness and
-saturation × 0.94 on the light desk, so white lands at the sheet's own
-median; × 0.9 at night, below the lamp-lit paper.
+saturation × 0.96 on the folded sheet (white 254 → 244, the sheet's median
+is 244–246), × 0.94 on the aged sheet on the light desk, × 0.9 at night,
+below the lamp-lit paper.
 
-**Paper.** The sheet is an old letter from the 1960s: yellowed paper
+**Paper.** On the light desk the sheet is new stationery folded in thirds:
+white paper (#fbf8f2), fine grain and the two fold creases per
+letter-sized page, straight edges and clean tape; the section labels use a
+brighter red, `--ink-red` #b01e2f. With `?paper=aged`, and always at
+night, it's an old letter from the 1960s: yellowed paper
 (#fbf4e4 on the light desk, #f3e7cc at night), fine grain, two clearly visible creases per letter-sized page
 (8.5 × 11, folded in thirds; the page scales with the sheet's width), soft
 wrinkles, faint foxing spots and light tea-coloured stains with a tide
@@ -118,8 +129,8 @@ match. All of it comes from
   edges (edge masks of coprime heights, so the nicks don't line up), and
   its shadow by `::after`, just inside, so the desk shows through a nick.
 
-`?paper=folded|grain|plain` (previews) shows the earlier, new-stationery
-sheets for comparison.
+`?paper=aged|folded|grain|plain` (previews) picks a sheet explicitly, on
+either desk, for comparison.
 
 ## Sections, links and sound
 
@@ -305,7 +316,7 @@ flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
 /?machine-crop=half | full            (default: half; full = earlier height)
 /?scene=light | night                 (default: light; night = lamp-lit desk)
 /?tw=red | olive                      (default: red)
-/?paper=folded | grain | plain        (default: aged)
+/?paper=aged | folded | grain | plain (default: folded; night: aged)
 /?font=plex | dmmono | cutive         (default: Sometype Mono)
 /?name=damion                         (default: Caveat 700)
 /?theme=classic | hermes | cobalt     (earlier colour themes)

@@ -13,9 +13,11 @@
   --text-stroke: 0px;
   --tracking: 0;
 
-  /* A light, quiet room: a warm greige desk, the aged sheet a little
-     lighter, with a soft shadow. (?scene=night: the earlier lamp-lit night
-     desk, below.) Ink on aged paper (README, Colour); WCAG AA needs 4.5:1:
+  /* A light, quiet room: a warm greige desk, the sheet a little lighter,
+     with a soft shadow. These are the aged sheet's values (?paper=aged,
+     and the night desk); the light desk's default folded sheet overrides
+     them below. (?scene=night: the earlier lamp-lit night desk, below.)
+     Ink on the paper (README, Colour); WCAG AA needs 4.5:1:
      --ink warm near-black, --ink-soft warm grey (secondary text),
      --ink-red a deep red for small red text (section labels).
      --accent is the red for large marks only (pen dividers and circles).
@@ -75,7 +77,7 @@
 
 /* —— Design playground (dev + preview deployments: src/playground.ts) ——
    ?machine=drawn|roller  ?machine-crop=full  ?tw=red|olive
-   ?scene=night  ?paper=folded|grain|plain
+   ?scene=night  ?paper=aged|folded|grain|plain
    ?font=plex|dmmono|cutive  ?name=damion  ?theme=classic|hermes|cobalt
    Each theme only overrides tokens; the default (valentine) is above.
    The typewriter drawing is the same red in every theme.
@@ -122,6 +124,21 @@
   );
 }
 
+/* The light desk's sheet is the folded one (white, creased in thirds; its
+   textures are with ?paper= below). ?paper=aged brings back the aged
+   sheet; the night desk keeps it. */
+:root:not([data-scene='night'], [data-paper]) {
+  --paper: #fbf8f2;
+  --ink-red: #b01e2f;
+  --tape: rgb(238 228 196 / 0.72);
+}
+
+/* White sheets on the light desk are brighter than the aged one, so
+   photos need less dimming to stay at or below the paper. */
+:root:not([data-scene='night'], [data-paper='aged']) {
+  --photo-filter: brightness(0.96) saturate(0.96);
+}
+
 /* The original look: cream paper, warm grey desk, green typewriter.
    ink 16.6 · ink-soft 8.9 · ink-red 6.5 on paper */
 :root[data-theme='classic'] {
@@ -149,20 +166,22 @@
   --ink-red: #b3261e;
 }
 
-/* ?paper=folded|grain|plain: the earlier, new-stationery sheets, for
-   comparison with the aged default: white paper, clean tape, straight
-   edges. */
-:root[data-paper] {
+/* The new-stationery sheets: white paper, clean tape, straight edges.
+   folded is the light desk's default; ?paper=grain|plain for comparison;
+   ?paper=aged keeps the aged sheet (the defaults at the top). */
+:root[data-paper]:not([data-paper='aged']) {
   --paper: #fbf8f2;
   --ink-red: #b01e2f;
   --tape: rgb(238 228 196 / 0.72);
 }
 
-:root[data-paper] .paper::before {
+:root:not([data-scene='night'], [data-paper]) .paper::before,
+:root[data-paper]:not([data-paper='aged']) .paper::before {
   -webkit-mask: none;
   mask: none;
 }
 
+:root:not([data-scene='night'], [data-paper]) .paper::before,
 :root[data-paper='folded'] .paper::before {
   background: url('/paper/fold.webp') 0 0 / 100% auto repeat-y,
     url('/paper/grain-a.webp') 0 0 / 128px repeat, url('/paper/grain-b.webp') 0 0 / 97px repeat,
