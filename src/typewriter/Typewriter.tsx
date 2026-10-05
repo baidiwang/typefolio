@@ -27,6 +27,17 @@ const machineOf = (): Machine =>
 const colourOf = (): 'red' | 'olive' =>
   document.documentElement.dataset.tw === 'olive' ? 'olive' : 'red'
 
+/** How much of the drawn body shows, in drawing rows below its top edge.
+ *  half (default): the shoulders, the roller's notch and the top key row
+ *  with its stems (≈ 119 px at 1440×900, ≈ 61 px at 390); the rest runs
+ *  off the bottom of the screen. full (?machine-crop=full): down to the keyboard
+ *  frame on desktop, the whole machine on phones. */
+const CROP = {
+  half: { desk: 146, phone: 168 },
+  full: { desk: BODY.keyboardBottom - BODY.top, phone: BODY.bottom - BODY.top },
+} as const
+const cropOf = () => CROP[document.documentElement.dataset.machineCrop === 'full' ? 'full' : 'half']
+
 /** Carriage travel per typed character: drawn, in reference px of the
  *  drawing; roller, as a fraction of the paper's width. */
 const STEP = 0.5
@@ -99,7 +110,7 @@ const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)'
  *
  * The sound toggle is a real button: the bell (drawn) or the carriage's
  * indicator light (roller). Until sound is turned on (each visit; nothing
- * is remembered), a light-rose note beside it says "ring for sound" (where there's room on the desk), and it gives
+ * is remembered), a pen note beside it says "ring for sound" (where there's room on the desk), and it gives
  * one small wiggle when the intro finishes typing. Everything else is
  * decorative (empty alt, nothing else focusable).
  */
@@ -130,8 +141,9 @@ export function Typewriter() {
     if (!scene || !paper) return
     const root = document.documentElement.style
     root.setProperty('--tw-aspect', (BODY_W / (BODY.keyboardBottom - BODY.top)).toFixed(4))
-    root.setProperty('--tw-rows-desk', String(BODY.keyboardBottom - BODY.top))
-    root.setProperty('--tw-rows-phone', String(BODY.bottom - BODY.top))
+    const crop = cropOf()
+    root.setProperty('--tw-rows-desk', String(crop.desk))
+    root.setProperty('--tw-rows-phone', String(crop.phone))
     const measure = () => {
       const r = paper.getBoundingClientRect()
       root.setProperty('--paper-l', `${r.left}px`)

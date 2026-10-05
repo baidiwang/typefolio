@@ -21,12 +21,14 @@ the strip until the paper feeds them out.
 
 ## Light
 
-The page's lamp (`.lamp`, README "Type and colour") is a fixed layer just
-below the typewriter. The strip paints the same lamp itself (the radial
-gradient positioned against the viewport), so it matches the desk around
-it. The machines bring their own lighting: the drawn body is lit from above
-in its export (brighter on top, into shadow toward the bottom), and the
-roller's gradients put a soft highlight on the side facing the lamp.
+The default room is light and has no lamp: the strip is the plain desk
+colour. With `?scene=night` the page's lamp (`.lamp`, README "Type and
+colour") is a fixed layer just below the typewriter, and the strip paints
+the same lamp itself (the radial gradient positioned against the
+viewport), so it matches the desk around it. The machines bring their own
+lighting: the drawn body is lit from above in its export (brighter on top,
+into shadow toward the bottom), and the roller's gradients put a soft
+highlight on its upper left.
 
 ## drawn
 
@@ -37,8 +39,8 @@ The lever and knobs stand outside the paper, left and right.
 
 | | Desktop (≥ 720 px) | Phones (< 720 px) |
 | --- | --- | --- |
-| Sizing | the body shows from its top edge to just below the keyboard frame, `--tw-visible: min(230px, 26vh)`, and is drawn 10% wider than the drawing (`--tw-sx: 1.1`); that fixes the scale, and the paper matches the body's width | the paper keeps its width (viewport − 2 × 12 px); the machine is scaled so the body matches it, unstretched |
-| Shown | body top to keyboard frame; the band below runs off the screen | the whole machine, ≈ 123 px of body at 390 px wide |
+| Sizing | the body from its top edge to just below the keyboard frame would be `--tw-frame-h: min(230px, 26vh)` tall, drawn 10% wider than the drawing (`--tw-sx: 1.1`); that fixes the scale, and the paper matches the body's width | the paper keeps its width (viewport − 2 × 12 px); the machine is scaled so the body matches it, unstretched |
+| Shown | the top 146 drawing rows: lever, knobs, bell, the roller's notch and the top key row with its stems, ≈ 119 px at 1440×900; the rest runs off the screen. `?machine-crop=full`: body top to keyboard frame | the top 168 rows: the roller and the top key row, ≈ 61 px at 390 px wide. `?machine-crop=full`: the whole machine, ≈ 123 px |
 | Paper width | 898 px at 1440×900, 812 at 1280×800, 779 at 1366×768 | 366 px at 390 |
 | Sound toggle | the bell; "ring for sound" note beside it until sound is turned on, if there's room | the bell; no room for the note (only the wiggle) |
 
@@ -50,9 +52,13 @@ strip's top edge. The stretch applies to the body, the roller and the
 notch; the small parts (lever, knobs, right axle, bell) keep their
 proportions and hang off the columns where the axles meet the body (x 289
 left, 1250 right), so they stay attached and only move outwards. CSS gets
-the paper's desktop width from `--tw-visible` and the drawing's aspect
+the paper's desktop width from `--tw-frame-h` and the drawing's aspect
 (`--tw-aspect`), and the strip height (`--tw-strip`) from the scale and the
-drawing's rows; the paper's bottom padding and the scroll padding use it.
+number of drawing rows shown (`--tw-rows-desk`/`--tw-rows-phone`, set by
+`Typewriter.tsx` from `CROP`); the reveal line, the paper's bottom padding
+and the scroll padding use it. The crop changes only the strip's height:
+the paper's width and the machine's scale stay the same, and the note
+stays anchored to the bell.
 
 The desktop paper margin (3rem) keeps the text clear of the bell and lever,
 which reach about 48 and 30 drawing px inside the paper's edges.
@@ -106,13 +112,14 @@ turned on.
 ## The sound toggle
 
 A real `<button>` (aria-label "Sound", `aria-pressed`, at least 44 × 44 px)
-with a light-rose focus ring: the bell (drawn; on phones its hit area
+with a focus ring in the desk pen (`--desk-pen`: the accent red on the
+light desk, light rose at night): the bell (drawn; on phones its hit area
 leans left so it stays on screen) or the carriage's light (roller). Off by
 default; turning sound on plays one ding. It's the first focus stop after
 the skip link (the typewriter comes first in the DOM).
 
 On every visit, until sound is turned on during it (nothing is
-remembered), a light-rose pen note in Caveat says "ring for sound", with an
+remembered), a pen note in Caveat (`--desk-pen`) says "ring for sound", with an
 arrow down to the toggle. It sits on the desk right of the paper, never
 over text, and is hidden where there isn't about 150 px of desk (phones:
 the bell is at the screen's edge). The toggle also gives one small wiggle
