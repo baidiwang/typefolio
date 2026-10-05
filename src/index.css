@@ -35,6 +35,9 @@
   --ink-red: #7a1f1a;
   --accent: #af312b;
   --highlight: #f6c1b4;
+  /* Selected text on a highlighted phrase: a deeper rose, so the selection
+     still shows on the marker (1.4:1 against it; ink 6.8:1). */
+  --highlight-selected: #e8998a;
   --desk-pen: var(--accent);
   --tape: rgb(226 204 148 / 0.74);
   /* Photos, posters and video frames: dimmed just enough that none is
@@ -307,6 +310,24 @@ a {
 :focus-visible {
   outline: 2px dashed var(--ink);
   outline-offset: 3px;
+}
+
+/* Selection: the highlighter rose, everywhere (the note on the desk
+   included), with the text in ink: 9.5:1. Selection paints above the
+   reveal's hidden-text highlight, as the browser's default one did, so
+   untyped text that's selected shows, the same as before. accent-color
+   tints the selection handles where the browser allows it. */
+:root {
+  accent-color: var(--highlight);
+}
+
+::selection {
+  background: var(--highlight);
+  color: var(--ink);
+}
+
+.hl[data-swiped]::selection {
+  background: var(--highlight-selected);
 }
 
 .visually-hidden {
