@@ -89,6 +89,11 @@ the "ring for sound" note and the focus rings use `--desk-pen`: the accent
 red on the light desk (5.2:1), light rose #f6c1b4 on the night desk (7.7:1
 on walnut). Focus on the paper is a dashed ink ring.
 
+Selected text is ink on the highlighter rose (9.5:1), everywhere, the note on
+the desk included; on a phrase that's already highlighted, the selection is
+a deeper rose, `--highlight-selected` #e8998a (ink 6.8:1). `accent-color`
+uses the rose too, for the selection handles where the browser allows it.
+
 Contrast is measured on the page itself: with the text hidden, the darkest
 paper pixel behind every fully revealed line (grain, folds, stains, foxing
 and edges included; at night, the lamp's falloff too), viewport by viewport
