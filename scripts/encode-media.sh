@@ -22,11 +22,14 @@ mkdir -p "$OUT"
 source "$HERE/media-clips.sh"
 
 for clip in "${CLIPS[@]}"; do
-  IFS='|' read -r id file start dur poster width crf264 crf9 <<<"$clip"
+  IFS='|' read -r id file start dur poster width crf264 crf9 wrap <<<"$clip"
   [[ "$ONLY" != "  " && "$ONLY" != *" $id "* ]] && continue
   in="$SRC/$file"
   trim=(-ss "$start")
   [[ -n "$dur" ]] && trim+=(-t "$dur")
+  # A wrapping clip reads the source twice in a row, so it can run past the
+  # end back into the beginning.
+  [[ "$wrap" == 1 ]] && trim=(-stream_loop 1 "${trim[@]}")
   poster="${poster:-$start}"
   # Even dimensions are required by yuv420p.
   vf="fps=24,scale=${width}:-2:flags=lanczos"

@@ -1,10 +1,9 @@
 /**
  * Portfolio content — edit copy here.
  *
- * Source of truth: the old site's src/constants/categories.js
- * (github.com/baidiwang/3D-Portfolio). Projects that appeared in several old
- * categories are merged into one entry. Do not add facts that aren't there.
- * Anything marked TODO needs Baidi's input before it ships.
+ * Copy is Baidi's own (final copy, October 2026); links and media come
+ * from the old site (github.com/baidiwang/3D-Portfolio). Do not add facts
+ * that aren't there. Anything marked TODO needs Baidi's input.
  */
 
 export type ProjectLinks = {
@@ -33,7 +32,7 @@ export type Project = {
   oneLiner: string
   /** Extra paragraphs merged in from other old categories. */
   body?: string[]
-  /** TODO: the old site has no roles. Empty strings are not rendered. */
+  /** Rendered as "Role: …". Empty strings are not rendered. */
   role: string
   /** Technologies and tools only. Skill tags (e.g. "Interaction Design") don't go here. */
   stack: string[]
@@ -41,6 +40,9 @@ export type Project = {
   media: ProjectMedia
   /** One sentence about a key decision, rendered in red ink. */
   decision?: string
+  /** A key phrase from `body` (or `oneLiner`), swiped with the highlighter
+   *  once it has typed. */
+  highlight?: string
 }
 
 export type OtherProject = {
@@ -48,6 +50,9 @@ export type OtherProject = {
   title: string
   kind: string
   oneLiner: string
+  stack?: string[]
+  /** A key phrase from `oneLiner`, swiped with the highlighter. */
+  highlight?: string
   href?: string
   linkLabel?: string
 }
@@ -55,8 +60,13 @@ export type OtherProject = {
 export const site = {
   name: 'Baidi Wang',
   title: 'Design Engineer',
-  intro:
-    'I’m a Design Engineer building AI interfaces and interactive web products. I’ve built UX prototypes at Google and data visualizations at Axios, and right now I’m building an iOS app of my own.',
+  /** Four lines, each on its own line, typed in order. */
+  intro: [
+    'Hey! I’m a Design Engineer.',
+    'I build web and mobile products, lately a lot of them with AI inside.',
+    'Making interactive graphics gave me a designer’s eye, and I’ve built games and XR too.',
+    'Right now I’m building my own iOS app, launching on the App Store soon!',
+  ],
   links: {
     resume: { label: 'Resume', href: '/BaidiWangResume.pdf' },
     email: {
@@ -68,12 +78,13 @@ export const site = {
     github: { label: 'GitHub', href: 'https://github.com/baidiwang' },
   },
   /** The page ends like a letter: the closing (ending in the email
-   *  address, linked), then the signature. */
+   *  address, linked), the sign-off, then the signature, in the same
+   *  lettering as the name at the top. */
   ending: {
     closing:
-      'Thanks for reading to the bottom of the page! If you want to reach out, just write me back:',
-    // TODO: becomes a handwritten SVG signature drawn with a stroke animation.
-    signature: 'Baidi Wang',
+      'Either you really like typewriters, or you really liked the work. Either way, thanks for staying to the last line. If you have more to say, write me back:',
+    signOff: 'Yours in type,',
+    signature: 'Baidi',
   },
 } as const
 
@@ -81,11 +92,14 @@ export const featuredProjects: Project[] = [
   {
     id: 'google-play',
     title: 'Google Play Prototypes',
-    kind: 'UX Engineering',
-    oneLiner:
-      'Interactive prototypes turning Figma designs into production-ready React components to validate new features with real users.',
-    role: '', // TODO
-    stack: ['React', 'TypeScript', 'Redux', 'MUI', 'Framer Motion'],
+    kind: 'UX Engineering · Google',
+    oneLiner: 'A prototyping platform for testing new Google Play features with real users.',
+    body: [
+      'Our team ran a prototyping platform for Google Play. I worked with designers from different product teams, turning their Figma files into working features, motion included, that went in front of real users for testing.',
+    ],
+    role: 'UX Engineer (contractor), prototyping team',
+    highlight: 'went in front of real users',
+    stack: ['React', 'Redux', 'TypeScript', 'MUI', 'Framer Motion', 'Figma'],
     // Deliberately no links: title and photo aren't clickable.
     links: {},
     media: {
@@ -97,15 +111,24 @@ export const featuredProjects: Project[] = [
   },
   {
     id: 'lily',
+    highlight: 'shows its work as a live document',
     title: 'Lily',
-    kind: 'AI Voice Assistant · AI Interface Design',
+    kind: 'AI Voice Assistant',
     oneLiner:
-      'A voice-first sales assistant that captures post-call notes and creates follow-up tasks through natural conversation.',
+      'A voice-first sales assistant that turns a spoken conversation into notes and follow-up tasks.',
     body: [
-      'Designing a voice-first interface that makes the AI’s state legible — showing live transcription and captured tasks so users can see the AI working in real time.',
+      'Instead of a chat log, Lily shows its work as a live document: transcription streams in, and notes and tasks appear while you talk, so you can see what the agent understood in real time. Audio streams over WebRTC rather than WebSockets, which keeps the conversation feeling live.',
     ],
-    role: '', // TODO
-    stack: ['Next.js', 'TypeScript', 'OpenAI Realtime API', 'WebRTC', 'Figma'],
+    role: 'Solo · design + engineering',
+    stack: [
+      'Next.js',
+      'React',
+      'TypeScript',
+      'Tailwind CSS',
+      'shadcn/ui',
+      'OpenAI Realtime API',
+      'WebRTC',
+    ],
     links: {
       live: 'https://voice-first-chat.vercel.app/',
       code: 'https://github.com/baidiwang/voice-first-chat',
@@ -119,16 +142,24 @@ export const featuredProjects: Project[] = [
   },
   {
     id: 'breadcrumb',
+    highlight: 'the train of thought you left behind',
     title: 'Breadcrumb',
-    kind: 'AI Desktop App · Interaction & Character Design',
+    kind: 'AI Desktop App',
     oneLiner:
-      'A desktop-pet working-memory companion for ADHD brains — a little toaster that drops a marker when your attention drifts, then rebuilds “where was I?” with AI when you return.',
+      'A desktop companion for ADHD brains that remembers what you were thinking when your attention drifted.',
     body: [
-      'Designing the desktop-pet toaster’s character and interaction language — its states, marker gestures, and the gentle “you were here” reveal — plus the information hierarchy that turns a scattered attention trail back into a clear “where was I” picture.',
+      'I built it for myself, because I’d start one task, glance at another, and lose the first one entirely. A small toaster on your desktop drops a marker the moment you switch away, with nothing to type and without ever reading your screen. When you come back, AI rebuilds where you were and the train of thought you left behind.',
     ],
-    role: '', // TODO
-    stack: ['Tauri', 'Rust', 'React', 'TypeScript', 'Claude API', 'Lovable', 'Claude Design'],
-    // TODO: no live link on the old site.
+    role: 'Solo · design + engineering',
+    stack: [
+      'Tauri (Rust)',
+      'React',
+      'TypeScript',
+      'Vite',
+      'Tailwind CSS',
+      'IndexedDB',
+      'Claude API',
+    ],
     links: { code: 'https://github.com/baidiwang/breadcrumb' },
     media: {
       src: '/media/breadcrumb',
@@ -139,15 +170,15 @@ export const featuredProjects: Project[] = [
   },
   {
     id: 'look-closer',
+    highlight: 'tells you something new',
     title: 'Look Closer',
-    kind: 'AI Interface · Interaction Design',
-    oneLiner:
-      'An artwork viewer where attention is the interface — it senses where your gaze lingers on a painting and quietly opens the story behind that detail.',
+    kind: 'AI Hackathon · Art Viewer',
+    oneLiner: 'An AI art viewer where your attention is the interface.',
     body: [
-      'Designing an interface that responds to looking itself — no hotspots, no chat box, no markers competing with the painting. Attention becomes the only input.',
+      'Built at an AI hackathon. Linger on a detail of a painting and Look Closer quietly opens the story behind it. Come back to a spot you’ve already explored and it notices, greets you, and tells you something new instead of repeating itself.',
     ],
-    role: '', // TODO
-    stack: ['Next.js', 'TypeScript', 'OpenAI API'],
+    role: 'Solo · design + engineering',
+    stack: ['Next.js', 'React', 'TypeScript', 'Tailwind CSS', 'OpenAI API'],
     links: {
       live: 'https://look-closer-masterpiece.vercel.app/',
       code: 'https://github.com/baidiwang/LookCloser',
@@ -159,40 +190,24 @@ export const featuredProjects: Project[] = [
       alt: 'Screen recording of Look Closer opening a story on The Last Supper.',
     },
   },
-  {
-    id: 'trustpath',
-    title: 'TrustPath',
-    kind: 'AI Interface',
-    oneLiner:
-      'A renter-controlled document copilot that shows its evidence — every extracted field comes with source quotes and confidence, and stays fully editable by the user.',
-    role: '', // TODO
-    stack: ['OpenAI API', 'Serverless', 'JavaScript'],
-    links: {
-      live: 'https://trust-path-copilot.vercel.app/',
-      code: 'https://github.com/baidiwang/TrustPath',
-    },
-    media: {
-      src: '/media/trustpath',
-      width: 720,
-      height: 352,
-      alt: 'Screen recording of TrustPath reviewing an uploaded document.',
-    },
-  },
 ]
 
+/** DATA VISUALIZATION: one entry, after Selected work. */
 export const otherProjects: OtherProject[] = [
   {
     id: 'data-visualization',
-    title: 'Data Visualization',
-    kind: 'Information Design',
+    highlight: 'I made the calls on chart type, colour and hierarchy',
+    title: 'Data Visualization at Axios',
+    kind: 'Data Visualization Engineer · Axios',
     oneLiner:
-      'Interactive editorial data visualizations — making complex datasets clear and explorable through considered chart design, color, and information hierarchy.',
+      'Interactive D3 graphics, Datawrapper charts and Illustrator illustrations for Axios news stories. I made the calls on chart type, colour and hierarchy, working within Axios’s design system.',
+    stack: ['JavaScript', 'D3.js', 'Datawrapper', 'Illustrator', 'Python (Pandas)', 'R'],
     href: 'https://medium.com/@WangPortfolio/daily-data-viz-graphics-bc698435092a',
     linkLabel: 'Writeup',
   },
 ]
 
-/** GAMES & 3D: full entries, after Selected work. */
+/** GAMES & XR: full entries, after Data Visualization, before the closing. */
 export const gameProjects: Project[] = [
   {
     id: 'little-helper',
