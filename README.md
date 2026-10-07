@@ -321,7 +321,7 @@ flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
 /?machine-crop=half | full            (default: half; full = earlier height)
 /?scene=light | night                 (default: light; night = lamp-lit desk)
 /?tw=red | olive                      (default: red)
-/?palette=jade | sage                 (default: none; see Palettes below)
+/?palette=mono                        (default: none; warm black and white)
 /?paper=aged | folded | grain | plain (default: folded; night: aged)
 /?font=plex | dmmono | cutive         (default: Sometype Mono)
 /?name=damion                         (default: Caveat 700)
@@ -330,31 +330,16 @@ flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
 /?scene=night&machine-crop=full       (the look before the light room)
 ```
 
-### Palettes
-
-`?palette=jade|sage` tries two palettes with no red, on the light desk with
-the folded sheet and the half-height machine (layout and type unchanged):
-
-| | jade (quiet, gallery-like) | sage |
-| --- | --- | --- |
-| Desk | #f1efe7 | #89a8a0 |
-| Paper | #faf8f2 | #f1efe7 (cooler shadow on the green) |
-| Typewriter body | jade #89a8a0 | cream, like a cream vintage Olivetti |
-| Ink / secondary | #22221f / warm grey #57524a | same |
-| Section labels | warm grey, caps, letter-spaced | same |
-| Pen dividers, link circles | deeper jade #5f8279 (decorative only) | same |
-| Highlighter, tape, selection | #d7c5a1 at 70% (selection on a highlight: #bfa673) | same |
-| Note, desk focus rings | ink | ink (6.2:1 on the sage desk) |
-| Photos | × 0.96 | × 0.92 (the off-white sheet is darker) |
-
-Both soften the typewriter's black outlines to a warm dark grey (≈ #3a3833)
-with an SVG colour-transfer filter on the machine's images: only tones
-below 40% are lifted, linearly, so the marker texture stays and the cream
-keys and the body colour are untouched. The bodies are exported by
-`scripts/typewriter-layers.py` (`typewriter-body-jade.webp`,
-`-cream.webp`). Contrast, measured as above: jade ink ≥ 10.5, secondary
-text and section labels ≥ 6.5, ink on the highlighter ≥ 10.4; sage ≥ 10.2,
-≥ 5.9, ≥ 10.2.
+`?palette=mono` is a warm black-and-white palette on the light desk with the
+folded sheet: paper #fbfaf7, desk #eceae5 with the same soft shadow, ink
+#1a1a18 for all text, the section labels, the pen marks, the note and the
+focus rings, warm grey #5f5b55 for secondary text, a light warm grey
+highlighter and selection (#e3e0d9; #c8c3b9 for selection on a
+highlighted phrase) and translucent warm grey tape. The project photos and
+clips are the only colour on the page. The typewriter is the drawing in
+greyscale (`grayscale(1) brightness(0.85)`), a stand-in for an
+engraving-style drawing. Contrast, measured as above: ink ≥ 13.2,
+secondary text ≥ 5.7, ink on the highlighter ≥ 13.2, ink on the desk 14.5.
 
 Options are `data-*` attributes on `<html>` that `src/index.css` reads
 (the machine, its crop and colour are also read by `Typewriter.tsx`). DM Mono's

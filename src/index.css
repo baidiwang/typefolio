@@ -142,51 +142,34 @@
   --photo-filter: brightness(0.96) saturate(0.96);
 }
 
-/* ?palette=jade|sage (previews): two palettes with no red, on the light
-   desk with the folded sheet. Both: ink #22221f; warm grey for secondary
-   text and the section labels (caps, letter-spaced, no colour); a deeper
-   jade for the pen marks only (dividers, link circles: decorative, never
-   text); #d7c5a1 for the highlighter, photo tape and selection; the
-   note and the desk's focus rings in ink. The typewriter's black outlines
-   are softened to a warm dark grey (#tw-soften, Typewriter.tsx).
-   Contrast (README, Colour): ink-soft 7.3 on jade paper, 6.7 on sage;
-   ink on the highlighter ≥ 10.5; ink on the sage desk 6.2. */
-:root[data-palette] {
-  --ink: #22221f;
-  --ink-soft: #57524a;
-  --ink-red: var(--ink-soft);
-  --accent: #5f8279;
-  --highlight: rgb(215 197 161 / 0.7);
-  --highlight-selected: #bfa673;
-  --tape: rgb(215 197 161 / 0.75);
+/* ?palette=mono (previews): black and white, warm rather than stark, on
+   the light desk with the folded sheet. Only the project photos and clips
+   keep their colour. Ink for all text, the section labels, the pen marks,
+   the note and the focus rings; a warm grey for secondary text (6.5:1);
+   a light warm grey highlighter and selection (ink 13.2:1; on a
+   highlighted phrase 9.9:1); translucent warm grey tape. The typewriter
+   is the drawing in greyscale, a stand-in for an engraving-style one. */
+:root[data-palette='mono'] {
+  --room: #eceae5;
+  --desk: #eceae5;
+  --paper: #fbfaf7;
+  --paper-shadow: rgb(60 55 48 / 0.16);
+  --ink: #1a1a18;
+  --ink-soft: #5f5b55;
+  --ink-red: var(--ink);
+  --accent: var(--ink);
+  --highlight: #e3e0d9;
+  --highlight-selected: #c8c3b9;
+  --tape: rgb(150 145 136 / 0.35);
   --desk-pen: var(--ink);
-  --tw-colour: #89a8a0;
-  accent-color: #d7c5a1;
+  --tw-colour: #4a4845;
+  accent-color: var(--ink);
 }
 
-/* jade: quiet, gallery-like. A pale desk, the paper a little lighter, a
-   jade machine (body only; the keys stay cream). */
-:root[data-palette='jade'] {
-  --room: #f1efe7;
-  --desk: #f1efe7;
-  --paper: #faf8f2;
-}
-
-/* sage: a sage desk, the sheet in warm off-white, a cream machine (like a
-   cream vintage Olivetti). The sheet's shadow is cooler on the green. */
-:root[data-palette='sage'] {
-  --room: #89a8a0;
-  --desk: #89a8a0;
-  --paper: #f1efe7;
-  --paper-shadow: rgb(25 40 35 / 0.22);
-  --tw-colour: #e8e1cf;
-  /* The off-white sheet is a little darker: white 254 → 234, at or below
-     its median of 235–237. */
-  --photo-filter: brightness(0.92) saturate(0.92);
-}
-
-:root[data-palette] .typewriter--drawn img {
-  filter: url('#tw-soften');
+/* Stand-in machine: greyscale and a little darker, so the body reads as
+   dark charcoal while the keys stay light. */
+:root[data-palette='mono'] .typewriter--drawn img {
+  filter: grayscale(1) brightness(0.85);
 }
 
 /* The original look: cream paper, warm grey desk, green typewriter.
@@ -944,11 +927,6 @@ a.taped:focus-visible {
    the paper. On desktop the band under the keyboard runs off the bottom
    of the screen. Layer boxes are set inline; --pl is the paper's left
    edge. */
-
-/* Holds the palettes' outline filter; takes no space. */
-.tw-filters {
-  position: absolute;
-}
 
 /* A zero-size anchor at the body's top-left corner. */
 .tw-origin {

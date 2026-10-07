@@ -24,25 +24,8 @@ import { playBell, playKey, playReturn, setSoundEnabled } from './sound'
 type Machine = 'drawn' | 'roller'
 const machineOf = (): Machine =>
   document.documentElement.dataset.machine === 'roller' ? 'roller' : 'drawn'
-/** The body's colour: ?tw=red|olive, or the palette's own (?palette=jade:
- *  jade; ?palette=sage: cream). */
-const colourOf = (): keyof typeof BODY_SRC => {
-  const { palette, tw } = document.documentElement.dataset
-  if (palette === 'jade') return 'jade'
-  if (palette === 'sage') return 'cream'
-  return tw === 'olive' ? 'olive' : 'red'
-}
-
-/** The palettes soften the drawing's black outlines to a warm dark grey
- *  (#3a3833): only the darkest tones are lifted, linearly, so the marker
- *  texture stays; everything above ~40% is untouched. index.css applies it
- *  to the machine's images with ?palette=. */
-const SOFTEN = { r: 0.227, g: 0.22, b: 0.2 }
-const softenTable = (lo: number) =>
-  [0, 0.1, 0.2, 0.3]
-    .map((x) => (lo + (0.4 - lo) * (x / 0.4)).toFixed(3))
-    .concat(['0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1'])
-    .join(' ')
+const colourOf = (): 'red' | 'olive' =>
+  document.documentElement.dataset.tw === 'olive' ? 'olive' : 'red'
 
 /** How much of the drawn body shows, in drawing rows below its top edge.
  *  half (default): the shoulders, the roller's notch and the top key row
@@ -324,15 +307,6 @@ export function Typewriter() {
 
   return (
     <div ref={sceneRef} className="typewriter typewriter--drawn" data-reveal-inset="">
-      <svg className="tw-filters" width="0" height="0" aria-hidden="true" focusable="false">
-        <filter id="tw-soften" colorInterpolationFilters="sRGB">
-          <feComponentTransfer>
-            <feFuncR type="table" tableValues={softenTable(SOFTEN.r)} />
-            <feFuncG type="table" tableValues={softenTable(SOFTEN.g)} />
-            <feFuncB type="table" tableValues={softenTable(SOFTEN.b)} />
-          </feComponentTransfer>
-        </filter>
-      </svg>
       {/* A zero-size anchor at the body's top-left corner. Back to front:
           the roller (clipped to the notch between the shoulders), the body,
           the lever, axle and knobs, then the bell (a button). */}

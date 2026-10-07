@@ -38,6 +38,5 @@ export const BELL_PIVOT = { x: 1240, y: 250 } as const
 export const KNOB_L_PIVOT = { x: 236, y: 272 } as const
 export const KNOB_R_PIVOT = { x: 1295, y: 277 } as const
 
-/** The body in each colour (?tw=red|olive; jade and cream for
- *  ?palette=jade|sage): same box as LAYERS.body. */
-export const BODY_SRC = { red: '/art/typewriter-body-red.webp', olive: '/art/typewriter-body-olive.webp', jade: '/art/typewriter-body-jade.webp', cream: '/art/typewriter-body-cream.webp' } as const
+/** The body in each colour (?tw=red|olive): same box as LAYERS.body. */
+export const BODY_SRC = { red: '/art/typewriter-body-red.webp', olive: '/art/typewriter-body-olive.webp' } as const

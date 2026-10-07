@@ -2,8 +2,7 @@
 """
 Split the hand-drawn typewriter (art/typewriter-wide.png) into rig layers
 and export them as WebP for the page. The body is exported once per
-colour (red, olive; jade and cream for the palettes), recoloured and lit
-from above.
+colour (red, olive), recoloured and lit from above.
 
     pip install pillow numpy
     python3 -B scripts/typewriter-layers.py
@@ -66,13 +65,7 @@ EXTEND = 90                      # roller added past each end of the notch
 ALPHA_MIN = 16                   # faint alpha noise below this is transparent
 # Body colours (?tw=red|olive) and the light from the lamp above: the body
 # is a little brighter at the top and falls into shadow toward the bottom.
-COLOURS = {
-    'red': (175, 49, 43),
-    'olive': (138, 147, 88),
-    # ?palette=jade and ?palette=sage (a cream vintage body).
-    'jade': (137, 168, 160),
-    'cream': (232, 225, 207),
-}
+COLOURS = {'red': (175, 49, 43), 'olive': (138, 147, 88)}
 LIGHT_TOP, LIGHT_BOTTOM = 1.08, 0.7
 
 # Export: at most source resolution (the body shows at most ~820 css px
@@ -296,9 +289,8 @@ export const BELL_PIVOT = {{ x: {int(stem.mean())}, y: {BELL_STEM_BOX[3]} }} as 
 export const KNOB_L_PIVOT = {centre(knob_l)} as const
 export const KNOB_R_PIVOT = {centre(knob_r)} as const
 
-/** The body in each colour (?tw=red|olive; jade and cream for
- *  ?palette=jade|sage): same box as LAYERS.body. */
-export const BODY_SRC = {{ {', '.join(f"{n}: '{layers['typewriter-body-' + n]['src']}'" for n in COLOURS)} }} as const
+/** The body in each colour (?tw=red|olive): same box as LAYERS.body. */
+export const BODY_SRC = {{ red: '{layers['typewriter-body-red']['src']}', olive: '{layers['typewriter-body-olive']['src']}' }} as const
 """)
     print('wrote', TS_OUT.relative_to(ROOT), f'(line {line}, body {body_x0}–{body_x1})')
 

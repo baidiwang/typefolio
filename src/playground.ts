@@ -7,8 +7,8 @@
  *   ?scene=light | night               (default: light; night = the earlier
  *                                       lamp-lit night desk)
  *   ?tw=red | olive                    (default: red; the typewriter's colour)
- *   ?palette=jade | sage               (default: none, the current colours;
- *                                       both drop all red)
+ *   ?palette=mono                      (default: none, the current colours;
+ *                                       mono: warm black and white)
  *   ?paper=aged | folded | grain | plain
  *                                      (default: folded on the light desk,
  *                                       aged at night)
@@ -30,7 +30,7 @@ const OPTIONS = {
   'machine-crop': ['half', 'full'],
   scene: ['light', 'night'],
   tw: ['red', 'olive'],
-  palette: ['none', 'jade', 'sage'],
+  palette: ['none', 'mono'],
   paper: ['none', 'aged', 'folded', 'plain', 'grain'],
   theme: ['none', 'classic', 'hermes', 'cobalt'],
 } as const
