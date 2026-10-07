@@ -142,27 +142,38 @@
   --photo-filter: brightness(0.96) saturate(0.96);
 }
 
-/* ?palette=mono (previews): black and white, warm rather than stark, on
-   the light desk with the folded sheet. Only the project photos and clips
-   keep their colour. Ink for all text, the section labels, the pen marks,
-   the note and the focus rings; a warm grey for secondary text (6.5:1);
-   a light warm grey highlighter and selection (ink 13.2:1; on a
-   highlighted phrase 9.9:1); translucent warm grey tape. The typewriter
-   is the engraved one (Typewriter.tsx), in sepia or black ink (?ink=). */
+/* ?palette=mono (previews): quiet and warm, on the folded sheet. No pure
+   white or black anywhere; the project photos and clips are the only
+   colour. Ink for all text, the section labels, the pen circles, the note
+   and the focus rings; a warm grey for secondary text; the rules (the
+   letterhead's line, the pen dividers) in a light warm grey; a pale warm
+   highlighter and selection (#cdc1aa for selection on a highlighted
+   phrase); translucent warm beige tape on prints a shade lighter than the
+   paper. The machine is the line-art typewriter: only its roller is fixed
+   to the screen (Typewriter.tsx), and the whole machine closes the letter
+   (App.tsx). Contrast: README, Palettes. */
 :root[data-palette='mono'] {
-  --room: #eceae5;
-  --desk: #eceae5;
-  --paper: #fbfaf7;
-  --paper-shadow: rgb(60 55 48 / 0.16);
-  --ink: #1a1a18;
-  --ink-soft: #5f5b55;
+  --room: #ede7db;
+  --desk: #ede7db;
+  --paper: #f7f3ea;
+  --paper-shadow: rgb(70 58 40 / 0.16);
+  --ink: #2b2823;
+  /* #6e675c was asked for: 5.0:1 on the paper colour, but 4.47:1 over the
+     sheet's darkest grain and creases; this is the nearest that passes. */
+  --ink-soft: #6a6358;
   --ink-red: var(--ink);
   --accent: var(--ink);
-  --highlight: #e3e0d9;
-  --highlight-selected: #c8c3b9;
-  --tape: rgb(150 145 136 / 0.35);
+  --rule: #cfc6b6;
+  --highlight: #e6decf;
+  --highlight-selected: #cdc1aa;
+  --tape: rgb(214 198 168 / 0.55);
+  --tape-shadow: rgb(70 58 40 / 0.08);
+  --photo-frame: #fcfaf5;
+  /* The warmer sheet is a little darker: white 253 → 238, at or below its
+     median of 239–241. */
+  --photo-filter: brightness(0.94) saturate(0.94);
   --desk-pen: var(--ink);
-  --tw-colour: #4a4845;
+  --tw-colour: #6a6358;
   accent-color: var(--ink);
 }
 
@@ -511,7 +522,7 @@ h2 {
   height: auto;
   overflow: visible;
   fill: none;
-  stroke: var(--accent);
+  stroke: var(--rule, var(--accent));
   stroke-width: 2.1;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -526,7 +537,7 @@ h2 {
 .letterhead {
   padding-bottom: 1.2em;
   margin-bottom: 2em;
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 1px solid var(--rule, var(--ink));
   text-align: center;
 }
 
@@ -726,7 +737,7 @@ h2 {
   display: block;
   margin: 0;
   padding: 0.45em;
-  background: #fff;
+  background: var(--photo-frame, #fff);
   /* Lit from the upper left: a small, soft shadow falling down-right. */
   box-shadow:
     1px 1px 1px rgb(40 25 10 / 0.12),
@@ -777,7 +788,7 @@ h2 {
   width: 4.2em;
   height: 1.5em;
   background: var(--tape);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  box-shadow: 0 1px 2px var(--tape-shadow, rgb(0 0 0 / 0.08));
   pointer-events: none;
 }
 
@@ -818,6 +829,21 @@ a.taped:focus-visible {
   margin: 0.1em 0 0.4em;
   font-size: 2.6em;
   line-height: 1.2;
+}
+
+/* ?palette=mono: the whole line-art typewriter closes the letter, once,
+   after the signature (in the page's flow: its size is reserved). */
+.ending__machine {
+  display: block;
+  width: min(500px, 100%);
+  height: auto;
+  margin: 2.5rem auto 0;
+}
+
+@media (max-width: 719px) {
+  .ending__machine {
+    width: 80%;
+  }
 }
 
 
@@ -974,46 +1000,44 @@ a.taped:focus-visible {
   outline-offset: 1px;
 }
 
-/* —— Engraved machine (?palette=mono): layered images placed from the
-   roller's top-left corner (the strip's top edge at the paper's left
-   edge), scaled by --tw-s so the roller matches the paper. On phones the
-   bell sits at the screen's edge, so its hit area moves left by
-   --bell-shift (set by Typewriter.tsx) while the bell stays put. */
+/* —— Line-art roller (?palette=mono): the roller image placed from its
+   top-left corner (the strip's top edge at the paper's left edge), scaled
+   by --tw-s so the roller matches the paper; the paper goes on behind it
+   (.tw-line-back). The bell stands just above the screen's bottom edge at
+   the roller's right end: its drawn size (--bell-h, set inline), but at
+   most 72% of the strip, so it never reaches above the entry line. */
 
-.tw-bell.tw-bell--eng {
-  translate: calc(-50% - var(--bell-shift, 0px)) -50%;
-}
-
-.tw-bell.tw-bell--eng img {
-  translate: var(--bell-shift, 0px) 0;
-}
-
-/* The note on the desk above the right post: a long stroke down past the
-   post to the bell (--arrow-h tall, ending --arrow-dx across; set inline),
-   and its head. */
-.tw-note--eng .tw-note__shaft,
-.tw-note--eng .tw-note__head {
+.tw-line-back {
   position: absolute;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  overflow: visible;
+  background: var(--paper);
 }
 
-.tw-note--eng .tw-note__shaft {
-  left: calc(var(--arrow-dx) - 4px);
-  top: 28px;
-  width: 20px;
-  height: calc(var(--arrow-h) - 36px);
+.tw-bell.tw-bell--line {
+  right: calc(100% - var(--pr, 100%));
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
+  place-items: end center;
+  border-radius: 8px;
+  translate: none;
 }
 
-.tw-note--eng .tw-note__head {
-  left: calc(var(--arrow-dx) - 8px);
-  top: calc(var(--arrow-h) - 18px);
-  width: 16px;
-  height: 12px;
+.tw-bell.tw-bell--line img {
+  height: min(var(--bell-h), calc(var(--tw-strip) * 0.72));
+  width: auto;
+  translate: none;
+  transform-origin: 50% 96%;
+}
+
+/* The note on the desk right of the paper, its arrow down to the bell. */
+.typewriter .tw-note--line {
+  left: calc(var(--pr, 100%) + 18px);
+  top: -56px;
+}
+
+.tw-note--line .tw-note__arrow {
+  left: -64px;
+  top: 22px;
+  width: 64px;
+  height: 54px;
 }
 
 /* —— Roller machine (?machine=roller): no body. A rendered platen roller

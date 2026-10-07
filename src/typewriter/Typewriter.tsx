@@ -9,30 +9,29 @@ import {
   LAYERS,
   NOTCH,
 } from './layers'
-import { ENGRAVING, ENGRAVING_BELL_PIVOT, ENGRAVING_POST, ENGRAVING_ROLLER } from './engraving'
+import { LINE_ART, LINE_ROLLER } from './line'
 import { playBell, playKey, playReturn, setSoundEnabled } from './sound'
 
 /**
  * Three machines:
  * - drawn (default): the hand-drawn typewriter, recoloured (?tw=red|olive)
  *   and lit from above; the paper goes in behind its body's top edge.
- * - engraving (?palette=mono): the engraved typewriter, in sepia or black
- *   ink (?ink=); the paper matches its roller and goes in at the roller's
- *   top edge.
+ * - line (?palette=mono): only the roller of the line-art typewriter, from
+ *   just above its clips to the bottom of the screen; the paper matches the
+ *   roller and goes into it. Its bell sits at the roller's right end. (The
+ *   whole machine closes the letter, after the signature: App.tsx.)
  * - roller (?machine=roller): no body, just a rendered platen roller
  *   spanning the paper at the bottom of the screen, with a small carriage
  *   in the typewriter's colour that slides as text types.
  * Either way the paper's entry line (the strip's top edge) is where text
  * appears (`data-reveal-inset`).
  */
-type Machine = 'drawn' | 'roller' | 'engraving'
+type Machine = 'drawn' | 'roller' | 'line'
 const machineOf = (): Machine => {
   const { machine, palette } = document.documentElement.dataset
   if (machine === 'roller') return 'roller'
-  return palette === 'mono' ? 'engraving' : 'drawn'
+  return palette === 'mono' ? 'line' : 'drawn'
 }
-const inkOf = (): 'sepia' | 'black' =>
-  document.documentElement.dataset.ink === 'black' ? 'black' : 'sepia'
 const colourOf = (): 'red' | 'olive' =>
   document.documentElement.dataset.tw === 'olive' ? 'olive' : 'red'
 
@@ -108,44 +107,29 @@ const NOTE_STYLE: CSSProperties = {
   top: `calc(${u(BELL.y - BODY.top)} - 64px)`,
 }
 
-/** The engraving's crop, in source px below the entry line (ENGRAVING_ROLLER
- *  .line, the top of the rod's clips). half: the roller and the top of the
- *  ribbon spools on desktop (≈ 120 px at 1440×900); the roller and the
- *  whole typebar fan on phones (≈ 90 px at 390). full (?machine-crop=full):
- *  down to the top key row (≈ 266 px at 1440×900, ≈ 108 px at 390). */
-const ENG_CROP = {
-  half: { desk: 91, phone: 168 },
-  full: { desk: 202, phone: 202 },
-} as const
-const ENG_W = ENGRAVING_ROLLER.x1 - ENGRAVING_ROLLER.x0
-/** Engraving: carriage travel per character and at most, in source px (the
- *  carriage's fill behind it is checked to this). */
-const ENG_STEP = 0.4
-const ENG_MAX = 30
-const engCx = (x: number) => x - ENGRAVING_ROLLER.x0
-const engCy = (y: number) => y - ENGRAVING_ROLLER.line
-const engBox = ({ x, y, w, h }: Box): CSSProperties => ({
-  left: u(engCx(x)),
-  top: u(engCy(y)),
+/** The line-art roller: how many rows of the 2x drawing show below the
+ *  entry line (just above the rod's clips): ≈ 85 px at 1440×900 and
+ *  ≈ 40 px at 390, the roller's lower part running off the screen. */
+const LINE_ROWS = { desk: 120, phone: 138 } as const
+const LINE_W = LINE_ROLLER.x1 - LINE_ROLLER.x0
+/** Carriage travel per character and at most, in px of the 2x drawing. */
+const LINE_STEP = 0.5
+const LINE_MAX = 34
+const lineBox = ({ x, y, w, h }: Box): CSSProperties => ({
+  left: u(x - LINE_ROLLER.x0),
+  top: u(y - LINE_ROLLER.line),
   width: u(w),
   height: u(h),
 })
-const ENG_BELL = ENGRAVING.bell
-const ENG_BELL_CX = ENGRAVING_BELL_PIVOT.x
-/** The bell, lifted by --bell-lift where the crop would hide it (desktop at
- *  the half crop): it must stay on screen, it's the sound toggle. */
-const ENG_BELL_BUTTON_STYLE: CSSProperties = {
-  left: u(engCx(ENG_BELL_CX)),
-  top: `calc(${u(engCy(ENG_BELL.y + ENG_BELL.h / 2))} - var(--bell-lift, 0px))`,
-}
-/** The note sits on the desk above the right post, its arrow running down
- *  past the post to the bell. */
-const ENG_NOTE_STYLE = {
-  left: u(engCx(ENGRAVING_POST.x)),
-  top: `calc(${u(engCy(ENGRAVING_POST.top))} - 46px)`,
-  '--arrow-h': `calc(${u(ENG_BELL.y - ENGRAVING_POST.top)} - var(--bell-lift, 0px) + 46px)`,
-  '--arrow-dx': u(ENG_BELL_CX - ENGRAVING_POST.x),
-} as CSSProperties
+/** Behind the roller, the paper goes on (paper colour) between the rod's
+ *  clips and the roller, and where the roller slides away from the
+ *  paper's right end. */
+const LINE_BACK = lineBox({
+  x: LINE_ROLLER.x0,
+  y: LINE_ROLLER.line,
+  w: LINE_W,
+  h: LINE_ART.roller.y + LINE_ART.roller.h - LINE_ROLLER.line,
+})
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -165,7 +149,6 @@ const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)'
 export function Typewriter() {
   const [machine] = useState(machineOf)
   const [colour] = useState(colourOf)
-  const [ink] = useState(inkOf)
   const sceneRef = useRef<HTMLDivElement>(null)
   /** Everything that slides with the carriage. */
   const movingRefs = useRef<(HTMLElement | null)[]>([])
@@ -191,10 +174,7 @@ export function Typewriter() {
     if (!scene || !paper) return
     const root = document.documentElement.style
     root.setProperty('--tw-aspect', (BODY_W / (BODY.keyboardBottom - BODY.top)).toFixed(4))
-    const crop =
-      machine === 'engraving'
-        ? ENG_CROP[document.documentElement.dataset.machineCrop === 'full' ? 'full' : 'half']
-        : cropOf()
+    const crop = machine === 'line' ? LINE_ROWS : cropOf()
     root.setProperty('--tw-rows-desk', String(crop.desk))
     root.setProperty('--tw-rows-phone', String(crop.phone))
     const measure = () => {
@@ -213,23 +193,13 @@ export function Typewriter() {
         const bellX = (BELL_CX[0] * sx + BELL_CX[1]) * s
         // The note needs about 150 px of desk right of the paper.
         scene.dataset.note = r.left + bellX + 18 + 150 <= room ? 'on' : 'off'
-      } else if (machine === 'engraving') {
-        const s = r.width / ENG_W
-        stepRef.current = ENG_STEP * s
-        maxRef.current = ENG_MAX * s
+      } else if (machine === 'line') {
+        const s = r.width / LINE_W
+        stepRef.current = LINE_STEP * s
+        maxRef.current = LINE_MAX * s
         root.setProperty('--tw-s', s.toFixed(5))
-        const bellX = r.left + engCx(ENG_BELL_CX) * s
-        // The note needs about 140 px of desk from the right post.
-        scene.dataset.note = r.left + engCx(ENGRAVING_POST.x) * s + 140 <= room ? 'on' : 'off'
-        // On phones the bell sits at the screen's edge: its hit area moves
-        // left onto the screen (the bell itself stays where it's drawn).
-        const shift = Math.max(0, bellX + 22 + 4 - document.documentElement.clientWidth)
-        scene.style.setProperty('--bell-shift', `${shift.toFixed(1)}px`)
-        // Where the crop would hide the bell, lift it to just above the
-        // screen's bottom edge.
-        const rows = window.matchMedia('(max-width: 719px)').matches ? crop.phone : crop.desk
-        const lift = Math.max(0, ENGRAVING_BELL_PIVOT.y + 4 - (ENGRAVING_ROLLER.line + rows))
-        scene.style.setProperty('--bell-lift', `${(lift * s).toFixed(1)}px`)
+        // The note sits on the desk right of the paper: about 150 px.
+        scene.dataset.note = r.right + 14 + 150 <= room ? 'on' : 'off'
       } else {
         stepRef.current = r.width * ROLLER_STEP
         scene.dataset.note = r.right + 16 + 150 <= room ? 'on' : 'off'
@@ -354,55 +324,45 @@ export function Typewriter() {
     onClick: toggleSound,
   }
 
-  if (machine === 'engraving') {
+  if (machine === 'line') {
     return (
-      <div ref={sceneRef} className="typewriter typewriter--engraving" data-reveal-inset="">
-        {/* From the roller's top-left corner. Back to front: paper colour
-            behind the carriage, the carriage (slides), the body, the bell
-            (a button). */}
+      <div ref={sceneRef} className="typewriter typewriter--line" data-reveal-inset="">
+        {/* From the roller's top-left corner: the paper behind, then the
+            roller (slides). */}
         <div className="tw-origin">
-          <img className="tw-layer" src={ENGRAVING.back.src} style={engBox(ENGRAVING.back)} alt="" />
+          <div className="tw-line-back" style={LINE_BACK} />
           <img
             ref={moving(0)}
             className="tw-layer"
-            src={ENGRAVING.carriage.src[ink]}
-            style={engBox(ENGRAVING.carriage)}
+            src={LINE_ART.roller.src}
+            style={lineBox(LINE_ART.roller)}
             alt=""
           />
-          <img className="tw-layer" src={ENGRAVING.body.src[ink]} style={engBox(ENGRAVING.body)} alt="" />
-          <button {...toggleProps} className="tw-bell tw-bell--eng" style={ENG_BELL_BUTTON_STYLE}>
-            <img
-              ref={(el) => {
-                toggleRef.current = el
-              }}
-              src={ENG_BELL.src[ink]}
-              style={{
-                width: u(ENG_BELL.w),
-                height: u(ENG_BELL.h),
-                transformOrigin: origin(ENGRAVING_BELL_PIVOT, ENG_BELL),
-              }}
-              alt=""
-            />
-          </button>
-          {!heard && (
-            <div className="tw-note tw-note--eng" style={ENG_NOTE_STYLE} aria-hidden="true">
-              <span className="tw-note__text">ring for sound</span>
-              {/* A long pen stroke down to the bell (stretched to fit), and
-                  its head. */}
-              <svg
-                className="tw-note__shaft"
-                viewBox="0 0 20 100"
-                preserveAspectRatio="none"
-                focusable="false"
-              >
-                <path d="M18 0C20 40 4 62 2 100" vectorEffect="non-scaling-stroke" />
-              </svg>
-              <svg className="tw-note__head" viewBox="0 0 16 12" focusable="false">
-                <path d="M2 2L8 10L14 3" />
-              </svg>
-            </div>
-          )}
         </div>
+        {/* The bell at the roller's right end, standing on the screen's
+            bottom edge: the sound toggle. */}
+        <button
+          {...toggleProps}
+          className="tw-bell tw-bell--line"
+          style={{ '--bell-h': u(LINE_ART.bell.h) } as CSSProperties}
+        >
+          <img
+            ref={(el) => {
+              toggleRef.current = el
+            }}
+            src={LINE_ART.bell.src}
+            alt=""
+          />
+        </button>
+        {!heard && (
+          <div className="tw-note tw-note--line" aria-hidden="true">
+            <span className="tw-note__text">ring for sound</span>
+            <svg className="tw-note__arrow" viewBox="0 0 60 50" focusable="false">
+              <path d="M52 6C40 10 22 18 12 38" />
+              <path d="M5 30L12 39L20 33" />
+            </svg>
+          </div>
+        )}
       </div>
     )
   }

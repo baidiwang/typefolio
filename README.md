@@ -321,7 +321,7 @@ flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
 /?machine-crop=half | full            (default: half; full = earlier height)
 /?scene=light | night                 (default: light; night = lamp-lit desk)
 /?tw=red | olive                      (default: red)
-/?palette=mono                        (default: none; warm black and white)
+/?palette=mono                        (default: none; quiet and warm)
 /?paper=aged | folded | grain | plain (default: folded; night: aged)
 /?font=plex | dmmono | cutive         (default: Sometype Mono)
 /?name=damion                         (default: Caveat 700)
@@ -330,54 +330,43 @@ flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
 /?scene=night&machine-crop=full       (the look before the light room)
 ```
 
-`?palette=mono` is a warm black-and-white palette on the light desk with the
-folded sheet: paper #fbfaf7, desk #eceae5 with the same soft shadow, ink
-#1a1a18 for all text, the section labels, the pen marks, the note and the
-focus rings, warm grey #5f5b55 for secondary text, a light warm grey
-highlighter and selection (#e3e0d9; #c8c3b9 for selection on a
-highlighted phrase) and translucent warm grey tape. The project photos and
-clips are the only colour on the page. The typewriter is the drawing in
-engraved typewriter (below). Contrast, measured as above: ink ≥ 13.2,
-secondary text ≥ 5.7, ink on the highlighter ≥ 13.2, ink on the desk 14.5.
+`?palette=mono` is a quiet, warm palette on the folded sheet: desk #ede7db,
+paper #f7f3ea, ink #2b2823 for all text, the section labels, the pen
+circles, the note and the focus rings; secondary text #6a6358; the rules
+(the letterhead's line and the pen dividers) #cfc6b6; highlighter and
+selection #e6decf (#cdc1aa for selection on a highlighted phrase);
+translucent warm beige tape on prints a shade lighter than the paper. No
+pure white or black anywhere; the project photos and clips are the only
+colour (dimmed × 0.94, at or below the paper). Secondary text was asked
+for as #6e675c: 5.0:1 on the paper colour but 4.47:1 over the sheet's
+darkest grain and creases, so it's the nearest grey that passes. Contrast,
+measured as above: ink ≥ 11.0, secondary text ≥ 4.74, ink on the
+highlighter ≥ 11.0, ink on the desk 11.9.
 
-### The engraved typewriter (?palette=mono)
+### The line-art typewriter (?palette=mono)
 
-A sepia engraving of a typewriter, front view (`art/typewriter-engraving.png`),
-split into layers by [`scripts/engraving-layers.py`](scripts/engraving-layers.py):
-paper colour behind the carriage; the carriage (roller, the rod with its two
-clips, the collars, both knobs and the return lever), which slides as text
-types (0.4 source px per character, at most 30); the body, with the ribbon
-spools and the type guide in front of the roller; and the bell, which rings.
-Only the white outside the machine is transparent (a flood fill from the
-image's edges); everything inside is opaque, its white in the paper colour.
-`?ink=sepia|black` picks the ink: as drawn, or #1a1a18.
+A light line-art typewriter in sepia (`art/typewriter-line.png`), upscaled
+2x with a line-art model (Real-ESRGAN realesr-animevideov3-x2, run on the
+CPU with ncnn: [`scripts/upscale-line.py`](scripts/upscale-line.py); the
+result, cropped to the machine, is `art/typewriter-line-2x.png`) and cut by
+[`scripts/line-layers.py`](scripts/line-layers.py). Its lines become ink
+#2b2823 with their alpha from their darkness; everything inside the
+machine (whatever the outer white doesn't reach) is filled with the paper
+colour, so it's opaque.
 
-The paper matches the roller (683 source px: ≈ 1.31 css px per source px at
-1440×900, 0.54 at 390). The paper goes in at the roller's top edge; the
-entry line is a little higher, at the top of the rod's clips, so no text is
-ever under the machine. Heights from the entry line:
-
-| Shows | 1440×900 | 390×844 |
-| --- | --- | --- |
-| roller and the top of the spools (default on desktop) | 120 px | |
-| roller, spools and the whole typebar fan | ≈ 222 px | 90 px (default on phones) |
-| down to the top key row (`?machine-crop=full`) | 266 px | 108 px |
-
-At 120 px the bell would be below the screen, so it's lifted to just above
-the bottom edge, beside the roller's right end; at the other heights it's
-where it's drawn. The "ring for sound" note sits on the desk above the right
-post with an arrow down to the bell (where there are ~140 px of desk; not on
-phones, where the bell is at the screen's edge and its hit area moves left
-onto the screen).
-
-Raster, not vector: traced with potrace (1, 2 or 3 tone levels), the
-drawing keeps crisp edges but loses its continuous-tone shading and the
-fine hatching on the roller, and reads like a woodcut. So the layers are
-WebP at twice the source resolution (Lanczos, lightly sharpened), which is
-crisper on a 2× screen than the source scaled by the browser. Per ink:
-≈ 230 KB (sepia) or ≈ 205 KB (black); a page loads one ink. For the top of
-the machine: SVG 1 tone 74 KB, 2 tones 134 KB, 3 tones 200 KB gzipped;
-WebP 71 KB at 1×, 165 KB at 2×.
+- **Fixed to the screen: only the roller**, with its rod and clips,
+  collars, knobs and return lever, from just above the clips down to the
+  bottom of the screen; the roller's lower part runs off the edge (no
+  spools, type guide or keys: the spools and the guide are painted out and
+  the roller and rail continued where they were). It spans the paper, the
+  knobs and lever outside it: ≈ 85 px tall at 1440×900, ≈ 40 px at 390.
+  The paper goes into it, and its top edge is the entry line. It slides as
+  text types (at most ≈ 24 px), with paper colour behind it.
+- **The bell**, cut out of the drawing, stands at the roller's right end
+  as the sound toggle (at most 72% of the strip tall, so it stays below
+  the entry line), with the "ring for sound" note on the desk beside it.
+- **The whole machine** closes the letter, once, after the signature:
+  500 px wide on desktop, 80% of the column on phones, in the page's flow.
 
 Options are `data-*` attributes on `<html>` that `src/index.css` reads
 (the machine, its crop and colour are also read by `Typewriter.tsx`). DM Mono's

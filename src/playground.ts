@@ -8,9 +8,8 @@
  *                                       lamp-lit night desk)
  *   ?tw=red | olive                    (default: red; the typewriter's colour)
  *   ?palette=mono                      (default: none, the current colours;
- *                                       mono: warm black and white, with the
- *                                       engraved typewriter)
- *   ?ink=sepia | black                 (default: sepia; the engraving's ink)
+ *                                       mono: quiet and warm, with the
+ *                                       line-art typewriter)
  *   ?paper=aged | folded | grain | plain
  *                                      (default: folded on the light desk,
  *                                       aged at night)
@@ -33,7 +32,6 @@ const OPTIONS = {
   scene: ['light', 'night'],
   tw: ['red', 'olive'],
   palette: ['none', 'mono'],
-  ink: ['sepia', 'black'],
   paper: ['none', 'aged', 'folded', 'plain', 'grain'],
   theme: ['none', 'classic', 'hermes', 'cobalt'],
 } as const

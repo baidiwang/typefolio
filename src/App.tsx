@@ -9,6 +9,7 @@ import { featuredProjects, gameProjects, otherProjects, site, xrExperiments } fr
 import { useHashScroll } from './hooks/useHashScroll'
 import { useHighlighterSwipe } from './hooks/useHighlighterSwipe'
 import { Reveal } from './reveal/Reveal'
+import { LINE_ART, LINE_MACHINE_SIZE } from './typewriter/line'
 import { Typewriter } from './typewriter/Typewriter'
 
 /** Joins a line's last two words with a no-break space, so a sentence that
@@ -16,6 +17,8 @@ import { Typewriter } from './typewriter/Typewriter'
 const keepLastTwo = (line: string) => line.replace(/ (\S+)$/, '\u00a0$1')
 
 export default function App() {
+  // ?palette=mono (previews) closes the letter with the line-art typewriter.
+  const mono = document.documentElement.dataset.palette === 'mono'
   useHashScroll()
   useHighlighterSwipe()
 
@@ -96,6 +99,17 @@ export default function App() {
             <Signature className="ending__signature" duration={700}>
               {site.ending.signature}
             </Signature>
+            {mono && (
+              <img
+                className="ending__machine"
+                src={LINE_ART.machine.src}
+                width={LINE_MACHINE_SIZE.w}
+                height={LINE_MACHINE_SIZE.h}
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+            )}
           </footer>
         </main>
       </div>

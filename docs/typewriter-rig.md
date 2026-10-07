@@ -183,15 +183,15 @@ removes old WebPs before writing new ones.
 4. Check the cut: compose the layers with the roller group slid ~60 px left
    and look for holes or pieces left behind.
 
-## engraving (?palette=mono)
+## line (?palette=mono)
 
-See README, "The engraved typewriter": layers, fit, crops and export are
-described there; the geometry is generated into
-[`src/typewriter/engraving.ts`](../src/typewriter/engraving.ts) and the
-layers are placed from the roller's top-left corner (`.tw-origin` at the
-paper's left edge, on the entry line). The knobs don't turn on line feed
-(seen from the front they'd only spin in place). No typebar swings: the
-fan's bars overlap too densely to cut one out cleanly.
+See README, "The line-art typewriter": only the roller is fixed to the
+screen, placed from its top-left corner (`.tw-origin` at the paper's left
+edge, on the entry line) and scaled by `--tw-s` so the roller matches the
+paper; its geometry is generated into
+[`src/typewriter/line.ts`](../src/typewriter/line.ts). The bell is placed
+in CSS at the roller's right end, standing just above the screen's bottom
+edge. The whole machine closes the letter (`App.tsx`).
 
 ## Only the toggle is interactive
 
