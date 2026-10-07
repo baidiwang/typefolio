@@ -337,9 +337,47 @@ focus rings, warm grey #5f5b55 for secondary text, a light warm grey
 highlighter and selection (#e3e0d9; #c8c3b9 for selection on a
 highlighted phrase) and translucent warm grey tape. The project photos and
 clips are the only colour on the page. The typewriter is the drawing in
-greyscale (`grayscale(1) brightness(0.85)`), a stand-in for an
-engraving-style drawing. Contrast, measured as above: ink ≥ 13.2,
+engraved typewriter (below). Contrast, measured as above: ink ≥ 13.2,
 secondary text ≥ 5.7, ink on the highlighter ≥ 13.2, ink on the desk 14.5.
+
+### The engraved typewriter (?palette=mono)
+
+A sepia engraving of a typewriter, front view (`art/typewriter-engraving.png`),
+split into layers by [`scripts/engraving-layers.py`](scripts/engraving-layers.py):
+paper colour behind the carriage; the carriage (roller, the rod with its two
+clips, the collars, both knobs and the return lever), which slides as text
+types (0.4 source px per character, at most 30); the body, with the ribbon
+spools and the type guide in front of the roller; and the bell, which rings.
+Only the white outside the machine is transparent (a flood fill from the
+image's edges); everything inside is opaque, its white in the paper colour.
+`?ink=sepia|black` picks the ink: as drawn, or #1a1a18.
+
+The paper matches the roller (683 source px: ≈ 1.31 css px per source px at
+1440×900, 0.54 at 390). The paper goes in at the roller's top edge; the
+entry line is a little higher, at the top of the rod's clips, so no text is
+ever under the machine. Heights from the entry line:
+
+| Shows | 1440×900 | 390×844 |
+| --- | --- | --- |
+| roller and the top of the spools (default on desktop) | 120 px | |
+| roller, spools and the whole typebar fan | ≈ 222 px | 90 px (default on phones) |
+| down to the top key row (`?machine-crop=full`) | 266 px | 108 px |
+
+At 120 px the bell would be below the screen, so it's lifted to just above
+the bottom edge, beside the roller's right end; at the other heights it's
+where it's drawn. The "ring for sound" note sits on the desk above the right
+post with an arrow down to the bell (where there are ~140 px of desk; not on
+phones, where the bell is at the screen's edge and its hit area moves left
+onto the screen).
+
+Raster, not vector: traced with potrace (1, 2 or 3 tone levels), the
+drawing keeps crisp edges but loses its continuous-tone shading and the
+fine hatching on the roller, and reads like a woodcut. So the layers are
+WebP at twice the source resolution (Lanczos, lightly sharpened), which is
+crisper on a 2× screen than the source scaled by the browser. Per ink:
+≈ 230 KB (sepia) or ≈ 205 KB (black); a page loads one ink. For the top of
+the machine: SVG 1 tone 74 KB, 2 tones 134 KB, 3 tones 200 KB gzipped;
+WebP 71 KB at 1×, 165 KB at 2×.
 
 Options are `data-*` attributes on `<html>` that `src/index.css` reads
 (the machine, its crop and colour are also read by `Typewriter.tsx`). DM Mono's

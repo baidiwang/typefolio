@@ -148,7 +148,7 @@
    the note and the focus rings; a warm grey for secondary text (6.5:1);
    a light warm grey highlighter and selection (ink 13.2:1; on a
    highlighted phrase 9.9:1); translucent warm grey tape. The typewriter
-   is the drawing in greyscale, a stand-in for an engraving-style one. */
+   is the engraved one (Typewriter.tsx), in sepia or black ink (?ink=). */
 :root[data-palette='mono'] {
   --room: #eceae5;
   --desk: #eceae5;
@@ -164,12 +164,6 @@
   --desk-pen: var(--ink);
   --tw-colour: #4a4845;
   accent-color: var(--ink);
-}
-
-/* Stand-in machine: greyscale and a little darker, so the body reads as
-   dark charcoal while the keys stay light. */
-:root[data-palette='mono'] .typewriter--drawn img {
-  filter: grayscale(1) brightness(0.85);
 }
 
 /* The original look: cream paper, warm grey desk, green typewriter.
@@ -978,6 +972,48 @@ a.taped:focus-visible {
 .tw-light:focus-visible {
   outline: 2px solid var(--desk-pen);
   outline-offset: 1px;
+}
+
+/* —— Engraved machine (?palette=mono): layered images placed from the
+   roller's top-left corner (the strip's top edge at the paper's left
+   edge), scaled by --tw-s so the roller matches the paper. On phones the
+   bell sits at the screen's edge, so its hit area moves left by
+   --bell-shift (set by Typewriter.tsx) while the bell stays put. */
+
+.tw-bell.tw-bell--eng {
+  translate: calc(-50% - var(--bell-shift, 0px)) -50%;
+}
+
+.tw-bell.tw-bell--eng img {
+  translate: var(--bell-shift, 0px) 0;
+}
+
+/* The note on the desk above the right post: a long stroke down past the
+   post to the bell (--arrow-h tall, ending --arrow-dx across; set inline),
+   and its head. */
+.tw-note--eng .tw-note__shaft,
+.tw-note--eng .tw-note__head {
+  position: absolute;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+
+.tw-note--eng .tw-note__shaft {
+  left: calc(var(--arrow-dx) - 4px);
+  top: 28px;
+  width: 20px;
+  height: calc(var(--arrow-h) - 36px);
+}
+
+.tw-note--eng .tw-note__head {
+  left: calc(var(--arrow-dx) - 8px);
+  top: calc(var(--arrow-h) - 18px);
+  width: 16px;
+  height: 12px;
 }
 
 /* —— Roller machine (?machine=roller): no body. A rendered platen roller
