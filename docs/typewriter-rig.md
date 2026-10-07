@@ -1,7 +1,9 @@
 # Typewriter rig
 
 There are two machines (`?machine=` on previews; **drawn** is the default),
-each in red #af312b or olive #8a9358 (`?tw=red|olive`). Both are rendered by
+each in red #af312b or olive #8a9358 (`?tw=red|olive`); `?palette=jade`
+and `?palette=sage` bring jade and cream bodies, with the black outlines
+softened to a warm dark grey by an SVG filter (README, Palettes). Both are rendered by
 [`Typewriter.tsx`](../src/typewriter/Typewriter.tsx) and animated in step
 with the reveal controller.
 

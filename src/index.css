@@ -142,6 +142,53 @@
   --photo-filter: brightness(0.96) saturate(0.96);
 }
 
+/* ?palette=jade|sage (previews): two palettes with no red, on the light
+   desk with the folded sheet. Both: ink #22221f; warm grey for secondary
+   text and the section labels (caps, letter-spaced, no colour); a deeper
+   jade for the pen marks only (dividers, link circles: decorative, never
+   text); #d7c5a1 for the highlighter, photo tape and selection; the
+   note and the desk's focus rings in ink. The typewriter's black outlines
+   are softened to a warm dark grey (#tw-soften, Typewriter.tsx).
+   Contrast (README, Colour): ink-soft 7.3 on jade paper, 6.7 on sage;
+   ink on the highlighter ≥ 10.5; ink on the sage desk 6.2. */
+:root[data-palette] {
+  --ink: #22221f;
+  --ink-soft: #57524a;
+  --ink-red: var(--ink-soft);
+  --accent: #5f8279;
+  --highlight: rgb(215 197 161 / 0.7);
+  --highlight-selected: #bfa673;
+  --tape: rgb(215 197 161 / 0.75);
+  --desk-pen: var(--ink);
+  --tw-colour: #89a8a0;
+  accent-color: #d7c5a1;
+}
+
+/* jade: quiet, gallery-like. A pale desk, the paper a little lighter, a
+   jade machine (body only; the keys stay cream). */
+:root[data-palette='jade'] {
+  --room: #f1efe7;
+  --desk: #f1efe7;
+  --paper: #faf8f2;
+}
+
+/* sage: a sage desk, the sheet in warm off-white, a cream machine (like a
+   cream vintage Olivetti). The sheet's shadow is cooler on the green. */
+:root[data-palette='sage'] {
+  --room: #89a8a0;
+  --desk: #89a8a0;
+  --paper: #f1efe7;
+  --paper-shadow: rgb(25 40 35 / 0.22);
+  --tw-colour: #e8e1cf;
+  /* The off-white sheet is a little darker: white 254 → 234, at or below
+     its median of 235–237. */
+  --photo-filter: brightness(0.92) saturate(0.92);
+}
+
+:root[data-palette] .typewriter--drawn img {
+  filter: url('#tw-soften');
+}
+
 /* The original look: cream paper, warm grey desk, green typewriter.
    ink 16.6 · ink-soft 8.9 · ink-red 6.5 on paper */
 :root[data-theme='classic'] {
@@ -897,6 +944,11 @@ a.taped:focus-visible {
    the paper. On desktop the band under the keyboard runs off the bottom
    of the screen. Layer boxes are set inline; --pl is the paper's left
    edge. */
+
+/* Holds the palettes' outline filter; takes no space. */
+.tw-filters {
+  position: absolute;
+}
 
 /* A zero-size anchor at the body's top-left corner. */
 .tw-origin {
