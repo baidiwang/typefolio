@@ -55,10 +55,10 @@ never fakes others. Hierarchy:
 | Element | Treatment |
 | ------- | --------- |
 | Name (letterhead) | 3.4em, hand lettering (Caveat 700), written on with a clip |
-| Section labels (Interfaces, Data visualization, Games & XR) | 400, spaced caps, ink; one shared `h2` style |
+| Section labels (Interfaces, Data visualization, Games & XR) | 400, spaced caps, ink, on a highlighter swipe; one shared style |
 | Project titles (Axios included) | 1.4em, 700 |
 | "More XR experiments:" | 700, as a heading for its line |
-| Body, meta lines | 400; meta lines (type, role, stack) in `--ink-soft` |
+| Body, meta lines | 400; meta lines (type, role, stack, and "Unity · C#" under Games & XR) in `--ink-soft` |
 
 Body text is 17px on phones, 18px on desktop.
 
@@ -72,10 +72,11 @@ clips are the only colour.
 links, the "ring for sound" note and the focus rings are ink, `--ink`
 #2b2823; secondary text is a warm grey, `--ink-soft` #6a6358. The rules
 (the letterhead's line and the pen dividers) are a light warm grey,
-`--rule` #cfc6b6. One key phrase per project gets the highlighter,
-`--highlight` #e6decf, swiped on left to right once that phrase has typed
-([`Highlight.tsx`](src/components/Highlight.tsx),
-[`useHighlighterSwipe`](src/hooks/useHighlighterSwipe.ts)). Selected text
+`--rule` #cfc6b6. One key phrase per project, and each section label,
+gets the highlighter, `--highlight` #e6decf, swiped on left to right once
+it has typed ([`Highlight.tsx`](src/components/Highlight.tsx),
+[`useHighlighterSwipe`](src/hooks/useHighlighterSwipe.ts); static under
+reduced motion). Selected text
 is ink on the highlighter too, everywhere; on a phrase that's already
 highlighted the selection is `--highlight-selected` #cdc1aa. Focus on the
 paper is a dashed ink ring, on the desk a solid one.
@@ -105,6 +106,11 @@ tiles of coprime sizes, so it doesn't visibly repeat. The sheet is drawn by
 `.paper::before` and its shadow by `::after`.
 
 ## Sections, links and sound
+
+- **Links rule**: an entry with only one link has its title (and photo)
+  carry it, with no separate link line (Axios, Breadcrumb, Little Helper,
+  Desol). Entries with two or more links keep their link line (Lily, Look
+  Closer).
 
 - **Dividers** are a quick wavy pen line
   ([`Divider.tsx`](src/components/Divider.tsx)): three hand-drawn variants,

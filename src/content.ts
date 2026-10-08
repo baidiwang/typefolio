@@ -34,8 +34,10 @@ export type Project = {
   body?: string[]
   /** Rendered as "Role: …". Omitted or empty: no role line. */
   role?: string
-  /** Technologies and tools only. Skill tags (e.g. "Interaction Design") don't go here. */
-  stack: string[]
+  /** Technologies and tools only. Skill tags (e.g. "Interaction Design")
+   *  don't go here. Omitted: no stack line (the games share one line under
+   *  their section label instead). */
+  stack?: string[]
   links: ProjectLinks
   media: ProjectMedia
   /** One sentence about a key decision, rendered in red ink. */
@@ -48,13 +50,13 @@ export type Project = {
 export type OtherProject = {
   id: string
   title: string
-  kind: string
+  kind?: string
   oneLiner: string
   stack?: string[]
   /** A key phrase from `oneLiner`, swiped with the highlighter. */
   highlight?: string
+  /** Its one link, carried by the title. */
   href?: string
-  linkLabel?: string
 }
 
 export const site = {
@@ -81,7 +83,7 @@ export const site = {
    *  address, linked), the sign-off, then the signature, in the same
    *  lettering as the name at the top. */
   ending: {
-    closing: 'The typewriter needs a rest. I don’t. Write me back:',
+    closing: 'If you’ve read this far, we should probably talk. Write me back:',
     signOff: 'Yours in type,',
     signature: 'Baidi',
   },
@@ -192,17 +194,16 @@ export const otherProjects: OtherProject[] = [
   {
     id: 'data-visualization',
     highlight: 'I made the calls on chart type, colour and hierarchy',
-    title: 'Data Visualization at Axios',
-    kind: 'Data Visualization Engineer · Axios',
+    title: 'Axios',
     oneLiner:
       'Interactive D3 graphics, Datawrapper charts and Illustrator illustrations for Axios news stories. I made the calls on chart type, colour and hierarchy, working within Axios’s design system.',
-    stack: ['JavaScript', 'D3.js', 'Datawrapper', 'Illustrator', 'Python (Pandas)', 'R'],
+    // The writeup.
     href: 'https://medium.com/@WangPortfolio/daily-data-viz-graphics-bc698435092a',
-    linkLabel: 'Writeup',
   },
 ]
 
-/** GAMES & XR: full entries, after Data Visualization, before the closing. */
+/** GAMES & XR: full entries, after Data Visualization, before the closing.
+ *  Their shared stack is one line under the section label (`gamesStack`). */
 export const gameProjects: Project[] = [
   {
     id: 'little-helper',
@@ -211,7 +212,6 @@ export const gameProjects: Project[] = [
     oneLiner:
       'A narrative puzzle game where you play a spirit, possessing environmental objects to indirectly guide a little girl through space.',
     role: '', // TODO
-    stack: ['Unity', 'C#'],
     // TODO: the old "Details" link (baidiwang.github.io/memory-system/) was
     // removed because it doesn't match this project.
     links: {
@@ -231,7 +231,6 @@ export const gameProjects: Project[] = [
     oneLiner:
       'A third-person desert exploration game where uncertainty is the core mechanic — navigate without a map using environmental wayfinding. Released on Steam.',
     role: '', // TODO
-    stack: ['Unity', 'C#', 'ScriptableObject'],
     links: {
       live: 'https://store.steampowered.com/app/4666960/desol/',
       liveLabel: 'Steam',
@@ -245,6 +244,9 @@ export const gameProjects: Project[] = [
   },
 ]
 
+/** Under the "Games & XR" label, in place of a stack line per game. */
+export const gamesStack = 'Unity · C#'
+
 /** One line under the games: "More XR experiments: A ↗ · B ↗". */
 export const xrExperiments = {
   label: 'More XR experiments:',
@@ -255,6 +257,12 @@ export const xrExperiments = {
     },
     { title: 'Spatial Jam', href: 'https://devpost.com/software/async-jam' },
   ],
+}
+
+/** How many links a project has. With only one, its title carries it and
+ *  there's no separate link line. */
+export function linkCount(links: ProjectLinks): number {
+  return [links.live, links.code, links.writeup].filter(Boolean).length
 }
 
 /** The main link for a project: where its media and title point. */

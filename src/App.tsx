@@ -6,7 +6,14 @@ import { OneLiners } from './components/OneLiners'
 import { Project } from './components/Project'
 import { Signature } from './components/Signature'
 import { Smiley } from './components/Smiley'
-import { featuredProjects, gameProjects, otherProjects, site, xrExperiments } from './content'
+import {
+  featuredProjects,
+  gameProjects,
+  gamesStack,
+  otherProjects,
+  site,
+  xrExperiments,
+} from './content'
 import { useHashScroll } from './hooks/useHashScroll'
 import { useHighlighterSwipe } from './hooks/useHighlighterSwipe'
 import { Reveal } from './reveal/Reveal'
@@ -15,6 +22,17 @@ import { Typewriter } from './typewriter/Typewriter'
 /** Joins a line's last two words with a no-break space, so a sentence that
  *  wraps never leaves one word alone on its last line. */
 const keepLastTwo = (line: string) => line.replace(/ (\S+)$/, '\u00a0$1')
+
+/** A section label: spaced caps with a highlighter swipe behind it, swiped
+ *  on once the label has typed (useHighlighterSwipe). The same for all three.
+ *  A span, not <mark>: the swipe is decoration, not emphasis. */
+function SectionLabel({ id, children }: { id: string; children: string }) {
+  return (
+    <Reveal as="h2" id={id}>
+      <span className="hl hl--label">{children}</span>
+    </Reveal>
+  )
+}
 
 export default function App() {
   useHashScroll()
@@ -45,9 +63,7 @@ export default function App() {
           <Divider variant={0} />
 
           <section aria-labelledby="work-heading">
-            <Reveal as="h2" id="work-heading">
-              Interfaces
-            </Reveal>
+            <SectionLabel id="work-heading">Interfaces</SectionLabel>
             {featuredProjects.map((project, i) => (
               <Project key={project.id} project={project} index={i} />
             ))}
@@ -56,18 +72,15 @@ export default function App() {
           <Divider variant={1} />
 
           <section aria-labelledby="other-heading">
-            <Reveal as="h2" id="other-heading">
-              Data visualization
-            </Reveal>
+            <SectionLabel id="other-heading">Data visualization</SectionLabel>
             <OneLiners items={otherProjects} />
           </section>
 
           <Divider variant={2} />
 
           <section aria-labelledby="games-heading">
-            <Reveal as="h2" id="games-heading">
-              Games &amp; XR
-            </Reveal>
+            <SectionLabel id="games-heading">Games &amp; XR</SectionLabel>
+            <Reveal className="section-note">{gamesStack}</Reveal>
             {gameProjects.map((project, i) => (
               <Project key={project.id} project={project} index={i} />
             ))}
