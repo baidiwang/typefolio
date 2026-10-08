@@ -334,11 +334,24 @@ h3 {
   margin: 0;
 }
 
-/* Section labels: regular weight, spaced caps, in ink. */
+/* Section labels: regular weight, spaced caps, in ink, with a highlighter
+   swipe behind (.hl--label: even padding either side, the trailing letter
+   spacing included). */
 h2 {
   margin: 0 0 1.2em;
   text-transform: uppercase;
   letter-spacing: 0.14em;
+}
+
+.hl.hl--label {
+  padding: 0 0.12em 0 0.26em;
+  margin: 0 -0.12em 0 -0.26em;
+}
+
+/* A small secondary line right under a label (the games' shared stack). */
+.sheet .section-note {
+  margin: -0.8em 0 1.6em;
+  color: var(--ink-soft);
 }
 
 /* —— Pen dividers (src/components/Divider.tsx) —— */
@@ -497,9 +510,13 @@ h2 {
   margin-bottom: 1em;
 }
 
-.one-liner .project__stack,
-.one-liner .project__links {
+.one-liner .project__stack {
   margin-top: 0.8em;
+}
+
+/* With no type line, a little air between the title and its text. */
+.one-liner .project__title {
+  margin-bottom: 0.5em;
 }
 
 /* —— Projects ——
@@ -529,6 +546,12 @@ h2 {
 
 .project__rest {
   grid-area: rest;
+}
+
+/* Nothing after the photo (the games: no stack line, one link carried by
+   the title): the photo ends the entry, so the usual gap to the next. */
+.project__media:has(+ .project__rest:empty) {
+  margin-bottom: 0;
 }
 
 @media (min-width: 720px) {

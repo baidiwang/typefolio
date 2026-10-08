@@ -1,4 +1,4 @@
-import { primaryHref, type Project as ProjectData } from '../content'
+import { linkCount, primaryHref, type Project as ProjectData } from '../content'
 import { Reveal } from '../reveal/Reveal'
 import { ExternalLink } from './ExternalLink'
 import { Highlighted } from './Highlight'
@@ -21,7 +21,8 @@ export function Project({ project, index }: Props) {
   const href = primaryHref(links)
   const titleId = `${id}-title`
   const leadId = `${id}-lead`
-  const hasLinks = Boolean(links.live || links.code || links.writeup)
+  // One link: the title (and photo) carry it, no link line.
+  const linkLine = linkCount(links) >= 2
 
   return (
     <article id={id} className="project" aria-labelledby={titleId}>
@@ -58,10 +59,12 @@ export function Project({ project, index }: Props) {
             {decision}
           </Reveal>
         )}
-        <Reveal mode="lines" className="project__stack">
-          Stack: {stack.join(', ')}
-        </Reveal>
-        {hasLinks && (
+        {stack && (
+          <Reveal mode="lines" className="project__stack">
+            Stack: {stack.join(', ')}
+          </Reveal>
+        )}
+        {linkLine && (
           <Reveal className="project__links">
             {links.live && (
               <ExternalLink href={links.live}>{links.liveLabel ?? 'Live'} ↗</ExternalLink>

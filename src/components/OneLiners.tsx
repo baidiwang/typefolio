@@ -3,8 +3,8 @@ import { Reveal } from '../reveal/Reveal'
 import { ExternalLink } from './ExternalLink'
 import { Highlighted } from './Highlight'
 
-/** Short entries: title and type (styled as a project's), a few sentences,
- *  stack, one link. */
+/** Short entries: title (styled as a project's, carrying the entry's one
+ *  link), type, a few sentences, stack. */
 export function OneLiners({ items }: { items: OtherProject[] }) {
   return (
     <ul className="one-liners">
@@ -14,18 +14,13 @@ export function OneLiners({ items }: { items: OtherProject[] }) {
           <Reveal as="h3" className="project__title">
             {item.href ? <ExternalLink href={item.href}>{item.title}</ExternalLink> : item.title}
           </Reveal>
-          <Reveal className="project__kind">{item.kind}</Reveal>
+          {item.kind && <Reveal className="project__kind">{item.kind}</Reveal>}
           <Reveal mode="lines">
             <Highlighted text={item.oneLiner} phrase={item.highlight} />
           </Reveal>
           {item.stack && (
             <Reveal mode="lines" className="project__stack">
               Stack: {item.stack.join(', ')}
-            </Reveal>
-          )}
-          {item.href && (
-            <Reveal className="project__links">
-              <ExternalLink href={item.href}>{item.linkLabel ?? 'Link'} ↗</ExternalLink>
             </Reveal>
           )}
         </li>
