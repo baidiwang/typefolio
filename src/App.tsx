@@ -28,9 +28,6 @@ export default function App() {
       {/* Fixed to the bottom of the screen; first in the DOM so its bell
           (the sound toggle) comes right after the skip link. */}
       <Typewriter />
-      {/* The desk lamp (?scene=night only): one fixed light over everything
-          but the machine. */}
-      <div className="lamp" aria-hidden="true" />
 
       <div className="paper" id="top">
         <Letterhead />
