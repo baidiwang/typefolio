@@ -2,7 +2,8 @@
  * Design playground: try variants from the URL.
  *
  *   ?font=plex | dmmono | cutive       (default: Sometype Mono)
- *   ?name=damion                       (default: Caveat 700; the name and the
+ *   ?name=instrument | garamond | fraunces | damion
+ *                                      (default: Caveat 700; the name and the
  *                                       signature's lettering)
  *
  * Enabled in dev and on preview deployments: main.tsx imports this module
@@ -25,6 +26,9 @@ export async function applyPlayground(): Promise<void> {
     cutive: () => import('@fontsource/cutive-mono/400.css'),
   }
   const NAMES: Record<string, () => Promise<unknown>> = {
+    instrument: () => import('@fontsource/instrument-serif/400-italic.css'),
+    garamond: () => import('@fontsource/eb-garamond/400-italic.css'),
+    fraunces: () => import('@fontsource/fraunces/300-italic.css'),
     damion: () => import('@fontsource/damion/400.css'),
   }
 

@@ -55,8 +55,9 @@ never fakes others. Hierarchy:
 | Element | Treatment |
 | ------- | --------- |
 | Name (letterhead) | 3.4em, hand lettering (Caveat 700), written on with a clip |
-| Section labels | 400, spaced caps, ink |
-| Project titles | 1.4em, 700 |
+| Section labels (Interfaces, Data visualization, Games & XR) | 400, spaced caps, ink; one shared `h2` style |
+| Project titles (Axios included) | 1.4em, 700 |
+| "More XR experiments:" | 700, as a heading for its line |
 | Body, meta lines | 400; meta lines (type, role, stack) in `--ink-soft` |
 
 Body text is 17px on phones, 18px on desktop.
@@ -111,7 +112,7 @@ tiles of coprime sizes, so it doesn't visibly repeat. The sheet is drawn by
   typing reaches it; static under reduced motion.
 - **The name** (and "Baidi" under "Yours in type," at the end) is hand
   lettering ([`Signature.tsx`](src/components/Signature.tsx)): real text in
-  a script face (Caveat 700; `?name=damion` on previews), written on left to
+  a script face (Caveat 700; other faces via `?name=` on previews), written on left to
   right by a clip that runs as a drawing job in the reveal queue, so it
   happens in reading order. Static under reduced motion.
 - **Contact links** (Resume · Email · LinkedIn · GitHub) are printed in the
@@ -145,11 +146,14 @@ tiles of coprime sizes, so it doesn't visibly repeat. The sheet is drawn by
   for sound" (where there's desk room; never over text), and the bell gives
   one small wiggle when the intro finishes typing (phones, with no desk
   beside the bell, get only the wiggle).
-- **The ending**: the page ends on the email and the signature. "Yours in
-  type," and the signature run as one last line: the carriage stays out
-  after the sign-off and carries on while the signature writes itself;
-  once it's written the bell rings once (heard only with sound on) and the
-  carriage returns. Nothing under reduced motion.
+- **The ending**: the page ends on the email, the signature and a smiley
+  doodled after it ([`Smiley.tsx`](src/components/Smiley.tsx): an SVG in
+  the signature's ink and mean stroke width, `--sig-stroke`, hidden from
+  assistive tech). "Yours in type," the signature and the smiley run as
+  one last line: the carriage stays out after the sign-off and carries on
+  while the signature writes itself and the smiley draws; once the smiley
+  is drawn the bell rings once (heard only with sound on) and the carriage
+  returns. Nothing moves under reduced motion; the smiley is simply there.
 
 ## How the reveal engine works
 
@@ -243,10 +247,11 @@ document order, a project's text, links included, finishes before the next
 project's title starts.
 
 **8. Drawings are jobs too.** `reveal.registerDrawing(el, { duration,
-apply })` queues a non-text reveal (the pen dividers) in the same reading
+apply })` queues a non-text reveal (the pen dividers, the smiley) in the same reading
 order and budget as text; the controller calls `apply(progress)` from 0 to
 1 in 40 steps. A divider in the first screen draws between the intro and
-"Selected work"; one further down waits for its turn.
+"Interfaces"; one further down waits for its turn. The smiley after the
+signature is the same kind of job, so it draws right after the signature.
 
 **9. The typewriter is a listener.** The controller emits an event for
 every step:
@@ -256,7 +261,7 @@ every step:
 | `char` (char, column) | the roller `translateX(−column × step)`, key click (space: carriage only) |
 | `return` (bell?) | end of a typed line: carriage return, bell at the end of an element |
 | `feed` (bell?) | a paragraph line appeared: return sound, bell at the last line |
-| `start` (element) | the signature: the carriage carries on across it |
+| `start` (element) | the signature, then the smiley: the carriage carries on across them |
 | `idle` | carriage returns home |
 
 Because the controller emits from the same frame loop that moves the
@@ -282,10 +287,14 @@ flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
 
 ```
 /?font=plex | dmmono | cutive         (default: Sometype Mono)
-/?name=damion                         (default: Caveat 700)
+/?name=instrument | garamond | fraunces | damion
+                                      (default: Caveat 700)
 ```
 
-Options are `data-*` attributes on `<html>` that `src/index.css` reads. DM
+Options are `data-*` attributes on `<html>` that `src/index.css` reads. The
+serif name faces are real italics at their own weights (Instrument Serif
+Italic 400, EB Garamond Italic 400, Fraunces Italic 300), each scaled (`--name-scale`, `--sig-scale`) so its ink
+matches Caveat 700 at the same box; nothing is synthesised. DM
 Mono's heaviest weight is 500, so its titles use 500; Cutive Mono has one
 thin weight, so it gets the hairline outline (`--text-stroke`) and regular
 titles.

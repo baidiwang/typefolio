@@ -65,7 +65,8 @@ the strip until the paper feeds them out.
 | end of the intro | | one small wiggle, until sound is turned on |
 | "Yours in type," | stays out (no return, no ring) | |
 | the signature writing itself | carries on across it | |
-| the signature written | returns home | rings once |
+| the smiley drawing itself | carries on across it | |
+| the smiley drawn | returns home | rings once |
 
 The bell swings `rotate(0 → 10 → −8 → 4 → 0deg)` over 420 ms about the foot
 of its dome. Under reduced motion nothing moves (the controller sends no

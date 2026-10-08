@@ -40,9 +40,17 @@
   --tape-shadow: rgb(70 58 40 / 0.08);
   --photo-frame: #fcfaf5;
 
-  /* The name and signature's hand lettering (?name=damion on previews). */
+  /* The name and signature's lettering: Caveat 700 (other faces with
+     ?name= on previews, each scaled by --name-scale/--sig-scale so its
+     visual weight matches Caveat's). */
   --font-script: 'Caveat', cursive;
   --script-weight: 700;
+  --script-style: normal;
+  --name-scale: 1;
+  --sig-scale: 1;
+  /* The face's mean stroke width (ink area over half its outline, in em of
+     the lettering): the pen weight of the smiley after the signature. */
+  --sig-stroke: 0.08;
 
   --margin: clamp(1.25rem, 6vw, 4.5rem);
   --line: 1.6;
@@ -62,12 +70,42 @@
 }
 
 /* —— Design playground (dev + preview deployments: src/playground.ts) ——
-   ?font=plex|dmmono|cutive  ?name=damion */
+   ?font=plex|dmmono|cutive  ?name=instrument|garamond|fraunces|damion */
 
-/* ?name=damion: the earlier script for the name and signature. */
+/* Serif italics for the name, at their own weights, each scaled so its ink
+   (measured at equal size) matches Caveat 700's; nothing synthesised. */
+:root[data-name='instrument'] {
+  --font-script: 'Instrument Serif', serif;
+  --script-weight: 400;
+  --script-style: italic;
+  --name-scale: 1.05;
+  --sig-scale: 1.02;
+  --sig-stroke: 0.053;
+}
+
+:root[data-name='garamond'] {
+  --font-script: 'EB Garamond', serif;
+  --script-weight: 400;
+  --script-style: italic;
+  --name-scale: 1.1;
+  --sig-scale: 1.09;
+  --sig-stroke: 0.051;
+}
+
+:root[data-name='fraunces'] {
+  --font-script: 'Fraunces', serif;
+  --script-weight: 300;
+  --script-style: italic;
+  --name-scale: 1.08;
+  --sig-scale: 1.06;
+  --sig-stroke: 0.053;
+}
+
+/* The earlier script. */
 :root[data-name='damion'] {
   --font-script: 'Damion', cursive;
   --script-weight: 400;
+  --sig-stroke: 0.085;
 }
 
 /* Alternative faces. Cutive Mono has one thin weight: a hairline outline
@@ -303,11 +341,6 @@ h2 {
   letter-spacing: 0.14em;
 }
 
-/* Inline labels (employer, short-entry titles): caps. */
-.label {
-  text-transform: uppercase;
-}
-
 /* —— Pen dividers (src/components/Divider.tsx) —— */
 
 .divider {
@@ -347,6 +380,7 @@ h2 {
   display: inline-block;
   font-family: var(--font-script);
   font-weight: var(--script-weight);
+  font-style: var(--script-style);
   letter-spacing: 0;
   -webkit-text-stroke: 0;
   text-transform: none;
@@ -354,7 +388,7 @@ h2 {
 
 .letterhead__name {
   margin: 0;
-  font-size: 3.4em;
+  font-size: calc(3.4em * var(--name-scale));
   line-height: 1.15;
 }
 
@@ -456,6 +490,11 @@ h2 {
 
 .one-liner p {
   margin: 0;
+}
+
+/* The type line spaced as a project's (.sheet p). */
+.one-liner p.project__kind {
+  margin-bottom: 1em;
 }
 
 .one-liner .project__stack,
@@ -616,6 +655,11 @@ a.taped:focus-visible {
   margin: -1.6em 0 0 !important;
 }
 
+/* "More XR experiments:" reads as the line's heading: project-title weight. */
+.xr-note__label {
+  font-weight: var(--title-weight);
+}
+
 .ending p {
   margin: 0 0 0.6em;
 }
@@ -627,8 +671,36 @@ a.taped:focus-visible {
 
 .ending p.ending__signature {
   margin: 0.1em 0 0.4em;
-  font-size: 2.6em;
+  font-size: calc(2.6em * var(--sig-scale));
   line-height: 1.2;
+}
+
+/* The smiley doodled after the signature (Smiley.tsx): in em of the
+   lettering, sitting on its baseline, a little tilted. Its pen is the
+   lettering's mean stroke width, converted to the 100-unit viewBox. */
+.smiley {
+  --smiley: 0.7; /* its size, in em of the lettering */
+  display: inline-block;
+  width: calc(var(--smiley) * 1em);
+  height: calc(var(--smiley) * 1em);
+  margin-left: 0.32em;
+  vertical-align: -0.03em;
+  transform: rotate(-7deg);
+}
+
+.smiley svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.smiley path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: calc(var(--sig-stroke) / var(--smiley) * 100);
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 @media (prefers-reduced-motion: reduce) {
