@@ -191,7 +191,9 @@ edge, on the entry line) and scaled by `--tw-s` so the roller matches the
 paper; its geometry is generated into
 [`src/typewriter/line.ts`](../src/typewriter/line.ts). The bell is placed
 in CSS at the roller's right end, standing just above the screen's bottom
-edge. The whole machine closes the letter (`App.tsx`).
+edge. The paper is sized from the whole machine (`index.css`), and the
+letter ends with one ring and a carriage return after the signature
+(`Typewriter.tsx`).
 
 ## Only the toggle is interactive
 

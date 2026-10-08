@@ -337,7 +337,9 @@ circles, the note and the focus rings; secondary text #6a6358; the rules
 selection #e6decf (#cdc1aa for selection on a highlighted phrase);
 translucent warm beige tape on prints a shade lighter than the paper. No
 pure white or black anywhere; the project photos and clips are the only
-colour (dimmed × 0.94, at or below the paper). Secondary text was asked
+colour, shown exactly as recorded (no dimming) and above the paper's
+texture and creases (the fine dot grid in the Google Play clip is the
+dithering of its source GIF, in the recording itself). Secondary text was asked
 for as #6e675c: 5.0:1 on the paper colour but 4.47:1 over the sheet's
 darkest grain and creases, so it's the nearest grey that passes. Contrast,
 measured as above: ink ≥ 11.0, secondary text ≥ 4.74, ink on the
@@ -358,15 +360,31 @@ colour, so it's opaque.
   collars, knobs and return lever, from just above the clips down to the
   bottom of the screen; the roller's lower part runs off the edge (no
   spools, type guide or keys: the spools and the guide are painted out and
-  the roller and rail continued where they were). It spans the paper, the
-  knobs and lever outside it: ≈ 85 px tall at 1440×900, ≈ 40 px at 390.
-  The paper goes into it, and its top edge is the entry line. It slides as
-  text types (at most ≈ 24 px), with paper colour behind it.
+  the roller and rail continued where they were). The paper is 96% of the
+  roller's length (a little narrower, like a real one) and goes into it;
+  the roller's top edge is the entry line. It slides as text types (at most
+  ≈ 22 px), with paper colour behind it.
+- **Sized from the whole machine** on desktop: lever tip to right knob is
+  1.608× the paper, so the paper is `min(88vw / 1.608, 898px)` and the
+  machine is at most 88% of the viewport, nothing cut off from 720 to
+  1920 px wide. The paper (and the machine's body under it) is centred; the
+  lever reaches further left than the knob does right.
+
+  | | paper | chars per line (full width / project column) | roller strip |
+  | --- | --- | --- | --- |
+  | 1440×900 | 788 px | 69 / 29 | 74 px |
+  | 1366×768 | 748 px | 65 / 28 | 71 px |
+  | 1280×800 | 700 px | 60 / 25 | 66 px |
+  | 390×844 | 367 px (full width) | 31 | 40 px |
+
 - **The bell**, cut out of the drawing, stands at the roller's right end
   as the sound toggle (at most 72% of the strip tall, so it stays below
   the entry line), with the "ring for sound" note on the desk beside it.
-- **The whole machine** closes the letter, once, after the signature:
-  500 px wide on desktop, 80% of the column on phones, in the page's flow.
+- **The ending**: the page ends on the email and the signature. "Yours in
+  type," and the signature run as one last line: the carriage stays out
+  after the sign-off and carries on while the signature writes itself;
+  once it's written the bell rings once (heard only with sound on) and
+  the carriage returns with the usual ease. Nothing under reduced motion.
 
 Options are `data-*` attributes on `<html>` that `src/index.css` reads
 (the machine, its crop and colour are also read by `Typewriter.tsx`). DM Mono's

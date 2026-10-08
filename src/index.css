@@ -149,9 +149,9 @@
    letterhead's line, the pen dividers) in a light warm grey; a pale warm
    highlighter and selection (#cdc1aa for selection on a highlighted
    phrase); translucent warm beige tape on prints a shade lighter than the
-   paper. The machine is the line-art typewriter: only its roller is fixed
-   to the screen (Typewriter.tsx), and the whole machine closes the letter
-   (App.tsx). Contrast: README, Palettes. */
+   paper; photos and clips undimmed, above the paper's texture. The machine
+   is the line-art typewriter: only its roller is fixed to the screen
+   (Typewriter.tsx). Contrast: README, Palettes. */
 :root[data-palette='mono'] {
   --room: #ede7db;
   --desk: #ede7db;
@@ -169,12 +169,26 @@
   --tape: rgb(214 198 168 / 0.55);
   --tape-shadow: rgb(70 58 40 / 0.08);
   --photo-frame: #fcfaf5;
-  /* The warmer sheet is a little darker: white 253 → 238, at or below its
-     median of 239–241. */
-  --photo-filter: brightness(0.94) saturate(0.94);
+  /* Photos and clips exactly as recorded: no dimming. */
+  --photo-filter: none;
   --desk-pen: var(--ink);
   --tw-colour: #6a6358;
   accent-color: var(--ink);
+}
+
+/* mono on desktop: the paper is sized from the machine, so the whole
+   machine, lever tip to right knob (1.608× the paper: line.ts and
+   Typewriter.tsx), is at most 88% of the viewport and nothing of it is cut
+   off. Capped at the usual 898 px, so the roller never gets taller. */
+@media (min-width: 720px) {
+  :root[data-palette='mono'] {
+    --tw-paper: min(calc(88vw / 1.608), 898px);
+  }
+}
+
+/* mono: photos and clips sit above the paper's texture and creases. */
+:root[data-palette='mono'] .taped {
+  z-index: 1;
 }
 
 /* The original look: cream paper, warm grey desk, green typewriter.
@@ -830,22 +844,6 @@ a.taped:focus-visible {
   font-size: 2.6em;
   line-height: 1.2;
 }
-
-/* ?palette=mono: the whole line-art typewriter closes the letter, once,
-   after the signature (in the page's flow: its size is reserved). */
-.ending__machine {
-  display: block;
-  width: min(500px, 100%);
-  height: auto;
-  margin: 2.5rem auto 0;
-}
-
-@media (max-width: 719px) {
-  .ending__machine {
-    width: 80%;
-  }
-}
-
 
 @media (prefers-reduced-motion: reduce) {
   .taped {

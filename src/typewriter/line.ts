@@ -2,12 +2,11 @@
 // The line-art typewriter (?palette=mono), in px of the drawing upscaled
 // 2x (art/typewriter-line-2x.png, before its crop).
 
-/** The fixed roller (slides as text types), the bell (the sound toggle)
- *  and the whole machine (the closing illustration). */
+/** The fixed roller (slides as text types) and the bell (the sound
+ *  toggle). */
 export const LINE_ART = {
   roller: { src: '/art/line-roller.webp', x: 270, y: 745, w: 1957, h: 246 },
   bell: { src: '/art/line-bell.webp', x: 1980, y: 970, w: 169, h: 127 },
-  machine: { src: '/art/line-machine.webp', x: 270, y: 734, w: 1957, h: 885 },
 } as const
 
 /** The paper matches the roller (x0–x1) and goes in at its top edge;
@@ -17,5 +16,6 @@ export const LINE_ROLLER = { x0: 700, x1: 1968, top: 841, line: 796 } as const
 /** The bell rings about the foot of its dome. */
 export const LINE_BELL_PIVOT = { x: 2067, y: 1083 } as const
 
-/** The closing illustration's image, in css px of its file. */
-export const LINE_MACHINE_SIZE = { w: 1200, h: 543 } as const
+/** The whole machine's width, lever tip to right knob: index.css sizes the
+ *  paper from it (desktop: the machine at most 88% of the viewport). */
+export const LINE_MACHINE = { x0: 270, x1: 2227 } as const

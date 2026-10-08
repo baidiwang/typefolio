@@ -24,8 +24,6 @@ Pieces:
            types.
   bell     the bell's dome, cut out; the sound toggle at the roller's
            right end.
-  machine  the whole machine, the closing illustration after the
-           signature.
 """
 
 from collections import deque
@@ -232,8 +230,7 @@ def main():
 
     roller = save('line-roller', roller_rgba, bbox(roller_rgba[..., 3] > 0))
     bell_e = save('line-bell', bell_rgba, bbox(bell))
-    machine_box = bbox(full[..., 3] > 8)
-    machine = save('line-machine', full, machine_box, width=1200)
+    mx0, _, mx1, _ = bbox(full[..., 3] > 8)
 
     def ts(e):
         return f"{{ src: '{e['src']}', x: {e['x']}, y: {e['y']}, w: {e['w']}, h: {e['h']} }}"
@@ -242,12 +239,11 @@ def main():
 // The line-art typewriter (?palette=mono), in px of the drawing upscaled
 // 2x (art/typewriter-line-2x.png, before its crop).
 
-/** The fixed roller (slides as text types), the bell (the sound toggle)
- *  and the whole machine (the closing illustration). */
+/** The fixed roller (slides as text types) and the bell (the sound
+ *  toggle). */
 export const LINE_ART = {{
   roller: {ts(roller)},
   bell: {ts(bell_e)},
-  machine: {ts(machine)},
 }} as const
 
 /** The paper matches the roller (x0–x1) and goes in at its top edge;
@@ -257,8 +253,9 @@ export const LINE_ROLLER = {{ x0: {ROLLER['x0']}, x1: {ROLLER['x1']}, top: {ROLL
 /** The bell rings about the foot of its dome. */
 export const LINE_BELL_PIVOT = {{ x: {BELL['cx']}, y: {BELL['base']} }} as const
 
-/** The closing illustration's image, in css px of its file. */
-export const LINE_MACHINE_SIZE = {{ w: 1200, h: {round(machine['h'] * 1200 / machine['w'])} }} as const
+/** The whole machine's width, lever tip to right knob: index.css sizes the
+ *  paper from it (desktop: the machine at most 88% of the viewport). */
+export const LINE_MACHINE = {{ x0: {mx0 + OFFSET[0]}, x1: {mx1 + OFFSET[0]} }} as const
 """)
     print('wrote', TS_OUT.relative_to(ROOT))
 

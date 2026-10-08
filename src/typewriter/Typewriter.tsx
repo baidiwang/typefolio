@@ -108,15 +108,23 @@ const NOTE_STYLE: CSSProperties = {
 }
 
 /** The line-art roller: how many rows of the 2x drawing show below the
- *  entry line (just above the rod's clips): ≈ 85 px at 1440×900 and
- *  ≈ 40 px at 390, the roller's lower part running off the screen. */
-const LINE_ROWS = { desk: 120, phone: 138 } as const
-const LINE_W = LINE_ROLLER.x1 - LINE_ROLLER.x0
+ *  entry line (just above the rod's clips): ≈ 75 px at 1440×900 (85 at
+ *  most, with the widest paper) and ≈ 40 px at 390, the roller's lower part
+ *  running off the screen. */
+const LINE_ROWS = { desk: 115, phone: 132 } as const
+/** The paper is a little narrower than the roller, like a real one: this
+ *  share of its length, centred on it. index.css sizes the paper so the
+ *  whole machine (LINE_MACHINE in line.ts, 1.608× the paper) is at most
+ *  88% of the viewport. */
+const LINE_PAPER = 0.96
+const LINE_W = (LINE_ROLLER.x1 - LINE_ROLLER.x0) * LINE_PAPER
+/** The paper's left edge, in px of the 2x drawing. */
+const LINE_X0 = LINE_ROLLER.x0 + ((LINE_ROLLER.x1 - LINE_ROLLER.x0) * (1 - LINE_PAPER)) / 2
 /** Carriage travel per character and at most, in px of the 2x drawing. */
 const LINE_STEP = 0.5
 const LINE_MAX = 34
 const lineBox = ({ x, y, w, h }: Box): CSSProperties => ({
-  left: u(x - LINE_ROLLER.x0),
+  left: u(x - LINE_X0),
   top: u(y - LINE_ROLLER.line),
   width: u(w),
   height: u(h),
@@ -125,7 +133,7 @@ const lineBox = ({ x, y, w, h }: Box): CSSProperties => ({
  *  clips and the roller, and where the roller slides away from the
  *  paper's right end. */
 const LINE_BACK = lineBox({
-  x: LINE_ROLLER.x0,
+  x: LINE_X0,
   y: LINE_ROLLER.line,
   w: LINE_W,
   h: LINE_ART.roller.y + LINE_ART.roller.h - LINE_ROLLER.line,
@@ -254,13 +262,48 @@ export function Typewriter() {
           })
         : undefined
 
+    // ?palette=mono, the letter's last line: "Yours in type," and the
+    // signature run as one line. The sign-off leaves the carriage where it
+    // ends (no return, no bell); while the signature writes itself the
+    // carriage carries on across it, as if it were typed; once it's written
+    // the bell rings once (heard only with sound on) and the carriage
+    // returns with the usual ease. If the signature is skipped (scrolled
+    // past), the queue's idle return still brings the carriage home; under
+    // reduced motion the controller sends nothing at all.
+    const signoff = machine === 'line' ? document.querySelector('.ending__signoff') : null
+    const signature =
+      machine === 'line' ? document.querySelector('.ending__signature .signature') : null
+    let current: Element | null = null
+    let column = 0
+    const signatureColumns = () => {
+      if (!signature) return 0
+      const ch = parseFloat(getComputedStyle(document.body).fontSize) * 0.6
+      return Math.round(signature.getBoundingClientRect().width / ch)
+    }
+    const stopSignature = signature
+      ? reveal.whenDone(signature, (instant) => {
+          if (instant || reducedMotion()) return
+          ring()
+          carriageReturn()
+          playReturn()
+          column = 0
+        })
+      : undefined
+
     const unsubscribe = reveal.subscribe((event) => {
       switch (event.type) {
+        case 'start':
+          current = event.element
+          if (signature && current === signature) moveCarriage(column + signatureColumns(), 700)
+          break
         case 'char':
-          moveCarriage(event.column + 1, 45)
+          column = event.column + 1
+          moveCarriage(column, 45)
           if (event.char.trim() !== '') playKey() // space bar: carriage only
           break
         case 'return':
+          if (signoff && current === signoff && event.bell) break // held for the signature
+          column = 0
           carriageReturn()
           lineFeed()
           playReturn()
@@ -272,12 +315,14 @@ export function Typewriter() {
           if (event.bell) ring()
           break
         case 'idle':
+          column = 0
           carriageReturn()
           break
       }
     })
     return () => {
       stopWiggle?.()
+      stopSignature?.()
       unsubscribe()
     }
   }, [machine])
