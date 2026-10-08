@@ -54,7 +54,7 @@ export function Project({ project, index }: Props) {
           </Reveal>
         ))}
         {decision && (
-          <Reveal mode="lines" className="ink-red">
+          <Reveal mode="lines">
             {decision}
           </Reveal>
         )}

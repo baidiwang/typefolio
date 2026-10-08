@@ -2,9 +2,9 @@
 
 Baidi Wang — Design Engineer portfolio.
 
-One sheet of cream paper coming out of a typewriter fixed at the bottom of the
-viewport. As you scroll, the paper feeds up and the typewriter types the next
-content.
+One sheet of warm paper coming out of a typewriter's roller, fixed at the
+bottom of the viewport. As you scroll, the paper feeds up and the typewriter
+types the next content.
 
 ## Run
 
@@ -55,138 +55,101 @@ never fakes others. Hierarchy:
 | Element | Treatment |
 | ------- | --------- |
 | Name (letterhead) | 3.4em, hand lettering (Caveat 700), written on with a clip |
-| Section labels | 400, spaced caps, deep red (`--ink-red`) |
+| Section labels | 400, spaced caps, ink |
 | Project titles | 1.4em, 700 |
 | Body, meta lines | 400; meta lines (type, role, stack) in `--ink-soft` |
 
 Body text is 17px on phones, 18px on desktop.
 
-**The scene** is a light, quiet room: a warm off-white greige desk
-(`--desk` and `--room`, #ece7df, plain), no lamp. The sheet is the folded
-one (see Paper): white paper, lighter than the desk (it renders at a
-median luma of about 245 against the desk's 232), with a soft,
+**The scene** is a quiet, warm room: a plain warm desk (`--desk` #ede7db)
+and the folded sheet (`--paper` #f7f3ea) a little lighter, with a soft,
 low-contrast shadow all round, slightly lower (`--paper-drop`,
-`--paper-shadow`). `?paper=aged` (previews) shows the aged sheet on the
-light desk instead (#fbf4e4, median about 240).
+`--paper-shadow`). No pure white or black anywhere; the project photos and
+clips are the only colour.
 
-`?scene=night` (previews) brings back the earlier lamp-lit night desk: a
-near-black warm navy room, a walnut desk, yellower paper (#f3e7cc) and one
-warm desk lamp from the upper left. The lamp is a single fixed layer
-(`.lamp`, shown only at night) with two gradients: a mild radial falloff
-over everything, and a falloff that starts at the paper's edges and runs to
-near-black at the screen's sides (darker on the right, away from the lamp).
-It's fixed to the viewport, so the paper slides under it as you scroll.
-
-**Colour.** Ink is a warm near-black, `--ink` #2a2520, with a warm grey,
-`--ink-soft` #453d35, for secondary text. Red is only for marks: the pen
-dividers and pen circles use `--accent` #af312b; small red text (the
-section labels) uses a deeper `--ink-red` #7a1f1a. One key phrase per
-project gets the highlighter, `--highlight` #f6c1b4, swiped on left to
-right once that phrase has typed
+**Colour.** All text, the section labels, the pen circles on the contact
+links, the "ring for sound" note and the focus rings are ink, `--ink`
+#2b2823; secondary text is a warm grey, `--ink-soft` #6a6358. The rules
+(the letterhead's line and the pen dividers) are a light warm grey,
+`--rule` #cfc6b6. One key phrase per project gets the highlighter,
+`--highlight` #e6decf, swiped on left to right once that phrase has typed
 ([`Highlight.tsx`](src/components/Highlight.tsx),
-[`useHighlighterSwipe`](src/hooks/useHighlighterSwipe.ts)). On the desk,
-the "ring for sound" note and the focus rings use `--desk-pen`: the accent
-red on the light desk (5.2:1), light rose #f6c1b4 on the night desk (7.7:1
-on walnut). Focus on the paper is a dashed ink ring.
-
-Selected text is ink on the highlighter rose (9.5:1), everywhere, the note on
-the desk included; on a phrase that's already highlighted, the selection is
-a deeper rose, `--highlight-selected` #e8998a (ink 6.8:1). `accent-color`
-uses the rose too, for the selection handles where the browser allows it.
+[`useHighlighterSwipe`](src/hooks/useHighlighterSwipe.ts)). Selected text
+is ink on the highlighter too, everywhere; on a phrase that's already
+highlighted the selection is `--highlight-selected` #cdc1aa. Focus on the
+paper is a dashed ink ring, on the desk a solid one.
 
 Contrast is measured on the page itself: with the text hidden, the darkest
-paper pixel behind every fully revealed line (grain, folds, stains, foxing
-and edges included; at night, the lamp's falloff too), viewport by viewport
-down the whole page at 1440×900, 1280×800 and 390×844 (AA text needs 4.5):
+paper pixel behind every fully revealed line (grain and creases included),
+viewport by viewport down the whole page at 1440×900, 1280×800 and 390×844
+(AA text needs 4.5): ink ≥ 11.0, secondary text ≥ 4.74, ink on the
+highlighter ≥ 11.0; ink on the desk 11.9, on the selection over a
+highlight 8.3. (Secondary text was asked for as #6e675c: 5.0:1 on the
+paper colour but 4.47:1 over the darkest grain and creases, so it's the
+nearest grey that passes.)
 
-| Sheet | ink | ink-soft | section labels | ink on highlighter |
-| --- | --- | --- | --- | --- |
-| folded, light desk (default) | ≥ 9.5 | ≥ 8.9 | ≥ 5.8 (#b01e2f) | 9.5 |
-| aged, light desk (`?paper=aged`) | ≥ 9.5 | ≥ 7.3 | ≥ 7.4 (#7a1f1a) | 9.5 |
-| aged, night (`?scene=night`) | ≥ 7.1 | ≥ 5.1 | ≥ 5.5 (#7a1f1a) | ≥ 7.1 |
+**Photos** are prints taped to the sheet: tilted at most 1°, on a frame a
+shade lighter than the paper (`--photo-frame` #fcfaf5), with translucent
+warm beige tape (`--tape`) and a small, soft shadow falling down and to the
+right. They sit above the paper's texture and creases, and photos and clips
+show exactly as recorded (no filter). The fine dot grid in the Google Play
+clip is the dithering of its source GIF, in the recording itself.
 
-**Photos** are tilted at most 1°, with a small, soft shadow falling down
-and to the right. Photos, posters and video frames are dimmed just enough
-that none is brighter than the paper (`--photo-filter`): brightness and
-saturation × 0.96 on the folded sheet (white 254 → 244, the sheet's median
-is 244–246), × 0.94 on the aged sheet on the light desk, × 0.9 at night,
-below the lamp-lit paper.
-
-**Paper.** On the light desk the sheet is new stationery folded in thirds:
-white paper (#fbf8f2), fine grain and the two fold creases per
-letter-sized page, straight edges and clean tape; the section labels use a
-brighter red, `--ink-red` #b01e2f. With `?paper=aged`, and always at
-night, it's an old letter from the 1960s: yellowed paper
-(#fbf4e4 on the light desk, #f3e7cc at night), fine grain, two clearly visible creases per letter-sized page
-(8.5 × 11, folded in thirds; the page scales with the sheet's width), soft
-wrinkles, faint foxing spots and light tea-coloured stains with a tide
-line, a little darker toward the edges, and side edges that are worn and
-irregular with a few small nicks and tears. Photo tape is yellowed to
-match. All of it comes from
+**Paper.** New stationery folded in thirds: fine grain and the two fold
+creases per letter-sized page (8.5 × 11; the page scales with the sheet's
+width), straight edges. The overlays come from
 [`scripts/paper-textures.py`](scripts/paper-textures.py) (`public/paper/`,
-58 KB), seeded, so it's the same on every visit:
-
-- grain, foxing and wrinkles are pairs of tiles of coprime sizes, so they
-  don't visibly repeat; the stains are one field drawn at a third of
-  display size (they're soft) and taller than the page, so no stain ever
-  repeats;
-- the sheet is drawn by `.paper::before` with a CSS mask for the worn
-  edges (edge masks of coprime heights, so the nicks don't line up), and
-  its shadow by `::after`, just inside, so the desk shows through a nick.
-
-`?paper=aged|folded|grain|plain` (previews) picks a sheet explicitly, on
-either desk, for comparison.
+15 KB), seeded, so they're the same on every visit; the grain is a pair of
+tiles of coprime sizes, so it doesn't visibly repeat. The sheet is drawn by
+`.paper::before` and its shadow by `::after`.
 
 ## Sections, links and sound
 
-- **Dividers** are a quick wavy line in red pen
+- **Dividers** are a quick wavy pen line
   ([`Divider.tsx`](src/components/Divider.tsx)): three hand-drawn variants,
   mirrored after the third. Each one draws itself (stroke offset) when
   typing reaches it; static under reduced motion.
 - **The name** (and "Baidi" under "Yours in type," at the end) is hand
   lettering ([`Signature.tsx`](src/components/Signature.tsx)): real text in
-  a script face (Caveat 700; `?name=damion` on previews), written on left to right by
-  a clip that runs as a drawing job in the reveal queue, so it happens in
-  reading order. Static under reduced motion.
+  a script face (Caveat 700; `?name=damion` on previews), written on left to
+  right by a clip that runs as a drawing job in the reveal queue, so it
+  happens in reading order. Static under reduced motion.
 - **Contact links** (Resume · Email · LinkedIn · GitHub) are printed in the
   letterhead as plain typed words
   ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)). On hover or
-  keyboard focus a red pen circle (three hand-drawn variants) draws around
-  the word; touch screens, which can't hover, get a dotted red underline. The letter's closing ends with the email address.
-  The resume is `public/BaidiWangResume.pdf`.
-- **The typewriter** comes in two variants (`?machine=` on previews; drawn
-  is the default), each in red #af312b or olive #8a9358 (`?tw=`):
-  - **drawn**: the hand-drawn wide, low machine split into layers (static
-    body, a roller sliding behind the body's shoulders with the lever and
-    knobs, turning knobs, a ringing bell), recoloured and lit from above
-    (brighter on top, into shadow toward the bottom). The paper is exactly
-    as wide as its body and disappears behind the body's top edge. On
-    desktop the body down to just below the keyboard would be
-    `min(230px, 26vh)` tall, with the body drawn 10% wider than the
-    drawing, which sets the paper's width (898 px at 1440×900); on phones
-    the paper keeps its width and the machine is scaled to it. Only the
-    top of the machine shows: lever, knobs, bell, the roller's notch and
-    the top key row (≈ 119 px at 1440×900, ≈ 61 px at 390×844); the rest
-    runs off the bottom of the screen. `?machine-crop=full` shows the
-    earlier full height (to the keyboard frame on desktop, the whole
-    machine on phones).
-  - **roller**: no body. A rendered platen roller (gunmetal, a soft
-    highlight on its upper left, end caps) spans the paper at the bottom,
-    60 px tall on desktop and 26 px on phones, with a small carriage in the
-    typewriter's colour that slides as text types. The paper isn't limited
-    by a machine: 900 px on desktop.
+  keyboard focus a pen circle (three hand-drawn variants) draws around the
+  word; touch screens, which can't hover, get a dotted underline. The
+  letter's closing ends with the email address. The resume is
+  `public/BaidiWangResume.pdf`.
+- **The typewriter** is a line-art drawing, of which only the roller is
+  fixed to the bottom of the screen: the roller with its rod and clips,
+  collars, knobs and return lever, from just above the clips; its lower
+  part runs off the edge. The paper is a little narrower than the roller
+  and goes into it; text appears at the strip's top edge. On desktop the
+  paper is sized from the whole machine, so lever tip to right knob is at
+  most 88% of the viewport (nothing cut off from 720 to 1920 px wide); the
+  paper, and the machine's body under it, is centred:
 
-  Either way the paper goes in at the top edge, and text reveals there.
+  | | paper | chars per line (full width / project column) | roller strip |
+  | --- | --- | --- | --- |
+  | 1440×900 | 788 px | 69 / 29 | 74 px |
+  | 1366×768 | 748 px | 65 / 28 | 71 px |
+  | 1280×800 | 700 px | 60 / 25 | 66 px |
+  | 390×844 | 367 px (full width) | 31 | 40 px |
+
   Details: [`docs/typewriter-rig.md`](docs/typewriter-rig.md).
 - **Sound** is off by default. The toggle is a real button (aria-label
-  "Sound", `aria-pressed`, at least 44 × 44 px, a focus ring in the desk
-  pen):
-  the bell on the drawn machine, an indicator light on the roller's
-  carriage (dim = off, lit = on). Turning sound on plays one ding. On
-  every visit, until sound is turned on, a pen note beside it
-  says "ring for sound" (where there's desk room; never over text), and
-  the toggle gives one small wiggle when the intro finishes typing (phones,
-  with no desk beside the bell, get only the wiggle).
+  "Sound", `aria-pressed`, at least 44 × 44 px, a solid ink focus ring):
+  the bell at the roller's right end. Turning sound on plays one ding. On
+  every visit, until sound is turned on, a pen note beside it says "ring
+  for sound" (where there's desk room; never over text), and the bell gives
+  one small wiggle when the intro finishes typing (phones, with no desk
+  beside the bell, get only the wiggle).
+- **The ending**: the page ends on the email and the signature. "Yours in
+  type," and the signature run as one last line: the carriage stays out
+  after the sign-off and carries on while the signature writes itself;
+  once it's written the bell rings once (heard only with sound on) and the
+  carriage returns. Nothing under reduced motion.
 
 ## How the reveal engine works
 
@@ -290,16 +253,17 @@ every step:
 
 | Event | Typewriter does |
 | --- | --- |
-| `char` (char, column) | roller, lever and knobs `translateX(−column × step)`, key click (space: carriage only) |
-| `return` (bell?) | end of a typed line: carriage return, the knobs turn (line feed), bell at the end of an element |
-| `feed` (bell?) | a paragraph line appeared: the knobs turn, bell at the last line |
+| `char` (char, column) | the roller `translateX(−column × step)`, key click (space: carriage only) |
+| `return` (bell?) | end of a typed line: carriage return, bell at the end of an element |
+| `feed` (bell?) | a paragraph line appeared: return sound, bell at the last line |
+| `start` (element) | the signature: the carriage carries on across it |
 | `idle` | carriage returns home |
 
 Because the controller emits from the same frame loop that moves the
 highlight, carriage and text can't drift apart, and compression speeds both
 up together. The typewriter also tells the controller where the paper
 emerges: the controller reads the height of the element marked
-`data-reveal-inset` (the desk strip, up to the body's top edge) and ends
+`data-reveal-inset` (the desk strip, up to just above the roller's clips) and ends
 its trigger zone there. The strip hides the paper below that edge, so lines
 of an element that are typed but haven't come out of the machine yet stay
 out of sight. Rig details:
@@ -310,31 +274,21 @@ element instantly.
 
 ## Design playground (dev + preview deployments)
 
-In `npm run dev` and on Vercel **preview** deployments, try alternative looks
-from the URL. No UI, and nothing of it in the production build:
+In `npm run dev` and on Vercel **preview** deployments, try other faces from
+the URL. No UI, and nothing of it in the production build:
 [`src/playground.ts`](src/playground.ts) is only imported when the build-time
 flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
 `VERCEL_ENV=preview`, or `PLAYGROUND=1`).
 
 ```
-/?machine=drawn | roller              (default: drawn)
-/?machine-crop=half | full            (default: half; full = earlier height)
-/?scene=light | night                 (default: light; night = lamp-lit desk)
-/?tw=red | olive                      (default: red)
-/?paper=aged | folded | grain | plain (default: folded; night: aged)
 /?font=plex | dmmono | cutive         (default: Sometype Mono)
 /?name=damion                         (default: Caveat 700)
-/?theme=classic | hermes | cobalt     (earlier colour themes)
-/?machine=roller&tw=olive
-/?scene=night&machine-crop=full       (the look before the light room)
 ```
 
-Options are `data-*` attributes on `<html>` that `src/index.css` reads
-(the machine, its crop and colour are also read by `Typewriter.tsx`). DM Mono's
-heaviest weight is 500, so its titles use 500; Cutive Mono has one thin
-weight, so it gets the hairline outline (`--text-stroke`) and regular
-titles. The earlier colour themes still override the paper and desk
-colours, but they were made for the daytime desk.
+Options are `data-*` attributes on `<html>` that `src/index.css` reads. DM
+Mono's heaviest weight is 500, so its titles use 500; Cutive Mono has one
+thin weight, so it gets the hairline outline (`--text-stroke`) and regular
+titles.
 
 ## Stack
 
