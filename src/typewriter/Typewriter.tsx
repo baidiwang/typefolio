@@ -54,7 +54,8 @@ const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)'
  *
  * Motion is imperative, driven by the reveal controller: the roller slides
  * per character and returns at line end; the bell rings at the end of an
- * element. The letter ends on one ring and a return after the signature.
+ * element. The letter ends on one ring and a return after the signature
+ * and the smiley doodled after it.
  *
  * The sound toggle is a real button: the bell at the roller's right end.
  * Until sound is turned on (each visit; nothing is remembered), a pen note
@@ -130,25 +131,31 @@ export function Typewriter() {
           })
         : undefined
 
-    // The letter's last line: "Yours in type," and the signature run as one
-    // line. The sign-off leaves the carriage where it ends (no return, no
-    // bell); while the signature writes itself the carriage carries on
-    // across it, as if it were typed; once it's written the bell rings once
-    // (heard only with sound on) and the carriage returns with the usual
-    // ease. If the signature is skipped (scrolled past), the queue's idle
-    // return still brings the carriage home; under reduced motion the
-    // controller sends nothing at all.
+    // The letter's last line: "Yours in type,", the signature and the
+    // smiley run as one line. The sign-off leaves the carriage where it
+    // ends (no return, no bell); while the signature writes itself and the
+    // smiley draws, the carriage carries on across them, as if they were
+    // typed; once the smiley is drawn the bell rings once (heard only with
+    // sound on) and the carriage returns with the usual ease. If they're
+    // skipped (scrolled past), the queue's idle return still brings the
+    // carriage home; under reduced motion the controller sends nothing at
+    // all.
     const signoff = document.querySelector('.ending__signoff')
     const signature = document.querySelector('.ending__signature .signature')
+    const smiley = document.querySelector('.ending__signature .smiley')
+    const doodles = new Map([
+      [signature, 700],
+      [smiley, 500],
+    ])
     let current: Element | null = null
     let column = 0
-    const signatureColumns = () => {
-      if (!signature) return 0
+    /** How many typed columns an element spans. */
+    const columnsOf = (el: Element) => {
       const ch = parseFloat(getComputedStyle(document.body).fontSize) * 0.6
-      return Math.round(signature.getBoundingClientRect().width / ch)
+      return Math.round(el.getBoundingClientRect().width / ch)
     }
-    const stopSignature = signature
-      ? reveal.whenDone(signature, (instant) => {
+    const stopSignature = smiley
+      ? reveal.whenDone(smiley, (instant) => {
           if (instant || reducedMotion()) return
           ring()
           carriageReturn()
@@ -161,7 +168,10 @@ export function Typewriter() {
       switch (event.type) {
         case 'start':
           current = event.element
-          if (signature && current === signature) moveCarriage(column + signatureColumns(), 700)
+          if (doodles.has(current)) {
+            column += columnsOf(current)
+            moveCarriage(column, doodles.get(current)!)
+          }
           break
         case 'char':
           column = event.column + 1

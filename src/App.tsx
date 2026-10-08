@@ -5,6 +5,7 @@ import { Letterhead } from './components/Letterhead'
 import { OneLiners } from './components/OneLiners'
 import { Project } from './components/Project'
 import { Signature } from './components/Signature'
+import { Smiley } from './components/Smiley'
 import { featuredProjects, gameProjects, otherProjects, site, xrExperiments } from './content'
 import { useHashScroll } from './hooks/useHashScroll'
 import { useHighlighterSwipe } from './hooks/useHighlighterSwipe'
@@ -45,7 +46,7 @@ export default function App() {
 
           <section aria-labelledby="work-heading">
             <Reveal as="h2" id="work-heading">
-              Selected work
+              Interfaces
             </Reveal>
             {featuredProjects.map((project, i) => (
               <Project key={project.id} project={project} index={i} />
@@ -71,11 +72,12 @@ export default function App() {
               <Project key={project.id} project={project} index={i} />
             ))}
             <Reveal className="xr-note">
-              {xrExperiments.label}{' '}
+              <span className="xr-note__label">{xrExperiments.label}</span>{' '}
               {xrExperiments.links.map((link, i) => (
                 <Fragment key={link.href}>
                   {i > 0 && <span aria-hidden="true"> · </span>}
-                  <ExternalLink href={link.href}>{link.title} ↗</ExternalLink>
+                  {/* No-break space: the arrow never wraps alone. */}
+                  <ExternalLink href={link.href}>{link.title}{'\u00a0'}↗</ExternalLink>
                 </Fragment>
               ))}
             </Reveal>
@@ -83,14 +85,15 @@ export default function App() {
 
           <Divider variant={3} />
 
-          {/* The page ends like a letter: closing, sign-off, signature. */}
+          {/* The page ends like a letter: closing, sign-off, signature, and
+              a smiley doodled after it. */}
           <footer className="ending">
             <Reveal mode="lines">
               {site.ending.closing}{' '}
               <a href={site.links.email.href}>{site.links.email.display}</a>
             </Reveal>
             <Reveal className="ending__signoff">{site.ending.signOff}</Reveal>
-            <Signature className="ending__signature" duration={700}>
+            <Signature className="ending__signature" duration={700} after={<Smiley />}>
               {site.ending.signature}
             </Signature>
           </footer>

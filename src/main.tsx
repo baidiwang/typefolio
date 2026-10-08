@@ -4,10 +4,9 @@ import { createRoot } from 'react-dom/client'
 // index.css sets font-synthesis: none so the browser never fakes others.
 import '@fontsource/sometype-mono/400.css'
 import '@fontsource/sometype-mono/700.css'
-// Caveat 400 for the note by the toggle; Instrument Serif Italic for the
-// name and signature.
+// Caveat: 700 for the name and signature, 400 for the note by the toggle.
 import '@fontsource/caveat/400.css'
-import '@fontsource/instrument-serif/400-italic.css'
+import '@fontsource/caveat/700.css'
 import './index.css'
 import App from './App.tsx'
 

@@ -165,7 +165,7 @@ class RevealController {
   }
 
   /**
-   * Register a drawing (a red pen divider). It's hidden with apply(0) and
+   * Register a drawing (a pen divider, the smiley). It's hidden with apply(0) and
    * drawn in its turn, in the same reading order as the text around it.
    * Under reduced motion it's never registered, so it simply stays drawn.
    */

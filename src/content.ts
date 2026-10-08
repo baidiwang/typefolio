@@ -32,8 +32,8 @@ export type Project = {
   oneLiner: string
   /** Extra paragraphs merged in from other old categories. */
   body?: string[]
-  /** Rendered as "Role: …". Empty strings are not rendered. */
-  role: string
+  /** Rendered as "Role: …". Omitted or empty: no role line. */
+  role?: string
   /** Technologies and tools only. Skill tags (e.g. "Interaction Design") don't go here. */
   stack: string[]
   links: ProjectLinks
@@ -81,8 +81,7 @@ export const site = {
    *  address, linked), the sign-off, then the signature, in the same
    *  lettering as the name at the top. */
   ending: {
-    closing:
-      'Either you really like typewriters, or you really liked the work. Either way, thanks for staying to the last line. If you have more to say, write me back:',
+    closing: 'The typewriter needs a rest. I don’t. Write me back:',
     signOff: 'Yours in type,',
     signature: 'Baidi',
   },
@@ -97,7 +96,6 @@ export const featuredProjects: Project[] = [
     body: [
       'Our team ran a prototyping platform for Google Play. I worked with designers from different product teams, turning their Figma files into working features, motion included, that went in front of real users for testing.',
     ],
-    role: 'UX Engineer (contractor), prototyping team',
     highlight: 'went in front of real users',
     stack: ['React', 'Redux', 'TypeScript', 'MUI', 'Framer Motion', 'Figma'],
     // Deliberately no links: title and photo aren't clickable.
@@ -119,7 +117,6 @@ export const featuredProjects: Project[] = [
     body: [
       'Instead of a chat log, Lily shows its work as a live document: transcription streams in, and notes and tasks appear while you talk, so you can see what the agent understood in real time. Audio streams over WebRTC rather than WebSockets, which keeps the conversation feeling live.',
     ],
-    role: 'Solo · design + engineering',
     stack: [
       'Next.js',
       'React',
@@ -146,11 +143,10 @@ export const featuredProjects: Project[] = [
     title: 'Breadcrumb',
     kind: 'AI Desktop App',
     oneLiner:
-      'A desktop companion for ADHD brains that remembers what you were thinking when your attention drifted.',
+      'A desktop companion for minds that wander. It remembers what you were thinking when your attention drifted.',
     body: [
-      'I built it for myself, because I’d start one task, glance at another, and lose the first one entirely. A small toaster on your desktop drops a marker the moment you switch away, with nothing to type and without ever reading your screen. When you come back, AI rebuilds where you were and the train of thought you left behind.',
+      'We’ve all been there: you glance at one tab, and the task you were in the middle of is gone. A small toaster on your desktop drops a marker the moment you switch away, with nothing to type and without ever reading your screen. When you come back, AI rebuilds where you were and the train of thought you left behind.',
     ],
-    role: 'Solo · design + engineering',
     stack: [
       'Tauri (Rust)',
       'React',
@@ -177,7 +173,6 @@ export const featuredProjects: Project[] = [
     body: [
       'Built at an AI hackathon. Linger on a detail of a painting and Look Closer quietly opens the story behind it. Come back to a spot you’ve already explored and it notices, greets you, and tells you something new instead of repeating itself.',
     ],
-    role: 'Solo · design + engineering',
     stack: ['Next.js', 'React', 'TypeScript', 'Tailwind CSS', 'OpenAI API'],
     links: {
       live: 'https://look-closer-masterpiece.vercel.app/',
@@ -192,7 +187,7 @@ export const featuredProjects: Project[] = [
   },
 ]
 
-/** DATA VISUALIZATION: one entry, after Selected work. */
+/** DATA VISUALIZATION: one entry, after Interfaces. */
 export const otherProjects: OtherProject[] = [
   {
     id: 'data-visualization',

@@ -3,16 +3,18 @@ import { Reveal } from '../reveal/Reveal'
 import { ExternalLink } from './ExternalLink'
 import { Highlighted } from './Highlight'
 
-/** Short entries: title, type, a few sentences, stack, one link. */
+/** Short entries: title and type (styled as a project's), a few sentences,
+ *  stack, one link. */
 export function OneLiners({ items }: { items: OtherProject[] }) {
   return (
     <ul className="one-liners">
       {items.map((item) => (
         <li key={item.id} id={item.id} className="one-liner">
-          <Reveal className="one-liner__head">
-            <span className="label">{item.title}</span>
-            <span className="project__kind"> — {item.kind}</span>
+          {/* Title and type line exactly as a project's (Project.tsx). */}
+          <Reveal as="h3" className="project__title">
+            {item.href ? <ExternalLink href={item.href}>{item.title}</ExternalLink> : item.title}
           </Reveal>
+          <Reveal className="project__kind">{item.kind}</Reveal>
           <Reveal mode="lines">
             <Highlighted text={item.oneLiner} phrase={item.highlight} />
           </Reveal>
