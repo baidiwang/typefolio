@@ -40,9 +40,15 @@
   --tape-shadow: rgb(70 58 40 / 0.08);
   --photo-frame: #fcfaf5;
 
-  /* The name and signature's hand lettering (?name=damion on previews). */
-  --font-script: 'Caveat', cursive;
-  --script-weight: 700;
+  /* The name and signature's lettering (?name= on previews): Instrument
+     Serif Italic. Each face is scaled so its visual weight (ink, measured
+     at equal size) matches Caveat 700 at the name's 3.4em and the
+     signature's 2.6em; real weights only, nothing synthesised. */
+  --font-script: 'Instrument Serif', serif;
+  --script-weight: 400;
+  --script-style: italic;
+  --name-scale: 1.05;
+  --sig-scale: 1.02;
 
   --margin: clamp(1.25rem, 6vw, 4.5rem);
   --line: 1.6;
@@ -62,12 +68,38 @@
 }
 
 /* —— Design playground (dev + preview deployments: src/playground.ts) ——
-   ?font=plex|dmmono|cutive  ?name=damion */
+   ?font=plex|dmmono|cutive  ?name=garamond|fraunces|caveat|damion */
 
-/* ?name=damion: the earlier script for the name and signature. */
+/* Name faces: italics at their own weights, scaled to Caveat's ink. */
+:root[data-name='garamond'] {
+  --font-script: 'EB Garamond', serif;
+  --script-weight: 400;
+  --name-scale: 1.1;
+  --sig-scale: 1.09;
+}
+
+:root[data-name='fraunces'] {
+  --font-script: 'Fraunces', serif;
+  --script-weight: 300;
+  --name-scale: 1.08;
+  --sig-scale: 1.06;
+}
+
+/* The scripts used before: Caveat 700 (the shipped look) and Damion. */
+:root[data-name='caveat'] {
+  --font-script: 'Caveat', cursive;
+  --script-weight: 700;
+  --script-style: normal;
+  --name-scale: 1;
+  --sig-scale: 1;
+}
+
 :root[data-name='damion'] {
   --font-script: 'Damion', cursive;
   --script-weight: 400;
+  --script-style: normal;
+  --name-scale: 1;
+  --sig-scale: 1;
 }
 
 /* Alternative faces. Cutive Mono has one thin weight: a hairline outline
@@ -347,6 +379,7 @@ h2 {
   display: inline-block;
   font-family: var(--font-script);
   font-weight: var(--script-weight);
+  font-style: var(--script-style);
   letter-spacing: 0;
   -webkit-text-stroke: 0;
   text-transform: none;
@@ -354,7 +387,7 @@ h2 {
 
 .letterhead__name {
   margin: 0;
-  font-size: 3.4em;
+  font-size: calc(3.4em * var(--name-scale));
   line-height: 1.15;
 }
 
@@ -627,7 +660,7 @@ a.taped:focus-visible {
 
 .ending p.ending__signature {
   margin: 0.1em 0 0.4em;
-  font-size: 2.6em;
+  font-size: calc(2.6em * var(--sig-scale));
   line-height: 1.2;
 }
 

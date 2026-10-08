@@ -54,7 +54,7 @@ never fakes others. Hierarchy:
 
 | Element | Treatment |
 | ------- | --------- |
-| Name (letterhead) | 3.4em, hand lettering (Caveat 700), written on with a clip |
+| Name (letterhead) | 3.4em, Instrument Serif Italic (scaled to match Caveat 700's weight), written on with a clip |
 | Section labels | 400, spaced caps, ink |
 | Project titles | 1.4em, 700 |
 | Body, meta lines | 400; meta lines (type, role, stack) in `--ink-soft` |
@@ -111,7 +111,7 @@ tiles of coprime sizes, so it doesn't visibly repeat. The sheet is drawn by
   typing reaches it; static under reduced motion.
 - **The name** (and "Baidi" under "Yours in type," at the end) is hand
   lettering ([`Signature.tsx`](src/components/Signature.tsx)): real text in
-  a script face (Caveat 700; `?name=damion` on previews), written on left to
+  Instrument Serif Italic (other faces via `?name=` on previews), written on left to
   right by a clip that runs as a drawing job in the reveal queue, so it
   happens in reading order. Static under reduced motion.
 - **Contact links** (Resume · Email · LinkedIn · GitHub) are printed in the
@@ -282,10 +282,14 @@ flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
 
 ```
 /?font=plex | dmmono | cutive         (default: Sometype Mono)
-/?name=damion                         (default: Caveat 700)
+/?name=instrument | garamond | fraunces | caveat | damion
+                                      (default: Instrument Serif Italic)
 ```
 
-Options are `data-*` attributes on `<html>` that `src/index.css` reads. DM
+Options are `data-*` attributes on `<html>` that `src/index.css` reads. The
+name faces are real italics at their own weights (EB Garamond Italic 400,
+Fraunces Italic 300), each scaled (`--name-scale`, `--sig-scale`) so its ink
+matches Caveat 700 at the same box; nothing is synthesised. DM
 Mono's heaviest weight is 500, so its titles use 500; Cutive Mono has one
 thin weight, so it gets the hairline outline (`--text-stroke`) and regular
 titles.
