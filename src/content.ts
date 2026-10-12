@@ -61,6 +61,7 @@ export type OtherProject = {
 
 export const site = {
   name: 'Baidi Wang',
+  /** In the page title and meta tags (index.html), not on the page. */
   title: 'Design Engineer',
   /** Four lines, each on its own line, typed in order. */
   intro: [
@@ -189,7 +190,7 @@ export const featuredProjects: Project[] = [
   },
 ]
 
-/** DATA VISUALIZATION: one entry, after Interfaces. */
+/** DATA VISUALIZATION: one entry, after Products. */
 export const otherProjects: OtherProject[] = [
   {
     id: 'data-visualization',
