@@ -54,8 +54,9 @@ never fakes others. Hierarchy:
 
 | Element | Treatment |
 | ------- | --------- |
-| Name (letterhead) | 3.4em, hand lettering (Caveat 700), written on with a clip |
-| Section labels (Interfaces, Data visualization, Games & XR) | 400, spaced caps, ink, on a highlighter swipe; one shared style |
+| Name (letterhead) | 3.4em, hand lettering (Caveat 700), written on with a clip; no title line under it ("Design Engineer" is in the page title and meta tags) |
+| Date and contact line (letterhead) | body size; the date in `--ink-soft`, the links in ink |
+| Section labels (Products, Data visualization, Games & XR) | 400, spaced caps, ink, on a highlighter swipe; one shared style |
 | Project titles (Axios included) | 1.4em, 700 |
 | "More XR experiments:" | 700, as a heading for its line |
 | Body, meta lines | 400; meta lines (type, role, stack, and "Unity · C#" under Games & XR) in `--ink-soft` |
@@ -121,12 +122,28 @@ tiles of coprime sizes, so it doesn't visibly repeat. The sheet is drawn by
   a script face (Caveat 700; other faces via `?name=` on previews), written on left to
   right by a clip that runs as a drawing job in the reveal queue, so it
   happens in reading order. Static under reduced motion.
-- **Contact links** (Resume · Email · LinkedIn · GitHub) are printed in the
-  letterhead as plain typed words
-  ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)). On hover or
-  keyboard focus a pen circle (three hand-drawn variants) draws around the
-  word; touch screens, which can't hover, get a dotted underline. The
-  letter's closing ends with the email address. The resume is
+- **Nothing is centred on the paper**: the letterhead, the dividers and
+  every photo start at the left text margin.
+- **The letterhead** ([`Letterhead.tsx`](src/components/Letterhead.tsx)):
+  the name on the left; beside it, right-aligned, today's date written out
+  ("October 12, 2026", from the visitor's own clock, in the first render),
+  then the contact line. Where the date and contact line wouldn't get at
+  least 26ch beside the name (phones, and the narrower desktop papers below
+  about 1280 px), they stack under it, left-aligned (container queries on
+  the letterhead, in em: Chrome resolves `ch` in a container query from the
+  fallback font). The rule under it stays.
+- **Contact line**: "baidiwang30@gmail.com · Resume · LinkedIn · GitHub",
+  printed as plain typed words
+  ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)), the address in
+  full as a mailto link. Where the whole line (50ch) doesn't fit, it breaks
+  after the address and the dot there goes. On hover or keyboard focus a
+  pen circle (three hand-drawn variants) draws around the word, drawn to
+  the word's real size so it's true on the long address too; touch
+  screens, which can't hover, get a dotted underline. Browsers never start
+  a text selection on a link, so the address handles a mouse drag itself:
+  a drag selects it like plain text (and can be copied), a plain click
+  follows the link; touch keeps the platform's long-press menu. The
+  letter's closing ends with the email address too. The resume is
   `public/BaidiWangResume.pdf`.
 - **The typewriter** is a line-art drawing, of which only the roller is
   fixed to the bottom of the screen: the roller with its rod and clips,
@@ -195,7 +212,7 @@ element in a layout effect (before first paint, so nothing flashes):
   in document order, compressed to finish within **1.5 s** of fonts being
   ready. Typewriter logic: nothing below the line being typed is ever
   visible early.
-- Otherwise → hidden and observed. (The letterhead's title and links aren't
+- Otherwise → hidden and observed. (The letterhead's date and links aren't
   registered: they're printed stationery, visible from the first frame. The
   name is a drawing job, written on first.)
 
@@ -256,7 +273,7 @@ project's title starts.
 apply })` queues a non-text reveal (the pen dividers, the smiley) in the same reading
 order and budget as text; the controller calls `apply(progress)` from 0 to
 1 in 40 steps. A divider in the first screen draws between the intro and
-"Interfaces"; one further down waits for its turn. The smiley after the
+"Products"; one further down waits for its turn. The smiley after the
 signature is the same kind of job, so it draws right after the signature.
 
 **9. The typewriter is a listener.** The controller emits an event for

@@ -358,13 +358,15 @@ h2 {
 
 .divider {
   display: flex;
-  justify-content: center;
   margin: 2em 0;
 }
 
 .divider__line {
   display: block;
   width: min(240px, 62%);
+  /* The stroke starts 6 units into the 240-wide drawing: flush with the
+     text margin. */
+  margin-left: calc(min(240px, 62%) * -0.025);
   height: auto;
   overflow: visible;
   fill: none;
@@ -378,13 +380,65 @@ h2 {
   transform: scaleX(-1);
 }
 
-/* —— Letterhead —— */
+/* —— Letterhead ——
+   Everything from the left text margin. The name, and beside it, right-
+   aligned, the date and the contact line, where they get at least the
+   contact line's second half (26ch) beside the name (about 24ch); else they
+   stack under it, left-aligned (phones, and the narrower desktop papers).
+   The queries are in em (1ch is 0.555em in Sometype Mono): Chrome resolves
+   ch in a container query from the fallback font. */
 
 .letterhead {
+  container: letterhead / inline-size;
   padding-bottom: 1.2em;
   margin-bottom: 2em;
   border-bottom: 1px solid var(--rule);
-  text-align: center;
+}
+
+.letterhead__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.letterhead__meta {
+  container: contact / inline-size;
+  margin-top: 0.3em;
+}
+
+@container letterhead (min-width: 31em) {
+  .letterhead__row {
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 2em;
+    align-items: end;
+  }
+
+  .letterhead__meta {
+    margin-top: 0;
+    text-align: right;
+  }
+}
+
+.letterhead__date {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+/* The contact line (50ch, 27.75em) on one line where it fits; otherwise it
+   breaks after the address, and the dot there goes. */
+.contact__group {
+  display: block;
+  white-space: nowrap;
+}
+
+.contact__dot--between {
+  display: none;
+}
+
+@container contact (min-width: 28.2em) {
+  .contact__group,
+  .contact__dot--between {
+    display: inline;
+  }
 }
 
 /* Hand lettering: the name at the top and the signature at the end
@@ -419,9 +473,11 @@ h2 {
 
 .pen-link__circle {
   position: absolute;
-  left: -0.6em;
+  /* A little more room at the sides on a long word (the address), so the
+     loop's ends clear its first and last letters. */
+  left: calc(-4% - 0.6em);
   top: -0.5em;
-  width: calc(100% + 1.2em);
+  width: calc(108% + 1.2em);
   height: calc(100% + 1em);
   overflow: visible;
   pointer-events: none;
@@ -432,10 +488,6 @@ h2 {
   stroke-dasharray: 1 2;
   stroke-dashoffset: 1;
   transition: stroke-dashoffset 450ms ease-out;
-}
-
-.pen-link__circle path {
-  vector-effect: non-scaling-stroke;
 }
 
 .pen-link:hover .pen-link__circle,
@@ -457,20 +509,6 @@ h2 {
   }
 }
 
-.letterhead__title {
-  margin: 0.2em 0 0;
-}
-
-.letterhead__links {
-  margin-top: 0.5em;
-}
-
-/* Phones: the four links fit on one line. */
-@media (max-width: 719px) {
-  .letterhead__links {
-    font-size: 0.88em;
-  }
-}
 
 .intro {
   margin-bottom: 1em;
@@ -614,7 +652,6 @@ h2 {
 
 .taped--portrait {
   width: max-content;
-  margin-inline: auto;
 }
 
 /* Portrait clips are height-capped (width follows the aspect ratio), so a

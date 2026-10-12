@@ -63,7 +63,7 @@ export default function App() {
           <Divider variant={0} />
 
           <section aria-labelledby="work-heading">
-            <SectionLabel id="work-heading">Interfaces</SectionLabel>
+            <SectionLabel id="work-heading">Products</SectionLabel>
             {featuredProjects.map((project, i) => (
               <Project key={project.id} project={project} index={i} />
             ))}
