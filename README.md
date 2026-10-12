@@ -55,7 +55,7 @@ never fakes others. Hierarchy:
 | Element | Treatment |
 | ------- | --------- |
 | Name (letterhead) | 3.4em, hand lettering (Caveat 700), written on with a clip; no title line under it ("Design Engineer" is in the page title and meta tags) |
-| Date and contact line (letterhead) | body size; the date in `--ink-soft`, the links in ink |
+| Contact line (letterhead) | body size (0.88em on phones), ink |
 | Section labels (Products, Data visualization, Games & XR) | 400, spaced caps, ink, on a highlighter swipe; one shared style |
 | Project titles (Axios included) | 1.4em, 700 |
 | "More XR experiments:" | 700, as a heading for its line |
@@ -125,26 +125,20 @@ tiles of coprime sizes, so it doesn't visibly repeat. The sheet is drawn by
 - **Nothing is centred on the paper**: the letterhead, the dividers and
   every photo start at the left text margin.
 - **The letterhead** ([`Letterhead.tsx`](src/components/Letterhead.tsx)):
-  the name on the left; beside it, right-aligned, today's date written out
-  ("October 12, 2026", from the visitor's own clock, in the first render),
-  then the contact line. Where the date and contact line wouldn't get at
-  least 26ch beside the name (phones, and the narrower desktop papers below
-  about 1280 px), they stack under it, left-aligned (container queries on
-  the letterhead, in em: Chrome resolves `ch` in a container query from the
-  fallback font). The rule under it stays.
-- **Contact line**: "baidiwang30@gmail.com · Resume · LinkedIn · GitHub",
-  printed as plain typed words
-  ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)), the address in
-  full as a mailto link. Where the whole line (50ch) doesn't fit, it breaks
-  after the address and the dot there goes. On hover or keyboard focus a
-  pen circle (three hand-drawn variants) draws around the word, drawn to
-  the word's real size so it's true on the long address too; touch
-  screens, which can't hover, get a dotted underline. Browsers never start
-  a text selection on a link, so the address handles a mouse drag itself:
-  a drag selects it like plain text (and can be copied), a plain click
-  follows the link; touch keeps the platform's long-press menu. The
-  letter's closing ends with the email address too. The resume is
-  `public/BaidiWangResume.pdf`.
+  the name, and directly under it one contact line, "Resume · Email ·
+  LinkedIn · GitHub", both from the left text margin (phones the same, the
+  line a little smaller so it fits). The rule under it stays.
+- **Contact links** are printed as plain typed words
+  ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)). On hover or
+  keyboard focus a pen circle (three hand-drawn variants) draws around the
+  word, drawn to the word's real size; touch screens, which can't hover,
+  get a dotted underline. **Email** copies baidiwang30@gmail.com to the
+  clipboard (click or Enter) instead of opening a mail app: a small
+  "copied!" types out right after the word, just below the line so nothing
+  moves, and goes after about 2 s; a polite live region tells screen
+  readers. Without the Clipboard API, or if the copy is refused, it's the
+  plain mailto link. The letter's closing ends with the email address,
+  linked. The resume is `public/BaidiWangResume.pdf`.
 - **The typewriter** is a line-art drawing, of which only the roller is
   fixed to the bottom of the screen: the roller with its rod and clips,
   collars, knobs and return lever, from just above the clips; its lower
@@ -212,7 +206,7 @@ element in a layout effect (before first paint, so nothing flashes):
   in document order, compressed to finish within **1.5 s** of fonts being
   ready. Typewriter logic: nothing below the line being typed is ever
   visible early.
-- Otherwise → hidden and observed. (The letterhead's date and links aren't
+- Otherwise → hidden and observed. (The letterhead's links aren't
   registered: they're printed stationery, visible from the first frame. The
   name is a drawing job, written on first.)
 
