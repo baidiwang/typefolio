@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -7,15 +8,9 @@ import {
 } from 'react'
 import { site } from '../content'
 
-/** The separator is visual only: screen readers just hear the four links.
- *  `between` marks the one between the address and the rest, dropped where
- *  the line breaks there (index.css). */
-function Dot({ between }: { between?: boolean }) {
-  return (
-    <span className={between ? 'contact__dot contact__dot--between' : 'contact__dot'} aria-hidden="true">
-      {' · '}
-    </span>
-  )
+/** The separator is visual only: screen readers just hear the four links. */
+function Dot() {
+  return <span aria-hidden="true"> · </span>
 }
 
 /**
@@ -31,8 +26,7 @@ const CIRCLES = [
 /** A loop drawn for a w × h px box: the 100 × 40 path scaled to it, so the
  *  SVG is never stretched. Its stroke and its dash (pathLength 1) then stay
  *  true at any width; a stretched SVG with a non-scaling stroke got the
- *  dash wrong on a long link (the address), showing a piece of the loop at
- *  rest. */
+ *  dash wrong on a long word, showing a piece of the loop at rest. */
 function loop(variant: number, w: number, h: number) {
   let i = 0
   return CIRCLES[variant % CIRCLES.length].replace(/-?\d*\.?\d+/g, (n) =>
@@ -44,59 +38,8 @@ type PenLinkProps = {
   href: string
   external?: boolean
   variant: number
-  /** Drag-selectable like plain text (the address): see selectByDrag. */
-  selectable?: boolean
+  onClick?: (e: ReactMouseEvent<HTMLAnchorElement>) => void
   children: ReactNode
-}
-
-/** The caret position under a point, in either engine's API. */
-function caretAt(x: number, y: number): { node: Node; offset: number } | null {
-  const pos = document.caretPositionFromPoint?.(x, y)
-  if (pos) return { node: pos.offsetNode, offset: pos.offset }
-  const range = document.caretRangeFromPoint?.(x, y)
-  return range ? { node: range.startContainer, offset: range.startOffset } : null
-}
-
-/**
- * Browsers never start a text selection on a link (a drag there drags the
- * link, or does nothing), so the printed address couldn't be selected and
- * copied. For a mouse press on it: a plain click still follows the link;
- * a drag selects text from where it started, like plain text, and the
- * click that ends it doesn't follow the link. Touch keeps the platform's
- * own long-press menu (Copy Email).
- */
-function selectByDrag(e: ReactMouseEvent<HTMLAnchorElement>) {
-  if (e.button !== 0 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return
-  const start = caretAt(e.clientX, e.clientY)
-  if (!start) return
-  e.preventDefault() // no link drag
-  const link = e.currentTarget
-  const x0 = e.clientX
-  const y0 = e.clientY
-  let dragging = false
-  const move = (m: MouseEvent) => {
-    if (!dragging && Math.hypot(m.clientX - x0, m.clientY - y0) < 4) return
-    dragging = true
-    const end = caretAt(m.clientX, m.clientY)
-    if (end) getSelection()?.setBaseAndExtent(start.node, start.offset, end.node, end.offset)
-  }
-  const up = () => {
-    window.removeEventListener('mousemove', move)
-    window.removeEventListener('mouseup', up)
-    if (!dragging) return
-    // The click that ends a selecting drag (dispatched right after this
-    // mouseup, if it ended on the link) doesn't follow the link; if there's
-    // no such click, the next press clears this.
-    const stay = (c: Event) => c.preventDefault()
-    link.addEventListener('click', stay, { capture: true, once: true })
-    window.addEventListener(
-      'mousedown',
-      () => link.removeEventListener('click', stay, { capture: true }),
-      { capture: true, once: true },
-    )
-  }
-  window.addEventListener('mousemove', move)
-  window.addEventListener('mouseup', up)
 }
 
 /**
@@ -105,7 +48,7 @@ function selectByDrag(e: ReactMouseEvent<HTMLAnchorElement>) {
  * circle is also the focus indicator. Touch screens, which can't hover, get
  * a dotted underline instead (index.css).
  */
-function PenLink({ href, external, variant, selectable, children }: PenLinkProps) {
+function PenLink({ href, external, variant, onClick, children }: PenLinkProps) {
   const ext = external ? { target: '_blank', rel: 'noopener noreferrer' } : {}
   const svgRef = useRef<SVGSVGElement>(null)
   // The loop's box in css px (index.css sizes it from the word), tracked so
@@ -126,12 +69,7 @@ function PenLink({ href, external, variant, selectable, children }: PenLinkProps
   }, [])
 
   return (
-    <a
-      className="pen-link"
-      href={href}
-      onMouseDown={selectable ? selectByDrag : undefined}
-      {...ext}
-    >
+    <a className="pen-link" href={href} onClick={onClick} {...ext}>
       {children}
       {external && <span className="visually-hidden"> (opens in a new tab)</span>}
       <svg
@@ -147,34 +85,106 @@ function PenLink({ href, external, variant, selectable, children }: PenLinkProps
   )
 }
 
+const NOTE = 'copied!'
+/** Per character as it types out, and how long it stays once typed. */
+const NOTE_CHAR_MS = 45
+const NOTE_HOLD_MS = 2000
+
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
 /**
- * "baidiwang30@gmail.com · Resume · LinkedIn · GitHub", printed in the
- * letterhead, the address in full. Two unbreakable groups, the address and
- * the rest: where the whole line doesn't fit it breaks between them.
+ * "Email": a click (or Enter) copies the address instead of opening a mail
+ * app, and a small "copied!" types out right after the word, then goes
+ * after about 2 s; screen readers hear it from a polite live region.
+ * Without the Clipboard API (an insecure context, an old browser), or if
+ * the copy is refused, it's the plain mailto link. A modified click
+ * (new window, etc.) is left to the browser.
  */
+function CopyEmail() {
+  const { label, href, display: address } = site.links.email
+  const canCopy =
+    typeof window !== 'undefined' && window.isSecureContext && Boolean(navigator.clipboard?.writeText)
+  /** Characters of the note shown; `leaving` while it fades out. */
+  const [shown, setShown] = useState(0)
+  const [leaving, setLeaving] = useState(false)
+  const [announce, setAnnounce] = useState('')
+  const timers = useRef<number[]>([])
+
+  const clearTimers = () => {
+    timers.current.forEach((t) => window.clearTimeout(t))
+    timers.current = []
+  }
+  useEffect(() => clearTimers, [])
+
+  const later = (fn: () => void, ms: number) => {
+    timers.current.push(window.setTimeout(fn, ms))
+  }
+
+  const showNote = () => {
+    clearTimers()
+    setLeaving(false)
+    // Cleared first, so a second copy is announced again.
+    setAnnounce('')
+    later(() => setAnnounce(`Copied ${address} to the clipboard.`), 50)
+    const still = reducedMotion()
+    if (still) setShown(NOTE.length)
+    else {
+      setShown(0)
+      for (let i = 1; i <= NOTE.length; i++) later(() => setShown(i), i * NOTE_CHAR_MS)
+    }
+    const typed = still ? 0 : NOTE.length * NOTE_CHAR_MS
+    if (still) later(() => setShown(0), typed + NOTE_HOLD_MS)
+    else {
+      later(() => setLeaving(true), typed + NOTE_HOLD_MS)
+      later(() => {
+        setShown(0)
+        setLeaving(false)
+      }, typed + NOTE_HOLD_MS + 250)
+    }
+  }
+
+  const onClick = (e: ReactMouseEvent<HTMLAnchorElement>) => {
+    if (!canCopy || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+    e.preventDefault()
+    navigator.clipboard.writeText(address).then(showNote, () => {
+      window.location.href = href
+    })
+  }
+
+  return (
+    <span className="copy-email">
+      <PenLink href={href} variant={1} onClick={onClick}>
+        {label}
+        {canCopy && <span className="visually-hidden"> (copies {address})</span>}
+      </PenLink>
+      <span className="copy-email__note" data-leaving={leaving || undefined} aria-hidden="true">
+        {NOTE.slice(0, shown)}
+      </span>
+      <span className="visually-hidden" role="status" aria-live="polite">
+        {announce}
+      </span>
+    </span>
+  )
+}
+
+/** "Resume · Email · LinkedIn · GitHub", printed in the letterhead. */
 export function ContactLinks() {
-  const { resume, email, linkedin, github } = site.links
+  const { resume, linkedin, github } = site.links
   return (
     <>
-      <span className="contact__group">
-        <PenLink href={email.href} variant={1} selectable>
-          {email.display}
-        </PenLink>
-      </span>
-      <Dot between />
-      <span className="contact__group">
-        <PenLink href={resume.href} external variant={0}>
-          {resume.label}
-        </PenLink>
-        <Dot />
-        <PenLink href={linkedin.href} external variant={2}>
-          {linkedin.label}
-        </PenLink>
-        <Dot />
-        <PenLink href={github.href} external variant={0}>
-          {github.label}
-        </PenLink>
-      </span>
+      <PenLink href={resume.href} external variant={0}>
+        {resume.label}
+      </PenLink>
+      <Dot />
+      <CopyEmail />
+      <Dot />
+      <PenLink href={linkedin.href} external variant={2}>
+        {linkedin.label}
+      </PenLink>
+      <Dot />
+      <PenLink href={github.href} external variant={0}>
+        {github.label}
+      </PenLink>
     </>
   )
 }
