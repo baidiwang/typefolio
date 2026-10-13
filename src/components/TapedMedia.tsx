@@ -22,7 +22,8 @@ type Props = {
 
 /**
  * A screen recording "taped" to the paper. Plays only while in view; under
- * reduced motion only the poster frame is shown.
+ * reduced motion only the poster frame is shown. A still (the Axios map)
+ * is just the image.
  */
 export function TapedMedia({ media, href, title, titleId, leadId, tilt }: Props) {
   const reduced = usePrefersReducedMotion()
@@ -114,7 +115,16 @@ export function TapedMedia({ media, href, title, titleId, leadId, tilt }: Props)
   }, [reduced])
 
   const portrait = media.height > media.width
-  const frame = reduced ? (
+  const frame = media.still ? (
+    <img
+      src={`${media.src}.webp`}
+      width={media.width}
+      height={media.height}
+      alt=""
+      decoding="async"
+      loading="lazy"
+    />
+  ) : reduced ? (
     <img
       src={`${media.src}.jpg`}
       width={media.width}
@@ -141,7 +151,10 @@ export function TapedMedia({ media, href, title, titleId, leadId, tilt }: Props)
   )
 
   const className = `taped${portrait ? ' taped--portrait' : ''}`
-  const style = { '--tilt': `${tilt}deg` } as CSSProperties
+  const style = {
+    '--tilt': `${tilt}deg`,
+    '--ratio': (media.height / media.width).toFixed(4),
+  } as CSSProperties
   const label = `${title}: ${media.alt}`
 
   if (!href) {

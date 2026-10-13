@@ -2,15 +2,14 @@ import { Fragment } from 'react'
 import { Divider } from './components/Divider'
 import { ExternalLink } from './components/ExternalLink'
 import { Letterhead } from './components/Letterhead'
-import { OneLiners } from './components/OneLiners'
 import { Project } from './components/Project'
 import { Signature } from './components/Signature'
 import { Smiley } from './components/Smiley'
 import {
+  dataVizProjects,
   featuredProjects,
   gameProjects,
   gamesStack,
-  otherProjects,
   site,
   xrExperiments,
 } from './content'
@@ -73,7 +72,9 @@ export default function App() {
 
           <section aria-labelledby="other-heading">
             <SectionLabel id="other-heading">Data visualization</SectionLabel>
-            <OneLiners items={otherProjects} />
+            {dataVizProjects.map((project, i) => (
+              <Project key={project.id} project={project} index={i} />
+            ))}
           </section>
 
           <Divider variant={2} />
