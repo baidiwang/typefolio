@@ -518,35 +518,6 @@ h2 {
   }
 }
 
-/* —— Lists —— */
-
-.one-liners {
-  padding: 0;
-  list-style: none;
-}
-
-.one-liner {
-  margin-bottom: 1.6em;
-}
-
-.one-liner p {
-  margin: 0;
-}
-
-/* The type line spaced as a project's (.sheet p). */
-.one-liner p.project__kind {
-  margin-bottom: 1em;
-}
-
-.one-liner .project__stack {
-  margin-top: 0.8em;
-}
-
-/* With no type line, a little air between the title and its text. */
-.one-liner .project__title {
-  margin-bottom: 0.5em;
-}
-
 /* —— Projects ——
    Reading order (DOM, tab order, typing order): head, photo, rest.
    Phones stack them in that order; desktop puts the photo in a left column
@@ -570,6 +541,8 @@ h2 {
   grid-area: media;
   padding: 0.8em 0.6em 0;
   margin: 0.2em 0 1.6em;
+  /* Portrait clips size themselves against it (100cqi). */
+  container-type: inline-size;
 }
 
 .project__rest {
@@ -584,8 +557,8 @@ h2 {
 
 @media (min-width: 720px) {
   .project {
-    /* Media about 55% of the content width, text about 45%. */
-    grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
+    /* Media about 45% of the content width, text about 55%. */
+    grid-template-columns: minmax(0, 9fr) minmax(0, 11fr);
     grid-template-rows: auto 1fr;
     grid-template-areas:
       'media head'
@@ -612,6 +585,11 @@ h2 {
 
 .project__kind {
   margin-bottom: 0.6em;
+}
+
+/* No type line (Axios): a little air between the title and its text. */
+.project__title + :not(.project__kind) {
+  margin-top: 0.5em;
 }
 
 .project__links {
@@ -645,17 +623,22 @@ h2 {
 }
 
 /* Portrait clips are height-capped (width follows the aspect ratio), so a
-   tall phone recording never towers over its text. */
+   tall phone recording never towers over its text; and never wider than
+   their column (its width less the frame, by the clip's own --ratio,
+   height over width, set in TapedMedia.tsx), so on a narrow desktop paper
+   they can't spill over the text. */
 .taped.taped--portrait video,
 .taped.taped--portrait img {
   width: auto;
   height: min(56vh, 440px);
+  height: min(56vh, 440px, calc((100cqi - 1.2em) * var(--ratio, 2)));
 }
 
 @media (max-width: 719px) {
   .taped.taped--portrait video,
   .taped.taped--portrait img {
     height: min(40vh, 320px);
+    height: min(40vh, 320px, calc((100cqi - 1.2em) * var(--ratio, 2)));
   }
 }
 

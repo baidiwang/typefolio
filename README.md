@@ -58,6 +58,7 @@ never fakes others. Hierarchy:
 | Contact line (letterhead) | body size (0.88em on phones), ink |
 | Section labels (Products, Data visualization, Games & XR) | 400, spaced caps, ink, on a highlighter swipe; one shared style |
 | Project titles (Axios included) | 1.4em, 700 |
+| Project photos | taped prints: screen recordings, and for Axios a still (`/media/axios-map.webp`, one of the maps); portrait clips height-capped and never wider than their column |
 | "More XR experiments:" | 700, as a heading for its line |
 | Body, meta lines | 400; meta lines (type, role, stack, and "Unity · C#" under Games & XR) in `--ink-soft` |
 
@@ -128,6 +129,11 @@ tiles of coprime sizes, so it doesn't visibly repeat. The sheet is drawn by
   the name, and directly under it one contact line, "Resume · Email ·
   LinkedIn · GitHub", both from the left text margin (phones the same, the
   line a little smaller so it fits). The rule under it stays.
+- **Favicon**: the typewriter's bell (from `art/typewriter-line.png`),
+  simplified to read at 16 px: dome, knob, rim and base in ink on the
+  desk colour. `public/favicon.svg`, with PNG fallbacks (`favicon-32.png`,
+  `apple-touch-icon.png` at 180 on a full square, `icon-512.png` in
+  `site.webmanifest`).
 - **Contact links** are printed as plain typed words
   ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)). On hover or
   keyboard focus a pen circle (three hand-drawn variants) draws around the
@@ -248,7 +254,9 @@ boundaries.
 
 **7. One project at a time.** A project reads head (title, type,
 one-liner), photo, rest: that's its DOM, tab and typing order. Desktop puts
-the photo in a left column beside the text; phones stack it in reading
+the photo in a left column (about 45% of the width) beside the text (about
+55%: 36 characters a line at 1440, 34 at 1366, 31 at 1280); phones stack it
+in reading
 order, so the title is never pushed below the photo. A taped photo sticks on
 (`data-stick="stuck"`, a short opacity/transform animation) when typing
 reaches it:

@@ -16,19 +16,23 @@ export type ProjectLinks = {
 }
 
 export type ProjectMedia = {
-  /** Base path without extension: `${src}.mp4`, `${src}.webm`, `${src}.jpg`. */
+  /** Base path without extension: `${src}.mp4`, `${src}.webm`, `${src}.jpg`
+   *  for a recording, `${src}.webp` for a still. */
   src: string
   width: number
   height: number
   alt: string
+  /** A still image (`${src}.webp`), not a screen recording. */
+  still?: boolean
 }
 
 export type Project = {
   /** Used as the deep-link anchor: /#lily */
   id: string
   title: string
-  /** Project type, from the old site's `category` field(s). */
-  kind: string
+  /** Project type, from the old site's `category` field(s). Omitted: no
+   *  type line. */
+  kind?: string
   oneLiner: string
   /** Extra paragraphs merged in from other old categories. */
   body?: string[]
@@ -42,21 +46,9 @@ export type Project = {
   media: ProjectMedia
   /** One sentence about a key decision, rendered in red ink. */
   decision?: string
-  /** A key phrase from `body` (or `oneLiner`), swiped with the highlighter
+  /** A key phrase from `oneLiner` or `body`, swiped with the highlighter
    *  once it has typed. */
   highlight?: string
-}
-
-export type OtherProject = {
-  id: string
-  title: string
-  kind?: string
-  oneLiner: string
-  stack?: string[]
-  /** A key phrase from `oneLiner`, swiped with the highlighter. */
-  highlight?: string
-  /** Its one link, carried by the title. */
-  href?: string
 }
 
 export const site = {
@@ -190,16 +182,27 @@ export const featuredProjects: Project[] = [
   },
 ]
 
-/** DATA VISUALIZATION: one entry, after Products. */
-export const otherProjects: OtherProject[] = [
+/** DATA VISUALIZATION: one entry (a full project, photo included), after
+ *  Products. */
+export const dataVizProjects: Project[] = [
   {
     id: 'data-visualization',
     highlight: 'I made the calls on chart type, colour and hierarchy',
     title: 'Axios',
     oneLiner:
       'Interactive D3 graphics, Datawrapper charts and Illustrator illustrations for Axios news stories. I made the calls on chart type, colour and hierarchy, working within Axios’s design system.',
-    // The writeup.
-    href: 'https://medium.com/@WangPortfolio/daily-data-viz-graphics-bc698435092a',
+    links: {
+      writeup: 'https://medium.com/@WangPortfolio/daily-data-viz-graphics-bc698435092a',
+    },
+    // One of the maps, from the old site's thumbnail (its bottom fade
+    // cropped off).
+    media: {
+      src: '/media/axios-map',
+      width: 720,
+      height: 606,
+      alt: 'Map of the percentage change in population of U.S. cities with more than 50,000 people, July 2020 to July 2021.',
+      still: true,
+    },
   },
 ]
 

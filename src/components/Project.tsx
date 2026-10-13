@@ -30,10 +30,10 @@ export function Project({ project, index }: Props) {
         <Reveal as="h3" id={titleId} className="project__title">
           {href ? <ExternalLink href={href}>{title}</ExternalLink> : title}
         </Reveal>
-        <Reveal className="project__kind">{kind}</Reveal>
+        {kind && <Reveal className="project__kind">{kind}</Reveal>}
         {role && <Reveal className="project__role">Role: {role}</Reveal>}
         <Reveal mode="lines" id={leadId}>
-          {oneLiner}
+          <Highlighted text={oneLiner} phrase={highlight} />
         </Reveal>
       </div>
 
