@@ -60,7 +60,7 @@ export const site = {
     'Hey! I’m a Design Engineer.',
     'I build web and mobile products, lately a lot of them with AI inside.',
     'Making interactive graphics gave me a designer’s eye, and I’ve built games and XR too.',
-    'Right now I’m building my own iOS app, launching on the App Store soon!',
+    'Right now I’m building Pocket, my own iOS app, launching on the App Store soon!',
   ],
   links: {
     resume: { label: 'Resume', href: '/BaidiWangResume.pdf' },
@@ -87,11 +87,11 @@ export const featuredProjects: Project[] = [
     id: 'google-play',
     title: 'Google Play Prototypes',
     kind: 'UX Engineering · Google',
-    oneLiner: 'A prototyping platform for testing new Google Play features with real users.',
+    oneLiner: 'Interactive Google Play prototypes for testing new features with real users.',
     body: [
-      'Our team ran a prototyping platform for Google Play. I worked with designers from different product teams, turning their Figma files into working features, motion included, that went in front of real users for testing.',
+      'I partnered with designers across Google Ads, Google Japan and other product teams, turning complex Figma designs into high-fidelity prototypes in React, motion included. I also built shared MUI components and wired in Firebase, so UX researchers could validate designs with real interaction data.',
     ],
-    highlight: 'went in front of real users',
+    highlight: 'Figma designs into high-fidelity prototypes',
     stack: ['React', 'Redux', 'TypeScript', 'MUI', 'Framer Motion', 'Figma'],
     // Deliberately no links: title and photo aren't clickable.
     links: {},
@@ -107,10 +107,9 @@ export const featuredProjects: Project[] = [
     highlight: 'shows its work as a live document',
     title: 'Lily',
     kind: 'AI Voice Assistant',
-    oneLiner:
-      'A voice-first sales assistant that turns a spoken conversation into notes and follow-up tasks.',
+    oneLiner: 'A voice-first AI agent that turns a sales call into notes and follow-up tasks.',
     body: [
-      'Instead of a chat log, Lily shows its work as a live document: transcription streams in, and notes and tasks appear while you talk, so you can see what the agent understood in real time. Audio streams over WebRTC rather than WebSockets, which keeps the conversation feeling live.',
+      'Instead of a chat log, Lily shows its work as a live document: as you talk, tool calls capture notes and create tasks on the page. Audio streams over WebRTC, so the conversation feels live.',
     ],
     stack: [
       'Next.js',
@@ -138,9 +137,9 @@ export const featuredProjects: Project[] = [
     title: 'Breadcrumb',
     kind: 'AI Desktop App',
     oneLiner:
-      'A desktop companion for minds that wander. It remembers what you were thinking when your attention drifted.',
+      'A desktop companion that remembers what you were thinking when your attention drifts.',
     body: [
-      'We’ve all been there: you glance at one tab, and the task you were in the middle of is gone. A small toaster on your desktop drops a marker the moment you switch away, with nothing to type and without ever reading your screen. When you come back, AI rebuilds where you were and the train of thought you left behind.',
+      'A small toaster on your desktop drops a marker the moment you switch away, without ever reading your screen. When you come back, AI rebuilds where you were and the train of thought you left behind. I later gave it a long-term memory with vector search for the CockroachDB × AWS hackathon.',
     ],
     stack: [
       'Tauri (Rust)',
@@ -161,12 +160,12 @@ export const featuredProjects: Project[] = [
   },
   {
     id: 'look-closer',
-    highlight: 'tells you something new',
+    highlight: 'your attention is the interface',
     title: 'Look Closer',
     kind: 'AI Hackathon · Art Viewer',
     oneLiner: 'An AI art viewer where your attention is the interface.',
     body: [
-      'Built at an AI hackathon. Linger on a detail of a painting and Look Closer quietly opens the story behind it. Come back to a spot you’ve already explored and it notices, greets you, and tells you something new instead of repeating itself.',
+      'Built at an AI hackathon. Linger on a detail of a painting and it opens the story behind it; come back to a spot you’ve already explored and it tells you something new.',
     ],
     stack: ['Next.js', 'React', 'TypeScript', 'Tailwind CSS', 'OpenAI API'],
     links: {
@@ -187,10 +186,13 @@ export const featuredProjects: Project[] = [
 export const dataVizProjects: Project[] = [
   {
     id: 'data-visualization',
-    highlight: 'I made the calls on chart type, colour and hierarchy',
+    highlight: 'I made the calls on chart type, color and hierarchy',
     title: 'Axios',
     oneLiner:
-      'Interactive D3 graphics, Datawrapper charts and Illustrator illustrations for Axios news stories. I made the calls on chart type, colour and hierarchy, working within Axios’s design system.',
+      'Interactive graphics and charts for Axios news stories, built with D3, Datawrapper and Illustrator.',
+    body: [
+      'I made the calls on chart type, color and hierarchy, working within Axios’s design system.',
+    ],
     links: {
       writeup: 'https://medium.com/@WangPortfolio/daily-data-viz-graphics-bc698435092a',
     },
@@ -214,8 +216,8 @@ export const gameProjects: Project[] = [
     title: 'Little Helper',
     kind: 'Narrative Puzzle Game',
     oneLiner:
-      'A narrative puzzle game where you play a spirit, possessing environmental objects to indirectly guide a little girl through space.',
-    role: '', // TODO
+      'A narrative puzzle game where you play a spirit, possessing objects around a little girl to guide her without her knowing.',
+    role: 'Game design · gameplay engineer',
     // TODO: the old "Details" link (baidiwang.github.io/memory-system/) was
     // removed because it doesn't match this project.
     links: {
@@ -230,11 +232,12 @@ export const gameProjects: Project[] = [
   },
   {
     id: 'desol',
+    highlight: 'Released on Steam',
     title: 'Desol',
     kind: '3D Exploration Game',
     oneLiner:
-      'A third-person desert exploration game where uncertainty is the core mechanic — navigate without a map using environmental wayfinding. Released on Steam.',
-    role: '', // TODO
+      'A third-person desert exploration game with no map: you find your way by reading the landscape. Released on Steam.',
+    role: 'Gameplay engineer',
     links: {
       live: 'https://store.steampowered.com/app/4666960/desol/',
       liveLabel: 'Steam',
