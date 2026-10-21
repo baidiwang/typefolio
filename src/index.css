@@ -758,6 +758,18 @@ a.taped:focus-visible {
   -webkit-text-stroke-color: transparent;
 }
 
+/* A just-typed character lands faint and darkens to full ink within about
+   0.2 s, the last few characters a short trail behind the typing
+   (highlight.ts), with a hair of ribbon smudge under the newest. */
+::highlight(ink-fresh) {
+  color: rgb(43 40 35 / 0.45);
+  text-shadow: 0 0.05em 0 rgb(43 40 35 / 0.12);
+}
+
+::highlight(ink-settle) {
+  color: rgb(43 40 35 / 0.75);
+}
+
 /* Taped media: "stuck on" when typing reaches it. */
 .taped[data-stick='pending'] {
   opacity: 0;

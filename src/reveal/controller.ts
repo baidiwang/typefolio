@@ -1,4 +1,4 @@
-import { hide, show, supported as highlightSupported, touch } from './highlight'
+import { hide, show, strike, supported as highlightSupported, touch } from './highlight'
 import { lineOf, measureLineStarts } from './lines'
 import { buildTextMap, charAt, pointAt, type TextMap } from './textMap'
 
@@ -87,6 +87,11 @@ type Hook = (instant: boolean) => void
 const MS_PER_CHAR = 30
 /** No single typed line may take longer than this. */
 const MAX_LINE_MS = 600
+/** The typing isn't metronomic: each character takes 70–130% of the pace
+ *  (a fixed pseudo-random per position, so it's the same every visit), and
+ *  the one after a punctuation mark waits longer, as a typist would. */
+const JITTER = 0.3
+const PUNCTUATION_PAUSE = 2.4
 /** Line-feed pace for paragraphs. */
 const MS_PER_LINE = 130
 /** A drawing advances in this many small steps (smooth at any speed). */
@@ -464,6 +469,7 @@ class RevealController {
       const char = charAt(job.map, job.offset)
       const column = job.offset - starts[line]
       job.offset += 1
+      if (char.trim()) this.inkChar(job, job.offset - 1)
       this.emit({ type: 'char', char, column })
       if (job.offset === lineEnd) {
         this.emit({
@@ -487,7 +493,30 @@ class RevealController {
       const lines = this.ensureLines(job).length
       return job.options.duration ? job.options.duration / lines : MS_PER_LINE
     }
-    return this.msPerChar(job)
+    return this.msPerChar(job) * this.rhythm(job)
+  }
+
+  /** This character's share of the pace (see JITTER). Mean 1, so typing
+   *  takes as long overall; the punctuation pause only where no duration
+   *  was given. */
+  private rhythm(job: TextJob): number {
+    const i = job.offset
+    const x = Math.sin((i + 1) * 12.9898 + job.map.length * 78.233) * 43758.5453
+    let f = 1 - JITTER + 2 * JITTER * (x - Math.floor(x))
+    if (!job.options.duration && i > 0 && /[.,;:!?—]/.test(charAt(job.map, i - 1))) {
+      f *= PUNCTUATION_PAUSE
+    }
+    return f
+  }
+
+  /** The character at `index` lands as fresh ink (highlight.ts). */
+  private inkChar(job: TextJob, index: number) {
+    const start = pointAt(job.map, index)
+    const end = pointAt(job.map, index + 1)
+    const range = document.createRange()
+    range.setStart(start.node, start.offset)
+    range.setEnd(end.node, end.offset)
+    strike(range)
   }
 
   private msPerChar(job: TextJob): number {

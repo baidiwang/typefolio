@@ -116,6 +116,15 @@ export function Typewriter() {
       roller.style.transform = `translateX(${-Math.min(column * stepRef.current, maxRef.current)}px)`
     }
     const carriageReturn = () => moveCarriage(0, 260, 'cubic-bezier(0.3, 0.8, 0.2, 1)')
+    // Line feed: the platen turns one notch and the roller gives a 1 px
+    // tick (the sheet itself never moves). `translate`, not `transform`, so
+    // it never fights the carriage's slide.
+    const lineFeed = () => {
+      roller?.animate(
+        [{ translate: '0 0' }, { translate: '0 1px', offset: 0.25 }, { translate: '0 0' }],
+        { duration: 180, easing: 'ease-out' },
+      )
+    }
     const ring = () => {
       swing(bell, 1)
       playBell()
@@ -182,10 +191,12 @@ export function Typewriter() {
           if (signoff && current === signoff && event.bell) break // held for the signature
           column = 0
           carriageReturn()
+          lineFeed()
           playReturn()
           if (event.bell) ring()
           break
         case 'feed':
+          lineFeed()
           playReturn()
           if (event.bell) ring()
           break
