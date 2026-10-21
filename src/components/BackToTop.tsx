@@ -9,8 +9,8 @@ const lever = (detail: 'hover' | 'leave' | 'throw') =>
  * in the page (so it's the last stop for the keyboard, after the letter's
  * closing), fixed over the lever drawn on the typewriter (index.css places
  * it from --tw-lever-*, which Typewriter.tsx measures). Hover nudges the
- * lever; a click or Enter throws it, runs the carriage, and scrolls to the
- * top smoothly. Under reduced motion it simply jumps to the top. Where the
+ * lever; a click or Enter throws it and scrolls to the top smoothly (the
+ * knobs rewind with the scroll). Under reduced motion it simply jumps to the top. Where the
  * lever is off the screen (phones), the button isn't shown.
  */
 export function BackToTop() {

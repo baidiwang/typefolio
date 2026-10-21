@@ -263,7 +263,7 @@ export function Typewriter() {
       : undefined
 
     // The lever (BackToTop.tsx): a nudge on hover; on use, a throw of the
-    // lever while the carriage runs the length of its travel and back.
+    // lever (the carriage stays put; the knobs rewind with the scroll).
     const onLever = (e: Event) => {
       const kind = (e as CustomEvent<string>).detail
       if (!leverImg) return
@@ -274,9 +274,6 @@ export function Typewriter() {
           [{ rotate: '0deg' }, { rotate: '-12deg', offset: 0.35 }, { rotate: '0deg' }],
           { duration: 520, easing: 'cubic-bezier(0.3, 0.7, 0.2, 1)' },
         )
-        moveCarriage(1e6, 240, 'cubic-bezier(0.4, 0, 0.6, 1)')
-        window.setTimeout(carriageReturn, 260)
-        column = 0
       }
     }
     window.addEventListener('tw:lever', onLever)

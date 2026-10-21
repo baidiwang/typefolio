@@ -144,8 +144,8 @@ tiles of coprime sizes, so it doesn't visibly repeat. The sheet is drawn by
     ([`BackToTop.tsx`](src/components/BackToTop.tsx)): a button over the
     lever (its own layer now), last in the tab order, at least 44 px, with
     a solid focus ring. Hover or focus nudges the lever; a click or Enter
-    throws it, runs the carriage to the end of its travel and back, and
-    scrolls smoothly to the top (under reduced motion: straight to the
+    throws it and scrolls smoothly to the top (the carriage stays put; the
+    knobs rewind with the scroll) (under reduced motion: straight to the
     top). Hidden on phones, where the lever is off the screen.
 - **Favicon**: the typewriter's bell (from `art/typewriter-line.png`),
   simplified to read at 16 px: dome, knob, rim and base in ink on the
