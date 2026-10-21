@@ -129,6 +129,24 @@ tiles of coprime sizes, so it doesn't visibly repeat. The sheet is drawn by
   the name, and directly under it one contact line, "Resume · Email ·
   LinkedIn · GitHub", both from the left text margin (phones the same, the
   line a little smaller so it fits). The rule under it stays.
+- **Pointer and scroll motion** (nothing moves on its own; none of it under
+  reduced motion):
+  - *Knobs follow the scroll.* The platen knobs are seen side on, so
+    turning shows as their ridges rolling over the rim: the ridges are
+    drawn by the page (`scripts/line-layers.py` smooths them out of the
+    roller and writes each rim's shape to `line.ts`), one full turn per
+    600 px scrolled, backwards going up, easing to a stop.
+  - *Photos lift toward the pointer*
+    ([`TapedMedia.tsx`](src/components/TapedMedia.tsx)): up to 3° of tilt
+    toward the pointer, a small lift and a deeper shadow, eased; desktop
+    pointers only (`hover: hover` and `pointer: fine`).
+  - *The return lever is "Back to top"*
+    ([`BackToTop.tsx`](src/components/BackToTop.tsx)): a button over the
+    lever (its own layer now), last in the tab order, at least 44 px, with
+    a solid focus ring. Hover or focus nudges the lever; a click or Enter
+    throws it and scrolls smoothly to the top (the carriage stays put; the
+    knobs rewind with the scroll) (under reduced motion: straight to the
+    top). Hidden on phones, where the lever is off the screen.
 - **Favicon**: the typewriter's bell (from `art/typewriter-line.png`),
   simplified to read at 16 px: dome, knob, rim and base in ink on the
   desk colour. `public/favicon.svg`, with PNG fallbacks (`favicon-32.png`,

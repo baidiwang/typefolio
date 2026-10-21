@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { reveal } from '../reveal/controller'
-import { LINE_ART, LINE_ROLLER } from './line'
+import { LINE_ART, LINE_KNOBS, LINE_LEVER_PIVOT, LINE_ROLLER } from './line'
 import { playBell, playKey, playReturn, setSoundEnabled } from './sound'
 
 type Box = { x: number; y: number; w: number; h: number }
@@ -45,6 +45,48 @@ const BACK = box({
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
+/** The knobs turn one full turn per this many px scrolled. */
+const PX_PER_TURN = 600
+/** Their ridges: this many around the rim. */
+const RIDGES = 50
+/** Each frame the knobs close this share of the gap to where the scroll
+ *  says they should be: an eased stop, not a hard one. */
+const KNOB_EASE = 0.16
+
+/** Positions inside the carriage, which sits at the roller's box. */
+const inCarriage = ({ x, y, w, h }: Box): CSSProperties => ({
+  left: u(x - LINE_ART.roller.x),
+  top: u(y - LINE_ART.roller.y),
+  width: u(w),
+  height: u(h),
+})
+const KNOB_VIEWBOX = `${LINE_ART.roller.x} ${LINE_ART.roller.y} ${LINE_ART.roller.w} ${LINE_ART.roller.h}`
+const knobSpan = (outline: readonly number[]) => {
+  const xs = outline.filter((_, i) => i % 2 === 0)
+  return [Math.min(...xs), Math.max(...xs)]
+}
+/** The lever tilts about its post: as a share of its own box. */
+const LEVER_ORIGIN = `${(((LINE_LEVER_PIVOT.x - LINE_ART.lever.x) / LINE_ART.lever.w) * 100).toFixed(1)}% ${(((LINE_LEVER_PIVOT.y - LINE_ART.lever.y) / LINE_ART.lever.h) * 100).toFixed(1)}%`
+
+/** Draw a knob's ridges at `phase` (radians): each ridge runs along the
+ *  platen's axis, so on the rim seen side on it's a line at
+ *  cy + ry·sin(θ), thinner as it turns away, hidden round the back. */
+function placeRidges(lines: SVGLineElement[], knob: (typeof LINE_KNOBS)[number], phase: number) {
+  lines.forEach((line, i) => {
+    const a = (i / RIDGES) * 2 * Math.PI + phase
+    const facing = Math.cos(a)
+    if (facing < 0.08) {
+      line.style.visibility = 'hidden'
+      return
+    }
+    const y = (knob.cy + knob.ry * Math.sin(a)).toFixed(2)
+    line.setAttribute('y1', y)
+    line.setAttribute('y2', y)
+    line.style.strokeWidth = (3.2 * facing).toFixed(2)
+    line.style.visibility = ''
+  })
+}
+
 /**
  * The typewriter fixed to the bottom of the viewport (docs/typewriter-rig.md):
  * only the roller of the line-art machine, from just above its clips to the
@@ -65,8 +107,13 @@ const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)'
  */
 export function Typewriter() {
   const sceneRef = useRef<HTMLDivElement>(null)
-  /** The roller: it slides with the carriage. */
+  /** The carriage: the roller, its knobs' ridges and the lever slide
+   *  together. */
+  const carriageRef = useRef<HTMLDivElement>(null)
+  /** The roller itself: it ticks on a line feed. */
   const rollerRef = useRef<HTMLImageElement>(null)
+  const leverRef = useRef<HTMLImageElement>(null)
+  const knobRefs = useRef<SVGGElement[]>([])
   /** The bell: it swings when it rings. */
   const bellRef = useRef<HTMLImageElement>(null)
   /** css px per carriage step, and the most it travels. */
@@ -98,6 +145,17 @@ export function Typewriter() {
       // The note sits on the desk right of the paper: about 150 px.
       const room = document.documentElement.clientWidth - 8
       scene.dataset.note = r.right + 14 + 150 <= room ? 'on' : 'off'
+      // The lever, for the "Back to top" button over it (BackToTop.tsx);
+      // where it's off the screen (phones), there's no button.
+      const lever = LINE_ART.lever
+      const left = r.left + (lever.x - PAPER_X0) * s
+      // The scene's top edge is the entry line.
+      const top = scene.getBoundingClientRect().top
+      root.setProperty('--tw-lever-x', `${left.toFixed(1)}px`)
+      root.setProperty('--tw-lever-y', `${(top + (lever.y - LINE_ROLLER.line) * s).toFixed(1)}px`)
+      root.setProperty('--tw-lever-w', `${(lever.w * s).toFixed(1)}px`)
+      root.setProperty('--tw-lever-h', `${(lever.h * s).toFixed(1)}px`)
+      document.documentElement.dataset.lever = left >= 4 ? 'on' : 'off'
     }
     measure()
     const ro = new ResizeObserver(measure)
@@ -106,14 +164,45 @@ export function Typewriter() {
     return () => ro.disconnect()
   }, [])
 
+  // The knobs turn with the scroll: one turn per PX_PER_TURN, backwards
+  // going up, easing to a stop. Only while the page scrolls; nothing under
+  // reduced motion (the ridges stay drawn as they are).
   useEffect(() => {
+    const groups = knobRefs.current
+    const lines = groups.map((g) => [...g.querySelectorAll('line')])
+    let phase = (window.scrollY / PX_PER_TURN) * 2 * Math.PI
+    const draw = () => lines.forEach((l, k) => placeRidges(l, LINE_KNOBS[k], phase))
+    draw()
+    let frame = 0
+    const follow = () => {
+      frame = 0
+      const target = (window.scrollY / PX_PER_TURN) * 2 * Math.PI
+      const gap = target - phase
+      phase = Math.abs(gap) < 0.002 ? target : phase + gap * KNOB_EASE
+      draw()
+      if (phase !== target) frame = requestAnimationFrame(follow)
+    }
+    const onScroll = () => {
+      if (reducedMotion() || frame) return
+      frame = requestAnimationFrame(follow)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [])
+
+  useEffect(() => {
+    const carriage = carriageRef.current
     const roller = rollerRef.current
     const bell = bellRef.current
+    const leverImg = leverRef.current
 
     const moveCarriage = (column: number, ms: number, easing = 'linear') => {
-      if (!roller) return
-      roller.style.transition = `transform ${ms}ms ${easing}`
-      roller.style.transform = `translateX(${-Math.min(column * stepRef.current, maxRef.current)}px)`
+      if (!carriage) return
+      carriage.style.transition = `transform ${ms}ms ${easing}`
+      carriage.style.transform = `translateX(${-Math.min(column * stepRef.current, maxRef.current)}px)`
     }
     const carriageReturn = () => moveCarriage(0, 260, 'cubic-bezier(0.3, 0.8, 0.2, 1)')
     // Line feed: the platen turns one notch and the roller gives a 1 px
@@ -173,6 +262,22 @@ export function Typewriter() {
         })
       : undefined
 
+    // The lever (BackToTop.tsx): a nudge on hover; on use, a throw of the
+    // lever (the carriage stays put; the knobs rewind with the scroll).
+    const onLever = (e: Event) => {
+      const kind = (e as CustomEvent<string>).detail
+      if (!leverImg) return
+      if (kind === 'hover') leverImg.dataset.hover = ''
+      if (kind === 'leave') delete leverImg.dataset.hover
+      if (kind === 'throw' && !reducedMotion()) {
+        leverImg.animate(
+          [{ rotate: '0deg' }, { rotate: '-12deg', offset: 0.35 }, { rotate: '0deg' }],
+          { duration: 520, easing: 'cubic-bezier(0.3, 0.7, 0.2, 1)' },
+        )
+      }
+    }
+    window.addEventListener('tw:lever', onLever)
+
     const unsubscribe = reveal.subscribe((event) => {
       switch (event.type) {
         case 'start':
@@ -207,6 +312,7 @@ export function Typewriter() {
       }
     })
     return () => {
+      window.removeEventListener('tw:lever', onLever)
       stopWiggle?.()
       stopSignature?.()
       unsubscribe()
@@ -231,7 +337,42 @@ export function Typewriter() {
           then the roller (slides). */}
       <div className="tw-origin">
         <div className="tw-back" style={BACK} />
-        <img ref={rollerRef} className="tw-roller" src={LINE_ART.roller.src} style={box(LINE_ART.roller)} alt="" />
+        <div ref={carriageRef} className="tw-carriage" style={box(LINE_ART.roller)}>
+          <img ref={rollerRef} className="tw-roller" src={LINE_ART.roller.src} alt="" />
+          {/* The knobs' ridges, drawn here so they can roll. */}
+          <svg className="tw-knobs" viewBox={KNOB_VIEWBOX} preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <defs>
+              {LINE_KNOBS.map((k, i) => (
+                <clipPath key={i} id={`tw-knob-${i}`}>
+                  <polygon points={k.outline.join(' ')} />
+                </clipPath>
+              ))}
+            </defs>
+            {LINE_KNOBS.map((k, i) => {
+              const [x0, x1] = knobSpan(k.outline)
+              return (
+                <g
+                  key={i}
+                  clipPath={`url(#tw-knob-${i})`}
+                  ref={(g) => {
+                    if (g) knobRefs.current[i] = g
+                  }}
+                >
+                  {Array.from({ length: RIDGES }, (_, r) => (
+                    <line key={r} x1={x0} x2={x1} y1={k.cy} y2={k.cy} />
+                  ))}
+                </g>
+              )
+            })}
+          </svg>
+          <img
+            ref={leverRef}
+            className="tw-lever"
+            src={LINE_ART.lever.src}
+            style={{ ...inCarriage(LINE_ART.lever), transformOrigin: LEVER_ORIGIN }}
+            alt=""
+          />
+        </div>
       </div>
       {/* The bell at the roller's right end, standing on the screen's bottom
           edge: the sound toggle. */}
