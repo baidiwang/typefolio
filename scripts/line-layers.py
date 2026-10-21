@@ -24,6 +24,13 @@ Pieces:
            types.
   bell     the bell's dome, cut out; the sound toggle at the roller's
            right end.
+  lever    the carriage-return lever, cut out of the roller piece (it tilts
+           on its own: the "Back to top" button).
+
+The platen knobs' ridges are smoothed out of the roller piece (each rim
+keeps its own shading, a per-column median down the rim): the page draws
+them itself, so they can roll as the page scrolls. KNOBS (each rim's box
+and its inner outline, row by row) goes to line.ts.
 """
 
 from collections import deque
@@ -61,6 +68,21 @@ SPOOLS = [
     {'cx': 1828, 'rx': 120, 'cy': 974, 'ry': 40, 'hub': (1792, 922, 1864, 964), 'src_dx': -270},
 ]
 TYPE_GUIDE = {'box': (1243, 916, 1417, PIECE_BOTTOM), 'src_dx': -186}
+# The return lever: everything of the piece left of the left knob (the
+# spoon dips lowest there), and above the knob's top between it and the
+# lever's post. It pivots at the post's top.
+LEVER = {'x_knob': 470, 'x_post': 548, 'overlap': 6, 'below_spoon': 875, 'below_arm': 830, 'pivot': (556, 786)}
+# The platen knobs' ridged rims, side on (2x px): each rim is a cylinder
+# seen from the front, its centre line at cy, ry from there to its top and
+# bottom edges; its inside runs between two arcs, x = a + b·√(1 − t²) with
+# t = (y − cy)/ry (measured on the drawing's ridge rows, inside the
+# outlines). The ridges run along the platen's axis, so they roll up or
+# down as the knob turns.
+KNOBS = [
+    {'name': 'l', 'cy': 910, 'ry': 70, 'left': (493, -17), 'right': (542, -17)},
+    {'name': 'r', 'cy': 906, 'ry': 72, 'left': (2178, -7), 'right': (2206, 16)},
+]
+KNOB_STEP = 4  # px between the rows of each rim's outline written to line.ts
 # The bell: a dome standing on its rim (traced from its centre outwards to
 # the end of its outline, so nothing behind it comes along), a ring knob on
 # top on a short stem.
@@ -179,6 +201,16 @@ def to_box(x0, y0, x1, y1):
     return x0 - OFFSET[0], y0 - OFFSET[1], x1 - OFFSET[0], y1 - OFFSET[1]
 
 
+def rim_inside(k):
+    """A knob rim's inside, {y: (x_left, x_right)} in 2x px, from its arcs."""
+    out = {}
+    for yy in range(k['cy'] - k['ry'] + 3, k['cy'] + k['ry'] - 2):
+        t = (yy - k['cy']) / k['ry']
+        w = np.sqrt(max(0.0, 1 - t * t))
+        out[yy] = (round(k['left'][0] + k['left'][1] * w), round(k['right'][0] + k['right'][1] * w))
+    return out
+
+
 def main():
     rgb = np.array(Image.open(SRC).convert('RGB')).astype(float)
     lum = lum_of(rgb)
@@ -197,6 +229,27 @@ def main():
     hole = (x >= gx0) & (x <= gx1) & (y >= gy0) & (y <= gy1)
     roller_lum = refill(roller_lum, hole, TYPE_GUIDE['src_dx'])
 
+    # The knobs' ridges smoothed out: each rim column takes its median down
+    # the rim (the shading stays, the lines go).
+    knobs = []
+    for k in KNOBS:
+        rim = rim_inside(k)
+        mask = np.zeros(lum.shape, bool)
+        for yy, (xl, xr) in rim.items():
+            mask[yy - OFFSET[1], xl - OFFSET[0]:xr - OFFSET[0] + 1] = True
+        cols = {}
+        for xx in range(min(v[0] for v in rim.values()), max(v[1] for v in rim.values()) + 1):
+            col = mask[:, xx - OFFSET[0]]
+            if col.any():
+                cols[xx] = np.median(lum[col, xx - OFFSET[0]])
+        ys_, xs_ = np.nonzero(mask)
+        roller_lum[ys_, xs_] = [cols[x_ + OFFSET[0]] for x_ in xs_]
+        ys = sorted(rim)
+        top, bottom = ys[0], ys[-1]
+        sample = ys[::KNOB_STEP] + ([bottom] if (bottom - top) % KNOB_STEP else [])
+        outline = [(rim[y_][0], y_) for y_ in sample] + [(rim[y_][1], y_) for y_ in reversed(sample)]
+        knobs.append({'name': k['name'], 'cy': k['cy'], 'ry': k['ry'], 'outline': outline})
+
     bell = dome_seen = dome_mask(darkness(lum), lum.shape)
     # The rim's underside is curved (seen a little from above): close the
     # bell along it, above the lever's stem.
@@ -210,6 +263,15 @@ def main():
 
     piece = inside | (lum < WHITE)
     piece &= (y >= PIECE_TOP) & (y <= PIECE_BOTTOM) & ~bell
+    def lever_region(x_post):
+        return piece & (
+            ((x < LEVER['x_knob']) & (y < LEVER['below_spoon']))
+            | ((x < x_post) & (y < LEVER['below_arm']))
+        )
+    # The lever layer runs a few px into the post, which the roller keeps:
+    # no hairline seam where they meet, at rest or tilted.
+    lever = lever_region(LEVER['x_post'] + LEVER['overlap'])
+    piece &= ~lever_region(LEVER['x_post'])
     # Nothing over the paper above the entry line.
     piece &= ~((x >= ROLLER['x0']) & (x <= ROLLER['x1']) & (y < LINE))
     roller_rgba = paint(darkness(roller_lum), inside)
@@ -220,6 +282,8 @@ def main():
     full = paint(darkness(lum), inside)
     bell_rgba = full.copy()
     bell_rgba[..., 3] = np.where(bell, bell_rgba[..., 3], 0)
+    lever_rgba = full.copy()
+    lever_rgba[..., 3] = np.where(lever, lever_rgba[..., 3], 0)
 
     for old in list(OUT.glob('engraving-*.webp')) + list(OUT.glob('line-*.webp')):
         old.unlink()
@@ -230,6 +294,7 @@ def main():
 
     roller = save('line-roller', roller_rgba, bbox(roller_rgba[..., 3] > 0))
     bell_e = save('line-bell', bell_rgba, bbox(bell))
+    lever_e = save('line-lever', lever_rgba, bbox(lever))
     mx0, _, mx1, _ = bbox(full[..., 3] > 8)
 
     def ts(e):
@@ -244,7 +309,17 @@ def main():
 export const LINE_ART = {{
   roller: {ts(roller)},
   bell: {ts(bell_e)},
+  lever: {ts(lever_e)},
 }} as const
+
+/** The lever tilts about the top of its post. */
+export const LINE_LEVER_PIVOT = {{ x: {LEVER['pivot'][0]}, y: {LEVER['pivot'][1]} }} as const
+
+/** The platen knobs' ridged rims, side on: the cylinder's centre line and
+ *  half-height (cy, ry), and the rim's inside as a polygon (x, y pairs),
+ *  where the page draws the ridges that roll as it scrolls. */
+export const LINE_KNOBS = [
+{''.join(f"  {{ cy: {k['cy']}, ry: {k['ry']}, outline: [{', '.join(f'{px}, {py}' for px, py in k['outline'])}] }},{chr(10)}" for k in knobs)}] as const
 
 /** The paper matches the roller (x0–x1) and goes in at its top edge;
  *  `line` is the entry line, just above the rod's clips. */

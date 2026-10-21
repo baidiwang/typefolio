@@ -1,4 +1,5 @@
 import { Fragment } from 'react'
+import { BackToTop } from './components/BackToTop'
 import { Divider } from './components/Divider'
 import { ExternalLink } from './components/ExternalLink'
 import { Letterhead } from './components/Letterhead'
@@ -113,6 +114,10 @@ export default function App() {
           </footer>
         </main>
       </div>
+
+      {/* Over the typewriter's return lever; last, so it's the keyboard's
+          last stop. */}
+      <BackToTop />
     </div>
   )
 }

@@ -5,6 +5,10 @@ import { reveal } from '../reveal/controller'
 
 /** Same breakpoint as the stacked project layout in index.css. */
 const STACKED_QUERY = '(max-width: 719px)'
+/** Pointers that hover (mouse, trackpad): only they get the lift. */
+const FINE_HOVER = '(hover: hover) and (pointer: fine)'
+/** The most a photo tilts toward the pointer. */
+const TILT_DEG = 3
 
 type Props = {
   media: ProjectMedia
@@ -94,6 +98,36 @@ export function TapedMedia({ media, href, title, titleId, leadId, tilt }: Props)
       io?.disconnect()
     }
   }, [titleId, leadId])
+
+  // Lifts toward the pointer: up to TILT_DEG of tilt toward wherever the
+  // pointer is over it (index.css adds the lift and the deeper shadow,
+  // eased), settling back on leave. Desktop pointers only; none under
+  // reduced motion.
+  useEffect(() => {
+    const el = frameRef.current
+    if (!el || reduced || !window.matchMedia(FINE_HOVER).matches) return
+    const move = (e: PointerEvent) => {
+      const r = el.getBoundingClientRect()
+      const px = (e.clientX - r.left) / r.width - 0.5
+      const py = (e.clientY - r.top) / r.height - 0.5
+      // The side under the pointer comes up: rotateX lifts the top for a
+      // pointer above the middle, rotateY the right for one to the right.
+      el.style.setProperty('--rx', `${(py * 2 * TILT_DEG).toFixed(2)}deg`)
+      el.style.setProperty('--ry', `${(-px * 2 * TILT_DEG).toFixed(2)}deg`)
+      el.dataset.lift = ''
+    }
+    const leave = () => {
+      el.style.setProperty('--rx', '0deg')
+      el.style.setProperty('--ry', '0deg')
+      delete el.dataset.lift
+    }
+    el.addEventListener('pointermove', move)
+    el.addEventListener('pointerleave', leave)
+    return () => {
+      el.removeEventListener('pointermove', move)
+      el.removeEventListener('pointerleave', leave)
+    }
+  }, [reduced])
 
   useEffect(() => {
     const video = videoRef.current
