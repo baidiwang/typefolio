@@ -147,6 +147,29 @@ tiles of coprime sizes, so it doesn't visibly repeat. The sheet is drawn by
     throws it and scrolls smoothly to the top (the carriage stays put; the
     knobs rewind with the scroll) (under reduced motion: straight to the
     top). Hidden on phones, where the lever is off the screen.
+- **Write back** ([`ReplyLine.tsx`](src/components/ReplyLine.tsx)): under
+  "Write me back:", one blank typed line to write a note on (up to 280
+  characters, wrapping). A real, labelled textarea ("Write Baidi a note"),
+  clear, over the paper's copy of the typing: same face and ink, a faint
+  baseline per line, a blinking typewriter caret while focused (steady
+  under reduced motion). New characters land in fresh ink; each keystroke
+  steps the carriage, the bell rings once near the end of a line, and a new
+  line returns the carriage. Enter or "send ↵" opens a mail draft (subject
+  "Hello from your portfolio"); if no mail app takes the page's focus
+  within 1.2 s, the note and the address are copied instead. The outcome
+  types itself on the line in the secondary ink and is announced (polite
+  live region).
+- **The visitor's keys**: any printable key pressed outside a text field
+  (no Cmd, Ctrl or Alt) steps the carriage and clicks (sound on), at most
+  once a frame; nothing is typed and nothing is prevented (Space still
+  scrolls, shortcuts work). The reply line and these keys share one piece
+  of logic ([`machine.ts`](src/typewriter/machine.ts)), so the carriage,
+  bell and returns behave the same. Under reduced motion: sound only.
+- **Print**: prints as a clean letter on A4 or US Letter: white, no desk,
+  typewriter, textures, buttons or reply line; all text and drawings in
+  full (flushed on `beforeprint`, and forced by the print styles); photos
+  as their poster frames, small, without tape; a project never splits from
+  its photo; outside links print their address after them.
 - **Favicon**: the typewriter's bell (from `art/typewriter-line.png`),
   simplified to read at 16 px: dome, knob, rim and base in ink on the
   desk colour. `public/favicon.svg`, with PNG fallbacks (`favicon-32.png`,

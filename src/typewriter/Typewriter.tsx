@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { reveal } from '../reveal/controller'
 import { LINE_ART, LINE_KNOBS, LINE_LEVER_PIVOT, LINE_ROLLER } from './line'
+import { setActuator, strikeFree, syncFree } from './machine'
 import { playBell, playKey, playReturn, setSoundEnabled } from './sound'
 
 type Box = { x: number; y: number; w: number; h: number }
@@ -219,6 +220,45 @@ export function Typewriter() {
       playBell()
     }
 
+    // The visitor's own keystrokes (machine.ts): the reply line and key
+    // presses elsewhere step, ring and return like the page's typing.
+    // Under reduced motion: sound only (if on), nothing moves.
+    setActuator({
+      step: (col, click) => {
+        if (!reducedMotion()) moveCarriage(col, 45)
+        if (click) playKey()
+      },
+      ring: () => {
+        if (!reducedMotion()) swing(bell, 1)
+        playBell()
+      },
+      carriageReturn: () => {
+        if (!reducedMotion()) {
+          carriageReturn()
+          lineFeed()
+        }
+        playReturn()
+      },
+    })
+
+    // Any printable key pressed outside a text field (no Cmd, Ctrl or Alt)
+    // makes the machine answer: nothing is typed, and the key's own job
+    // (Space scrolls, shortcuts work) is untouched: never preventDefault.
+    // At most one answer per frame.
+    let keyFrame = 0
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1 || keyFrame) return
+      const t = e.target
+      if (
+        t instanceof Element &&
+        t.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])')
+      )
+        return
+      keyFrame = requestAnimationFrame(() => (keyFrame = 0))
+      strikeFree(e.key)
+    }
+    window.addEventListener('keydown', onKey)
+
     // One small wiggle when the intro has finished typing, so the toggle
     // reads as something to touch.
     const intro = document.querySelector('.intro > :last-child')
@@ -289,6 +329,7 @@ export function Typewriter() {
           break
         case 'char':
           column = event.column + 1
+          syncFree(column)
           moveCarriage(column, 45)
           if (event.char.trim() !== '') playKey() // space bar: carriage only
           break
@@ -307,11 +348,15 @@ export function Typewriter() {
           break
         case 'idle':
           column = 0
+          syncFree(0)
           carriageReturn()
           break
       }
     })
     return () => {
+      setActuator(null)
+      window.removeEventListener('keydown', onKey)
+      cancelAnimationFrame(keyFrame)
       window.removeEventListener('tw:lever', onLever)
       stopWiggle?.()
       stopSignature?.()
