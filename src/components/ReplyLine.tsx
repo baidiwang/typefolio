@@ -37,6 +37,9 @@ export function ReplyLine() {
   const [ready, setReady] = useState(false)
   const [status, setStatus] = useState('')
   const [shown, setShown] = useState(0)
+  /** Neither a mail app nor the clipboard took the note: it stays on the
+   *  line, and this says where to send it, beside "send". */
+  const [stuck, setStuck] = useState('')
   const fieldRef = useRef<HTMLTextAreaElement>(null)
   const beforeRef = useRef<HTMLSpanElement>(null)
   const caretRef = useRef<HTMLSpanElement>(null)
@@ -101,6 +104,7 @@ export function ReplyLine() {
     const next = el.value.replace(/[\r\n]+/g, ' ').slice(0, MAX)
     change.current = next.length - value.length || (next !== value ? 1 : 0)
     if (status) setStatus('')
+    if (stuck) setStuck('')
     setValue(next)
     setCaret(el.selectionStart ?? next.length)
   }
@@ -134,7 +138,7 @@ export function ReplyLine() {
         clear()
         say(COPIED)
       } catch {
-        say(`write to ${display}`)
+        setStuck(`couldn't open mail: write to ${display}`)
       }
     }, MAIL_WAIT_MS)
   }
@@ -200,8 +204,9 @@ export function ReplyLine() {
       <button type="button" className="reply__send" onClick={send}>
         send ↵
       </button>
+      {stuck && <span className="reply__stuck">{stuck}</span>}
       <span className="visually-hidden" role="status" aria-live="polite">
-        {status}
+        {status || stuck}
       </span>
     </div>
   )
