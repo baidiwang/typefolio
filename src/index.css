@@ -787,7 +787,7 @@ a.taped:focus-visible {
   position: relative;
 }
 
-.reply__caret[data-on]::after {
+.reply__caret::after {
   content: '';
   position: absolute;
   left: 0;
@@ -795,7 +795,12 @@ a.taped:focus-visible {
   width: 0.56em;
   height: 0.12em;
   background: var(--ink);
-  animation: reply-blink 1.06s steps(1) infinite;
+  /* Waiting: a slow blink; in use: the usual pace. */
+  animation: reply-blink 2.2s steps(1) infinite;
+}
+
+.reply__caret[data-on]::after {
+  animation-duration: 1.06s;
 }
 
 @keyframes reply-blink {
@@ -805,9 +810,19 @@ a.taped:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .reply__caret::after,
   .reply__caret[data-on]::after {
     animation: none;
   }
+}
+
+/* The invitation, until the visitor types (secondary ink, 4.7:1). */
+.reply__placeholder {
+  color: var(--ink-soft);
+}
+
+.reply__field {
+  cursor: text;
 }
 
 .reply__status {
@@ -1125,7 +1140,7 @@ a.taped:focus-visible {
    of it too). Photos as their poster frames, small, without tape; a
    project never splits between its photo and its text. Each outside link
    prints its address after it. */
-.taped__print {
+.taped .taped__print {
   display: none;
 }
 
@@ -1229,7 +1244,7 @@ a.taped:focus-visible {
     display: none;
   }
 
-  .taped__print {
+  .taped .taped__print {
     display: block;
   }
 

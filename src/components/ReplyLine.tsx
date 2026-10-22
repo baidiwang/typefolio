@@ -7,6 +7,8 @@ import { resetLine, strikeAt } from '../typewriter/machine'
 const MAX = 280
 const SUBJECT = 'Hello from your portfolio'
 const SENT = 'Sent to your mail app. Thank you!'
+/** The invitation on the empty line (gone once the visitor types). */
+const PLACEHOLDER = 'type a note here…'
 const COPIED = `copied, paste it into an email to ${site.links.email.display}`
 /** Per character as a status line types out. */
 const STATUS_CHAR_MS = 28
@@ -175,7 +177,11 @@ export function ReplyLine() {
           ) : (
             <>
               <span ref={caretRef} className="reply__caret" data-on={focused || undefined} />
-              <span className="reply__status">{status.slice(0, shown)}</span>
+              {status ? (
+                <span className="reply__status">{status.slice(0, shown)}</span>
+              ) : (
+                <span className="reply__placeholder">{PLACEHOLDER}</span>
+              )}
             </>
           )}
           {'​'}
