@@ -4,6 +4,7 @@ import { Divider } from './components/Divider'
 import { ExternalLink } from './components/ExternalLink'
 import { Letterhead } from './components/Letterhead'
 import { Project } from './components/Project'
+import { ReplyLine } from './components/ReplyLine'
 import { Signature } from './components/Signature'
 import { Smiley } from './components/Smiley'
 import {
@@ -100,13 +101,14 @@ export default function App() {
 
           <Divider variant={3} />
 
-          {/* The page ends like a letter: closing, sign-off, signature, and
-              a smiley doodled after it. */}
+          {/* The page ends like a letter: closing, a blank line to write
+              back on, sign-off, signature, and a smiley doodled after it. */}
           <footer className="ending">
-            <Reveal mode="lines">
+            <Reveal mode="lines" className="ending__closing">
               {site.ending.closing}{' '}
               <a href={site.links.email.href}>{site.links.email.display}</a>
             </Reveal>
+            <ReplyLine />
             <Reveal className="ending__signoff">{site.ending.signOff}</Reveal>
             <Signature className="ending__signature" duration={700} after={<Smiley />}>
               {site.ending.signature}

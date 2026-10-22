@@ -183,6 +183,18 @@ export function TapedMedia({ media, href, title, titleId, leadId, tilt }: Props)
       <source src={`${media.src}.mp4`} type="video/mp4" />
     </video>
   )
+  // Print shows the poster frame, not the video (index.css, @media print).
+  const printFrame = media.still || reduced ? null : (
+    <img
+      className="taped__print"
+      src={`${media.src}.jpg`}
+      width={media.width}
+      height={media.height}
+      alt=""
+      decoding="async"
+      loading="lazy"
+    />
+  )
 
   const className = `taped${portrait ? ' taped--portrait' : ''}`
   const style = {
@@ -201,6 +213,7 @@ export function TapedMedia({ media, href, title, titleId, leadId, tilt }: Props)
         aria-label={label}
       >
         {frame}
+        {printFrame}
       </figure>
     )
   }
@@ -215,6 +228,7 @@ export function TapedMedia({ media, href, title, titleId, leadId, tilt }: Props)
       aria-label={`${label} (opens in a new tab)`}
     >
       {frame}
+      {printFrame}
     </a>
   )
 }

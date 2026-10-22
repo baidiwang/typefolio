@@ -9,6 +9,7 @@ import '@fontsource/caveat/400.css'
 import '@fontsource/caveat/700.css'
 import './index.css'
 import App from './App.tsx'
+import { reveal } from './reveal/controller'
 
 // Theme/font overrides from the URL (src/playground.ts), only in dev and on
 // preview deployments (see vite.config.ts). Production builds drop this
@@ -16,6 +17,15 @@ import App from './App.tsx'
 const ready = __PLAYGROUND__
   ? import('./playground').then((m) => m.applyPlayground())
   : Promise.resolve()
+
+// Printing (index.css, @media print): everything typed and drawn at once,
+// and the print-only poster images loaded.
+window.addEventListener('beforeprint', () => {
+  reveal.flushAll()
+  document.querySelectorAll<HTMLImageElement>('img[loading="lazy"]').forEach((img) => {
+    img.loading = 'eager'
+  })
+})
 
 void ready.then(() => {
   createRoot(document.getElementById('root')!).render(

@@ -719,6 +719,139 @@ a.taped:focus-visible {
 }
 
 /* "Yours in type," then "Baidi" in the name's lettering. */
+/* The reply line (ReplyLine.tsx): a clear, labelled field over the
+   paper's copy of the typing. Same face, size and ink as the letter; a
+   faint baseline under each line, a typewriter caret while focused. Out of
+   sight until the closing above it has typed. */
+.reply {
+  margin: 0.4em 0 0;
+  opacity: 0;
+}
+
+.reply[data-ready] {
+  opacity: 1;
+}
+
+.reply__line {
+  position: relative;
+  --reply-lh: calc(var(--line) * 1em);
+}
+
+.reply__paper,
+.reply__field {
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: var(--reply-lh);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 0;
+  margin: 0;
+}
+
+.reply__paper {
+  min-height: var(--reply-lh);
+  color: var(--ink);
+  background: linear-gradient(transparent calc(var(--reply-lh) - 1px), var(--rule) 0) 0 0 /
+    100% var(--reply-lh);
+}
+
+.reply__field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  /* The paper shows the text; the field only takes it (its selection
+     still shows). */
+  color: transparent;
+  caret-color: transparent;
+  resize: none;
+  overflow: hidden;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.reply__field::selection {
+  background: var(--highlight);
+}
+
+/* A typewriter caret: a short bar on the baseline, a character wide,
+   blinking while the line has focus (steady under reduced motion). */
+.reply__caret {
+  display: inline-block;
+  width: 0;
+  height: 1em;
+  vertical-align: -0.2em;
+  position: relative;
+}
+
+.reply__caret::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0.05em;
+  width: 0.56em;
+  height: 0.12em;
+  background: var(--ink);
+  /* Waiting: a slow blink; in use: the usual pace. */
+  animation: reply-blink 2.2s steps(1) infinite;
+}
+
+.reply__caret[data-on]::after {
+  animation-duration: 1.06s;
+}
+
+@keyframes reply-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reply__caret::after,
+  .reply__caret[data-on]::after {
+    animation: none;
+  }
+}
+
+/* The invitation, until the visitor types (secondary ink, 4.7:1). */
+.reply__placeholder {
+  color: var(--ink-soft);
+}
+
+.reply__field {
+  cursor: text;
+}
+
+.reply__status {
+  color: var(--ink-soft);
+}
+
+/* "send ↵": a small typed hint that's also the button. */
+.reply__send {
+  margin: 0.3em 0 0;
+  padding: 0.35em 0;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.85em;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.reply__send:hover {
+  color: var(--ink);
+}
+
+.reply__stuck {
+  margin-left: 1em;
+  font-size: 0.85em;
+  color: var(--ink-soft);
+}
+
 .ending p.ending__signoff {
   margin: 1.6em 0 0;
 }
@@ -998,4 +1131,164 @@ a.taped:focus-visible {
 
 .typewriter[data-note='off'] .tw-note {
   display: none;
+}
+
+/* —— Print: a clean letter ——
+   On A4 or US Letter: white paper, no desk, no typewriter, no textures, no
+   sound or back-to-top button, no reply field. Everything typed and drawn
+   (main.tsx flushes the reveal on beforeprint; the rules below make sure
+   of it too). Photos as their poster frames, small, without tape; a
+   project never splits between its photo and its text. Each outside link
+   prints its address after it. */
+.taped .taped__print {
+  display: none;
+}
+
+@page {
+  margin: 16mm 16mm 18mm;
+}
+
+@media print {
+  :root {
+    --desk: #fff;
+    --paper: #fff;
+  }
+
+  html,
+  body {
+    background: #fff;
+    font-size: 10.5pt;
+  }
+
+  .desk {
+    padding: 0;
+    overflow: visible;
+  }
+
+  .paper {
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .paper::before,
+  .paper::after,
+  .typewriter,
+  .back-to-top,
+  .skip-link,
+  .reply,
+  .pen-link__circle {
+    display: none !important;
+  }
+
+  /* All text and drawings in full, whatever the reveal had reached. */
+  ::highlight(unrevealed),
+  ::highlight(ink-fresh),
+  ::highlight(ink-settle) {
+    color: inherit;
+    text-decoration-color: inherit;
+    -webkit-text-stroke-color: inherit;
+  }
+
+  .signature {
+    clip-path: none !important;
+  }
+
+  .divider path,
+  .smiley path {
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+    visibility: visible !important;
+  }
+
+  /* Projects: photo beside text, never split across pages. */
+  .project {
+    grid-template-columns: 34% minmax(0, 1fr);
+    grid-template-areas:
+      'media head'
+      'media rest';
+    column-gap: 1.4em;
+    margin-bottom: 2.2em;
+    break-inside: avoid;
+  }
+
+  .project__media {
+    padding: 0;
+    margin: 0;
+  }
+
+  h2,
+  .project__title {
+    break-after: avoid;
+  }
+
+  .taped,
+  .taped[data-stick] {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    padding: 0;
+    box-shadow: none;
+    background: none;
+    break-inside: avoid;
+  }
+
+  .taped::before,
+  .taped::after {
+    display: none;
+  }
+
+  .taped video {
+    display: none;
+  }
+
+  .taped .taped__print {
+    display: block;
+  }
+
+  .taped img,
+  .taped.taped--portrait img {
+    width: 100%;
+    height: auto;
+    max-height: 6.5cm;
+    object-fit: contain;
+    object-position: left top;
+    border: 0.5pt solid var(--rule);
+  }
+
+  /* The address after each outside link (not mail, not on-page, not the
+     photo links, whose project title already shows it). */
+  a[href^='http']:not(.taped)::after,
+  a[href^='/']:not(.taped)::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.78em;
+    color: var(--ink-soft);
+    overflow-wrap: anywhere;
+    text-decoration: none;
+  }
+
+  a[href^='/']:not(.taped)::after {
+    content: ' (https://baidiwang.vercel.app' attr(href) ')';
+  }
+
+  a {
+    text-decoration-color: var(--ink-soft);
+  }
+
+  /* After a title, the address in small regular type. */
+  .project .project__title a[href]::after {
+    font-size: 0.5em;
+    font-weight: 400;
+  }
+
+  /* A section's label (and the games' stack line) stays with what follows. */
+  .section-note {
+    break-after: avoid;
+  }
+
+  .ending {
+    break-inside: avoid;
+  }
 }
