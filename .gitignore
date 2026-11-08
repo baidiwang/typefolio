@@ -25,3 +25,7 @@ dist-ssr
 
 # Python (scripts/typewriter-layers.py)
 __pycache__/
+.vercel
+
+# Local visual review captures
+.impeccable/

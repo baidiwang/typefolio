@@ -21,6 +21,7 @@ export type ProjectMedia = {
   width: number
   height: number
   alt: string
+  formats?: Array<'webm' | 'mp4'>
 }
 
 export type Project = {
@@ -74,7 +75,10 @@ export const site = {
       href: 'mailto:baidiwang30@gmail.com',
       display: 'baidiwang30@gmail.com',
     },
-    linkedin: { label: 'LinkedIn', href: 'https://www.linkedin.com/in/abbeywang' },
+    linkedin: {
+      label: 'LinkedIn',
+      href: 'https://www.linkedin.com/in/abbeywang',
+    },
     github: { label: 'GitHub', href: 'https://github.com/baidiwang' },
   },
   /** The page ends like a letter: the closing (ending in the email
@@ -90,10 +94,35 @@ export const site = {
 
 export const featuredProjects: Project[] = [
   {
+    id: 'pocket',
+    title: 'Pocket',
+    kind: 'iOS App · In development',
+    oneLiner:
+      'An iOS app that turns photos, doodles, and a few words into a personal world.',
+    body: [
+      'I’m independently building Pocket for iOS. My World turns everyday moments into a private world you can return to as it grows. Together, an invitation-only shared world for people close to you, is in development.',
+      'The current native iOS prototype is shown in the demo. An earlier web prototype is also available on the project site.',
+    ],
+    role: 'Independent · design + development',
+    stack: ['iOS'],
+    links: {
+      live: 'https://pocket-prototype.vercel.app/',
+      liveLabel: 'Explore Pocket',
+    },
+    media: {
+      src: '/media/pocket',
+      width: 1280,
+      height: 720,
+      formats: ['mp4'],
+      alt: 'A 50-second demonstration of the Pocket native iOS prototype.',
+    },
+  },
+  {
     id: 'google-play',
     title: 'Google Play Prototypes',
     kind: 'UX Engineering · Google',
-    oneLiner: 'A prototyping platform for testing new Google Play features with real users.',
+    oneLiner:
+      'A prototyping platform for testing new Google Play features with real users.',
     body: [
       'Our team ran a prototyping platform for Google Play. I worked with designers from different product teams, turning their Figma files into working features, motion included, that went in front of real users for testing.',
     ],
@@ -201,7 +230,14 @@ export const otherProjects: OtherProject[] = [
     kind: 'Data Visualization Engineer · Axios',
     oneLiner:
       'Interactive D3 graphics, Datawrapper charts and Illustrator illustrations for Axios news stories. I made the calls on chart type, colour and hierarchy, working within Axios’s design system.',
-    stack: ['JavaScript', 'D3.js', 'Datawrapper', 'Illustrator', 'Python (Pandas)', 'R'],
+    stack: [
+      'JavaScript',
+      'D3.js',
+      'Datawrapper',
+      'Illustrator',
+      'Python (Pandas)',
+      'R',
+    ],
     href: 'https://medium.com/@WangPortfolio/daily-data-viz-graphics-bc698435092a',
     linkLabel: 'Writeup',
   },

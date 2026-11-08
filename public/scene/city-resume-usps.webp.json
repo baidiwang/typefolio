@@ -1,0 +1,4 @@
+{
+  "prompt": "Use case: text-localization / precise-object-edit. Edit target is the supplied fixed-coordinate 1536×1024 snowy NYC portfolio illustration. Change ONLY the lettering on TWO existing ground-floor awnings: left bookshop awning currently 'BOOKS & RÉSUMÉ' must say exactly 'RESUME' (R E S U M E), centered in the same cream painted serif style; right striped postal awning currently 'POST OFFICE' must say exactly 'USPS' (U S P S), same cream painted serif style, centered. Keep both awnings' shapes, stripes, snow, ink texture, widths, supports, shops, furniture and lights exactly in place. Preserve EVERY other pixel/position of the two apartment wings, all six empty room interiors and furnishings, balcony rails, tree, sky, road, both sidewalks, crossing, mailbox and hydrant. No added logos, no residents, no vehicles, no crop, no zoom, no shifted geometry. Output the full SAME 1536×1024 composition.",
+  "createdAt": "2026-11-07T06:14:41.477Z"
+}

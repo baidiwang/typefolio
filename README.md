@@ -1,336 +1,44 @@
-# typefolio
+# Baidi Wang — After Hours
 
-Baidi Wang — Design Engineer portfolio.
+An illustrated, full-screen portfolio built with React 19, TypeScript, Vite, and plain CSS. Six inhabited apartment windows open real project stories; the RESUME shop opens the existing résumé, and the USPS storefront copies the contact email.
 
-One sheet of cream paper coming out of a typewriter fixed at the bottom of the
-viewport. As you scroll, the paper feeds up and the typewriter types the next
-content.
+## Development
 
-## Run
+Use Node 22.12 or later (required by the existing oxlint dependency).
 
-```bash
+```sh
 npm install
-npm run dev        # dev server
-npm run check      # tsc + oxlint + production build
-npm run preview    # serve the production build
+npm run dev
+npm run check
 ```
 
-## Edit content
+`check` runs TypeScript, oxlint, the scene behavior checks, and the production build. Vite outputs `dist/`. The homepage is a single viewport; case studies scroll inside a native modal dialog. The production host must serve the root HTML at the site URL. There is no backend or new runtime dependency.
 
-All copy lives in [`src/content.ts`](src/content.ts). Its source of truth is
-the old site's `src/constants/categories.js`
-([baidiwang/3D-Portfolio](https://github.com/baidiwang/3D-Portfolio)). Entries
-marked `TODO` need real values before launch.
+All six windows open a single MetroCard over the illustrated neighborhood. It arrives from the selected window, swipes through a visible reader, then turns/expands and reveals the reading inside the same rounded card. Click/tap or Enter runs the same scan; short drags cancel. Covers retain their room thumbnail and introduction. Manrope now handles all project headings; Henny Penny remains only on the homepage name. The shared `--window-gold` token also supplies the site's text-selection yellow. See [metro-card-stack.md](docs/metro-card-stack.md) for the current contract. Local `/?study=pass&project=lily` shares the card implementation; its comparison wrapper is development-only. The direct stacked-card flip and room-object/vignette experiment are retired. Historical illustration provenance remains in [room-object-motion.md](docs/room-object-motion.md).
 
-Each project has an `id` that doubles as its deep link (`/#lily`). Content
-renders client-side, so `useHashScroll` scrolls to the target after mount
-(once fonts are ready).
+## Content
 
-## Media
+- `src/content.ts` remains the source for the existing verified project copy, project links, media, personal links, and résumé.
+- `src/scene/projects.ts` maps those records to the six reference room coordinates and centralizes `contactEmail`, `resumeUrl`, `linkedinUrl`, and `xUrl`.
+- The bottom icons link to the verified LinkedIn profile and the user-provided X profile, `https://x.com/baidi_wang`.
+- Existing `#lily`, `#breadcrumb`, `#google-play`, `#look-closer`, `#data-visualization`, `#little-helper`, and `#desol` links still open their project context. `#pocket` opens the new iOS project; `#ai-projects` groups Look Closer and Breadcrumb, while their individual hashes scroll to the right entry. `#games` opens Games & XR.
+- No project claims, achievements, or metrics were added. Games preserve both existing full entries and the existing XR links. Axios retains its actual writeup.
 
-Project media are short screen recordings in `public/media/<id>.{mp4,webm,jpg}`
-(H.264 + VP9 + a poster frame). They play muted and looped only while in view;
-under `prefers-reduced-motion` only the poster is shown. Never ship GIFs.
+## Scene
 
-Each clip's start, duration and poster time (seconds in the source GIF),
-width and quality live in one table, [`scripts/media-clips.sh`](scripts/media-clips.sh).
-To choose them, look at the contact sheets in
-[`docs/contact-sheets/`](docs/contact-sheets): one frame every 0.5 s, each
-labelled with its timestamp.
+`src/scene/engine.ts` draws the residents, cat, snow, and yielding traffic with Canvas 2D. `sprites.json` preserves the prototype's original frame crops and anchors. Room coordinates use the original 1536 × 1024 world; every visual layer and hit target belongs to the same responsive world.
 
-```bash
-# from the old site's GIFs (../3D-Portfolio/public/thumbnails)
-scripts/contact-sheets.sh ../3D-Portfolio/public/thumbnails        # regenerate sheets
-scripts/encode-media.sh  ../3D-Portfolio/public/thumbnails         # all clips
-scripts/encode-media.sh  ../3D-Portfolio/public/thumbnails lily    # just one
-```
+The desktop camera reserves a quiet sky area for the identity and fits the complete scene with a matching panoramic surround; mobile keeps the artwork at a readable scale and supports native horizontal swiping plus West/East buttons. There is no persistent project directory. Focused and hovered windows show one paper caption beside the room, over its balcony/courtyard space, while the resident responds with a different pose. Touch visitors tap once to discover the caption and again to open it. Standard modified-click and new-tab link behavior are preserved.
 
-## Type and colour
+Native `<dialog>` provides keyboard focus containment. Background click or Escape returns directly from either card face with a shrinking/fading exit; closing restores its apartment window and preserves scene time/camera. Side arrows replace the dropdown and cycle through project covers. Wide-screen sound/motion and LinkedIn/X controls sit on the empty side facades; narrower layouts keep unboxed edge controls. See [metro-navigation.md](docs/metro-navigation.md). Optional quiet city-snow ambience starts off: soft snowfall with sparse distant traffic, without a melody or continuous storm hiss. Reduced motion starts paused, and motion suspends for hidden tabs, offscreen scenes, and open case studies.
 
-The face is **Sometype Mono**, self-hosted via `@fontsource/sometype-mono`
-at the two weights the design uses (400 and 700), set once as
-`--font-type` in `src/index.css`; `font-synthesis: none` means the browser
-never fakes others. Hierarchy:
+## Assets
 
-| Element | Treatment |
-| ------- | --------- |
-| Name (letterhead) | 3.4em, hand lettering (Caveat 700), written on with a clip |
-| Section labels | 400, spaced caps, deep red (`--ink-red`) |
-| Project titles | 1.4em, 700 |
-| Body, meta lines | 400; meta lines (type, role, stack) in `--ink-soft` |
+- `public/scene/` includes extracted transparent reference sprites and generated matching illustration assets.
+- `public/fonts/` self-hosts the user-selected Henny Penny for large headings, Manrope for readable tooltips, and Patrick Hand for the existing case-study text (Latin WOFF2).
+- `public/media/` and `public/BaidiWangResume.pdf` are the original project demos and résumé.
+- See `docs/scene-assets.md` for illustration provenance and generation prompts.
 
-Body text is 17px on phones, 18px on desktop.
+The old typewriter components and artwork remain in the repository for reference; they are no longer imported into the application bundle.
 
-**The scene** is a light, quiet room: a warm off-white greige desk
-(`--desk` and `--room`, #ece7df, plain), no lamp. The sheet is the folded
-one (see Paper): white paper, lighter than the desk (it renders at a
-median luma of about 245 against the desk's 232), with a soft,
-low-contrast shadow all round, slightly lower (`--paper-drop`,
-`--paper-shadow`). `?paper=aged` (previews) shows the aged sheet on the
-light desk instead (#fbf4e4, median about 240).
-
-`?scene=night` (previews) brings back the earlier lamp-lit night desk: a
-near-black warm navy room, a walnut desk, yellower paper (#f3e7cc) and one
-warm desk lamp from the upper left. The lamp is a single fixed layer
-(`.lamp`, shown only at night) with two gradients: a mild radial falloff
-over everything, and a falloff that starts at the paper's edges and runs to
-near-black at the screen's sides (darker on the right, away from the lamp).
-It's fixed to the viewport, so the paper slides under it as you scroll.
-
-**Colour.** Ink is a warm near-black, `--ink` #2a2520, with a warm grey,
-`--ink-soft` #453d35, for secondary text. Red is only for marks: the pen
-dividers and pen circles use `--accent` #af312b; small red text (the
-section labels) uses a deeper `--ink-red` #7a1f1a. One key phrase per
-project gets the highlighter, `--highlight` #f6c1b4, swiped on left to
-right once that phrase has typed
-([`Highlight.tsx`](src/components/Highlight.tsx),
-[`useHighlighterSwipe`](src/hooks/useHighlighterSwipe.ts)). On the desk,
-the "ring for sound" note and the focus rings use `--desk-pen`: the accent
-red on the light desk (5.2:1), light rose #f6c1b4 on the night desk (7.7:1
-on walnut). Focus on the paper is a dashed ink ring.
-
-Contrast is measured on the page itself: with the text hidden, the darkest
-paper pixel behind every fully revealed line (grain, folds, stains, foxing
-and edges included; at night, the lamp's falloff too), viewport by viewport
-down the whole page at 1440×900, 1280×800 and 390×844 (AA text needs 4.5):
-
-| Sheet | ink | ink-soft | section labels | ink on highlighter |
-| --- | --- | --- | --- | --- |
-| folded, light desk (default) | ≥ 9.5 | ≥ 8.9 | ≥ 5.8 (#b01e2f) | 9.5 |
-| aged, light desk (`?paper=aged`) | ≥ 9.5 | ≥ 7.3 | ≥ 7.4 (#7a1f1a) | 9.5 |
-| aged, night (`?scene=night`) | ≥ 7.1 | ≥ 5.1 | ≥ 5.5 (#7a1f1a) | ≥ 7.1 |
-
-**Photos** are tilted at most 1°, with a small, soft shadow falling down
-and to the right. Photos, posters and video frames are dimmed just enough
-that none is brighter than the paper (`--photo-filter`): brightness and
-saturation × 0.96 on the folded sheet (white 254 → 244, the sheet's median
-is 244–246), × 0.94 on the aged sheet on the light desk, × 0.9 at night,
-below the lamp-lit paper.
-
-**Paper.** On the light desk the sheet is new stationery folded in thirds:
-white paper (#fbf8f2), fine grain and the two fold creases per
-letter-sized page, straight edges and clean tape; the section labels use a
-brighter red, `--ink-red` #b01e2f. With `?paper=aged`, and always at
-night, it's an old letter from the 1960s: yellowed paper
-(#fbf4e4 on the light desk, #f3e7cc at night), fine grain, two clearly visible creases per letter-sized page
-(8.5 × 11, folded in thirds; the page scales with the sheet's width), soft
-wrinkles, faint foxing spots and light tea-coloured stains with a tide
-line, a little darker toward the edges, and side edges that are worn and
-irregular with a few small nicks and tears. Photo tape is yellowed to
-match. All of it comes from
-[`scripts/paper-textures.py`](scripts/paper-textures.py) (`public/paper/`,
-58 KB), seeded, so it's the same on every visit:
-
-- grain, foxing and wrinkles are pairs of tiles of coprime sizes, so they
-  don't visibly repeat; the stains are one field drawn at a third of
-  display size (they're soft) and taller than the page, so no stain ever
-  repeats;
-- the sheet is drawn by `.paper::before` with a CSS mask for the worn
-  edges (edge masks of coprime heights, so the nicks don't line up), and
-  its shadow by `::after`, just inside, so the desk shows through a nick.
-
-`?paper=aged|folded|grain|plain` (previews) picks a sheet explicitly, on
-either desk, for comparison.
-
-## Sections, links and sound
-
-- **Dividers** are a quick wavy line in red pen
-  ([`Divider.tsx`](src/components/Divider.tsx)): three hand-drawn variants,
-  mirrored after the third. Each one draws itself (stroke offset) when
-  typing reaches it; static under reduced motion.
-- **The name** (and "Baidi" under "Yours in type," at the end) is hand
-  lettering ([`Signature.tsx`](src/components/Signature.tsx)): real text in
-  a script face (Caveat 700; `?name=damion` on previews), written on left to right by
-  a clip that runs as a drawing job in the reveal queue, so it happens in
-  reading order. Static under reduced motion.
-- **Contact links** (Resume · Email · LinkedIn · GitHub) are printed in the
-  letterhead as plain typed words
-  ([`ContactLinks.tsx`](src/components/ContactLinks.tsx)). On hover or
-  keyboard focus a red pen circle (three hand-drawn variants) draws around
-  the word; touch screens, which can't hover, get a dotted red underline. The letter's closing ends with the email address.
-  The resume is `public/BaidiWangResume.pdf`.
-- **The typewriter** comes in two variants (`?machine=` on previews; drawn
-  is the default), each in red #af312b or olive #8a9358 (`?tw=`):
-  - **drawn**: the hand-drawn wide, low machine split into layers (static
-    body, a roller sliding behind the body's shoulders with the lever and
-    knobs, turning knobs, a ringing bell), recoloured and lit from above
-    (brighter on top, into shadow toward the bottom). The paper is exactly
-    as wide as its body and disappears behind the body's top edge. On
-    desktop the body down to just below the keyboard would be
-    `min(230px, 26vh)` tall, with the body drawn 10% wider than the
-    drawing, which sets the paper's width (898 px at 1440×900); on phones
-    the paper keeps its width and the machine is scaled to it. Only the
-    top of the machine shows: lever, knobs, bell, the roller's notch and
-    the top key row (≈ 119 px at 1440×900, ≈ 61 px at 390×844); the rest
-    runs off the bottom of the screen. `?machine-crop=full` shows the
-    earlier full height (to the keyboard frame on desktop, the whole
-    machine on phones).
-  - **roller**: no body. A rendered platen roller (gunmetal, a soft
-    highlight on its upper left, end caps) spans the paper at the bottom,
-    60 px tall on desktop and 26 px on phones, with a small carriage in the
-    typewriter's colour that slides as text types. The paper isn't limited
-    by a machine: 900 px on desktop.
-
-  Either way the paper goes in at the top edge, and text reveals there.
-  Details: [`docs/typewriter-rig.md`](docs/typewriter-rig.md).
-- **Sound** is off by default. The toggle is a real button (aria-label
-  "Sound", `aria-pressed`, at least 44 × 44 px, a focus ring in the desk
-  pen):
-  the bell on the drawn machine, an indicator light on the roller's
-  carriage (dim = off, lit = on). Turning sound on plays one ding. On
-  every visit, until sound is turned on, a pen note beside it
-  says "ring for sound" (where there's desk room; never over text), and
-  the toggle gives one small wiggle when the intro finishes typing (phones,
-  with no desk beside the bell, get only the wiggle).
-
-## How the reveal engine works
-
-Code: [`src/reveal/`](src/reveal). No animation library, no React state per
-character.
-
-**1. Nothing is ever hidden in the markup.** Every word is rendered by React
-on the first render and laid out normally. To "un-type" text, the engine puts
-a DOM `Range` over the unrevealed tail of each element and registers it with
-the [CSS Custom Highlight API](https://developer.mozilla.org/docs/Web/API/CSS_Custom_Highlight_API):
-
-```css
-::highlight(unrevealed) { color: transparent; text-decoration-color: transparent; }
-```
-
-A highlight only repaints glyphs. It can't move layout (so there's no reflow
-and page height is fixed from the first frame) and it isn't in the
-accessibility tree (screen readers and find-in-page always see every word).
-Typing a character is just `range.setStart(node, offset + 1)`.
-
-**2. Progressive enhancement.** Hiding only happens when JS runs, the browser
-supports highlights, and `prefers-reduced-motion` is off. Otherwise nothing
-is registered and everything is simply visible. Switching reduced motion on
-mid-visit flushes everything.
-
-**3. One controller owns "what is being typed".** `reveal` in
-`controller.ts` is a singleton. `<Reveal as="p" mode="lines">` registers its
-element in a layout effect (before first paint, so nothing flashes):
-
-- In view at load (above the platen line) → hidden and put in the **load
-  batch**. All registrations from the first commit are flushed together in
-  a microtask: the intro first, then everything below it on the first screen,
-  in document order, compressed to finish within **1.5 s** of fonts being
-  ready. Typewriter logic: nothing below the line being typed is ever
-  visible early.
-- Otherwise → hidden and observed. (The letterhead's title and links aren't
-  registered: they're printed stationery, visible from the first frame. The
-  name is a drawing job, written on first.)
-
-The controller runs a single `requestAnimationFrame` loop over a queue of
-jobs, one active at a time, in document order. Two modes:
-
-- `type`: one character per step, ~30 ms each, capped so no visual line takes
-  more than 0.6 s (headings, short lines, links).
-- `lines`: one visual line per step, like a line feed (paragraphs).
-
-**4. Triggers are per element.** An `IntersectionObserver` whose root box
-ends at the platen line (the top of the typewriter) and stretches 100 000 px
-*above* the viewport. One observer therefore reports both cases:
-
-- Element scrolled into view → joins the queue.
-- Element jumped past in one frame (End key, deep link, fling), which a
-  normal observer would never report → completed instantly.
-
-A second observer, plus a cheap per-frame rect check of the queue, completes
-anything that scrolls above the viewport while it's still waiting. Never a
-page-wide timer, never a scroll percentage.
-
-**5. Nobody waits: compression, not skipping.** Whenever elements join, the
-deadline becomes *now + 1.2 s* (*1.5 s* for the load batch). Each frame the speed is
-
-```
-speed = max(1, nominal time remaining for the whole queue / time left to deadline)
-```
-
-so a single heading types at natural pace, while a burst of content (fast
-scroll, tall screen) is sped up to land within the budget.
-
-**6. Measuring lines.** `lines.ts` finds visual line breaks by measuring a
-one-character `Range` at each possible break (start of a word or text node)
-and starting a new line when the glyph box drops. It runs after
-`document.fonts.ready`, again on every font `loadingdone`, and on resize
-(width changes). A line-feed reveal in progress snaps to the new line
-boundaries.
-
-**7. One project at a time.** A project reads head (title, type,
-one-liner), photo, rest: that's its DOM, tab and typing order. Desktop puts
-the photo in a left column beside the text; phones stack it in reading
-order, so the title is never pushed below the photo. A taped photo sticks on
-(`data-stick="stuck"`, a short opacity/transform animation) when typing
-reaches it:
-
-- desktop: `reveal.whenStarts(title)`, the controller's `start` for the
-  title beside it;
-- stacked: `reveal.whenDone(oneLiner)`, then once the photo itself has come
-  out of the platen.
-
-Either hook fires with `instant` if its element is revealed without typing
-(scrolled past, focused, reduced motion). Since one job runs at a time in
-document order, a project's text, links included, finishes before the next
-project's title starts.
-
-**8. Drawings are jobs too.** `reveal.registerDrawing(el, { duration,
-apply })` queues a non-text reveal (the pen dividers) in the same reading
-order and budget as text; the controller calls `apply(progress)` from 0 to
-1 in 40 steps. A divider in the first screen draws between the intro and
-"Selected work"; one further down waits for its turn.
-
-**9. The typewriter is a listener.** The controller emits an event for
-every step:
-
-| Event | Typewriter does |
-| --- | --- |
-| `char` (char, column) | roller, lever and knobs `translateX(−column × step)`, key click (space: carriage only) |
-| `return` (bell?) | end of a typed line: carriage return, the knobs turn (line feed), bell at the end of an element |
-| `feed` (bell?) | a paragraph line appeared: the knobs turn, bell at the last line |
-| `idle` | carriage returns home |
-
-Because the controller emits from the same frame loop that moves the
-highlight, carriage and text can't drift apart, and compression speeds both
-up together. The typewriter also tells the controller where the paper
-emerges: the controller reads the height of the element marked
-`data-reveal-inset` (the desk strip, up to the body's top edge) and ends
-its trigger zone there. The strip hides the paper below that edge, so lines
-of an element that are typed but haven't come out of the machine yet stay
-out of sight. Rig details:
-[`docs/typewriter-rig.md`](docs/typewriter-rig.md).
-
-**10. Keyboard.** Focusing a link inside unrevealed text completes that
-element instantly.
-
-## Design playground (dev + preview deployments)
-
-In `npm run dev` and on Vercel **preview** deployments, try alternative looks
-from the URL. No UI, and nothing of it in the production build:
-[`src/playground.ts`](src/playground.ts) is only imported when the build-time
-flag `__PLAYGROUND__` is true (`vite.config.ts`: dev mode,
-`VERCEL_ENV=preview`, or `PLAYGROUND=1`).
-
-```
-/?machine=drawn | roller              (default: drawn)
-/?machine-crop=half | full            (default: half; full = earlier height)
-/?scene=light | night                 (default: light; night = lamp-lit desk)
-/?tw=red | olive                      (default: red)
-/?paper=aged | folded | grain | plain (default: folded; night: aged)
-/?font=plex | dmmono | cutive         (default: Sometype Mono)
-/?name=damion                         (default: Caveat 700)
-/?theme=classic | hermes | cobalt     (earlier colour themes)
-/?machine=roller&tw=olive
-/?scene=night&machine-crop=full       (the look before the light room)
-```
-
-Options are `data-*` attributes on `<html>` that `src/index.css` reads
-(the machine, its crop and colour are also read by `Typewriter.tsx`). DM Mono's
-heaviest weight is 500, so its titles use 500; Cutive Mono has one thin
-weight, so it gets the hairline outline (`--text-stroke`) and regular
-titles. The earlier colour themes still override the paper and desk
-colours, but they were made for the daytime desk.
-
-## Stack
-
-Vite + React + TypeScript, plain CSS. No animation library.
+Design and maintenance rules live in `AGENTS.md`, including the user’s instruction to avoid unnecessary secondary labels and descriptions. The globally installed Impeccable skill supplies additional design guidance; the user’s illustrated direction takes precedence. Small authored cursor SVGs are in `public/cursors/`.

@@ -1,1115 +1,1085 @@
-/* Typefolio — one sheet of paper coming out of a typewriter. */
+@font-face {
+  font-family: Manrope;
+  src: url('/fonts/manrope-latin-400-600.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+}
 
+@font-face {
+  font-family: 'Henny Penny';
+  src: url('/fonts/henny-penny-latin-400.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Patrick Hand';
+  src: url('/fonts/patrick-hand-latin-400.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
 :root {
-  color-scheme: light;
-
-  /* Type: Sometype Mono, self-hosted at 400 and 700: body 400, project
-     titles 700 (--title-weight), section labels 400 in spaced caps.
-     ?font=plex|dmmono|cutive on previews. --text-stroke thickens Cutive
-     only (it has a single, thin weight). */
-  --font-type: 'Sometype Mono', ui-monospace, monospace;
-  --font-weight: 400;
-  --title-weight: 700;
-  --text-stroke: 0px;
-  --tracking: 0;
-
-  /* A light, quiet room: a warm greige desk, the sheet a little lighter,
-     with a soft shadow. These are the aged sheet's values (?paper=aged,
-     and the night desk); the light desk's default folded sheet overrides
-     them below. (?scene=night: the earlier lamp-lit night desk, below.)
-     Ink on the paper (README, Colour); WCAG AA needs 4.5:1:
-     --ink warm near-black, --ink-soft warm grey (secondary text),
-     --ink-red a deep red for small red text (section labels).
-     --accent is the red for large marks only (pen dividers and circles).
-     --highlight is the highlighter swiped over one phrase per project.
-     --desk-pen is the pen on the desk ("ring for sound") and the focus
-     rings there: the accent red on the light desk (5.2:1). */
-  --paper: #fbf4e4;
-  --paper-shadow: rgb(90 70 45 / 0.16);
-  /* Even, from above: a soft shadow all round, a little lower. */
-  --paper-drop: 0 3px 16px;
-  --room: #ece7df;
-  --desk: #ece7df;
-  --ink: #2a2520;
-  --ink-soft: #453d35;
-  --ink-red: #7a1f1a;
-  --accent: #af312b;
-  --highlight: #f6c1b4;
-  --desk-pen: var(--accent);
-  --tape: rgb(226 204 148 / 0.74);
-  /* Photos, posters and video frames: dimmed just enough that none is
-     brighter than the paper (white 255 → 240, the sheet's own median). */
-  --photo-filter: brightness(0.94) saturate(0.94);
-  /* Darkening toward the sheet's worn edges. */
-  --paper-edge: rgb(150 105 45 / 0.13);
-  /* The typewriter's colour (?tw=red|olive). */
-  --tw-colour: #af312b;
-
-  /* No lamp in the light room (see ?scene=night). */
-  --lamp-radial: none;
-  --lamp-desk: none;
-
-  /* The name and signature's hand lettering (?name=damion on previews). */
-  --font-script: 'Caveat', cursive;
-  --script-weight: 700;
-
-  --measure: 50rem;
-  --margin: clamp(1.25rem, 6vw, 4.5rem);
-  --line: 1.6;
-
-  /* The typewriter's body is exactly as wide as the paper, and the paper
-     disappears behind its top edge. On desktop the body's height from that
-     edge to just below the keyboard frame would be --tw-frame-h, which sets
-     the paper's width through the drawing's aspect (--tw-aspect).
-     Typewriter.tsx then sets --tw-s (css px per drawing px) from the
-     paper's actual width, and how many of the drawing's rows show
-     (--tw-rows-*: by default only the top of the machine, ?machine-crop=full
-     down to the keyboard frame). The strip from the body's top edge to the
-     bottom of the viewport is --tw-strip tall; the reveal line, the paper's
-     bottom padding and the scroll padding use it. Fallbacks match the
-     drawing. */
-  --tw-frame-h: min(230px, 26vh);
-  /* Desktop draws the body 10% wider than the drawing (phones: 1). */
-  --tw-sx: 1.1;
-  --tw-paper: calc(var(--tw-frame-h) * var(--tw-aspect, 3.5477) * var(--tw-sx));
-  --tw-strip: calc(var(--tw-s, 0.8127) * var(--tw-rows-desk, 146) * 1px);
-}
-
-/* —— Design playground (dev + preview deployments: src/playground.ts) ——
-   ?machine=drawn|roller  ?machine-crop=full  ?tw=red|olive
-   ?scene=night  ?paper=aged|folded|grain|plain
-   ?font=plex|dmmono|cutive  ?name=damion  ?theme=classic|hermes|cobalt
-   Each theme only overrides tokens; the default (valentine) is above.
-   The typewriter drawing is the same red in every theme.
-   Contrast per theme is listed in the README (Design playground). */
-
-/* ?scene=night: the lamp-lit night desk (the look before the light room).
-   A navy room, a walnut desk, the light pen on it, and the desk lamp
-   (.lamp, fixed to the viewport, so the paper slides under it): one warm
-   light from the upper left. Two gradients on one layer: a mild radial
-   falloff over everything, kept light enough on the paper for AA text, and
-   a falloff that starts at the paper's edges and runs to near-black navy
-   at the screen's sides (darker on the right, away from the lamp).
-   --paper-l/--paper-r are the paper's edges in viewport px (set by
-   Typewriter.tsx). */
-:root[data-scene='night'] {
-  /* Yellower paper: the lamp's warm light. */
-  --paper: #f3e7cc;
-  --paper-shadow: rgb(8 6 10 / 0.55);
-  /* The lamp is upper left: the sheet's shadow falls down and right. */
-  --paper-drop: 10px 14px 40px;
-  --room: #0e0f1a;
-  --desk: #4a2f1f;
-  /* Light rose on the dark desk. */
-  --desk-pen: #f6c1b4;
-  /* Under the lamp's falloff: 10%, so photos stay below the lit paper. */
-  --photo-filter: brightness(0.9) saturate(0.9);
-  --lamp-radial: radial-gradient(
-    ellipse 90% 80% at 30% 12%,
-    rgb(255 210 150 / 0.06) 0%,
-    rgb(255 210 150 / 0) 32%,
-    rgb(14 15 26 / 0) 42%,
-    rgb(14 15 26 / 0.14) 100%
-  );
-  --lamp-desk: linear-gradient(
-    90deg,
-    rgb(14 15 26 / 0.72) 0,
-    rgb(14 15 26 / 0.2) calc(var(--paper-l, 50%) - 24px),
-    rgb(14 15 26 / 0.06) var(--paper-l, 50%),
-    transparent var(--paper-l, 50%),
-    transparent var(--paper-r, 50%),
-    rgb(14 15 26 / 0.12) var(--paper-r, 50%),
-    rgb(14 15 26 / 0.38) calc(var(--paper-r, 50%) + 24px),
-    rgb(14 15 26 / 0.92) 100%
-  );
-}
-
-/* The light desk's sheet is the folded one (white, creased in thirds; its
-   textures are with ?paper= below). ?paper=aged brings back the aged
-   sheet; the night desk keeps it. */
-:root:not([data-scene='night'], [data-paper]) {
-  --paper: #fbf8f2;
-  --ink-red: #b01e2f;
-  --tape: rgb(238 228 196 / 0.72);
-}
-
-/* White sheets on the light desk are brighter than the aged one, so
-   photos need less dimming to stay at or below the paper. */
-:root:not([data-scene='night'], [data-paper='aged']) {
-  --photo-filter: brightness(0.96) saturate(0.96);
-}
-
-/* The original look: cream paper, warm grey desk, green typewriter.
-   ink 16.6 · ink-soft 8.9 · ink-red 6.5 on paper */
-:root[data-theme='classic'] {
-  --paper: #f6f0e1;
-  --paper-shadow: rgb(60 45 20 / 0.18);
-  --desk: #cbc2b0;
-  --ink-red: #a3241b;
-}
-
-/* Seafoam typewriter, walnut desk, ivory paper.
-   ink 17.6 · ink-soft 9.4 · ink-red 6.9 on paper */
-:root[data-theme='hermes'] {
-  --paper: #fbf7ea;
-  --paper-shadow: rgb(30 15 5 / 0.45);
-  --desk: #5b3a29;
-  --ink-red: #a3241b;
-}
-
-/* Cobalt-blue desk, white paper, cream typewriter.
-   ink 18.9 · ink-soft 10.1 · ink-red 6.5 on paper */
-:root[data-theme='cobalt'] {
-  --paper: #ffffff;
-  --paper-shadow: rgb(0 15 60 / 0.4);
-  --desk: #0047ab;
-  --ink-red: #b3261e;
-}
-
-/* The new-stationery sheets: white paper, clean tape, straight edges.
-   folded is the light desk's default; ?paper=grain|plain for comparison;
-   ?paper=aged keeps the aged sheet (the defaults at the top). */
-:root[data-paper]:not([data-paper='aged']) {
-  --paper: #fbf8f2;
-  --ink-red: #b01e2f;
-  --tape: rgb(238 228 196 / 0.72);
-}
-
-:root:not([data-scene='night'], [data-paper]) .paper::before,
-:root[data-paper]:not([data-paper='aged']) .paper::before {
-  -webkit-mask: none;
-  mask: none;
-}
-
-:root:not([data-scene='night'], [data-paper]) .paper::before,
-:root[data-paper='folded'] .paper::before {
-  background: url('/paper/fold.webp') 0 0 / 100% auto repeat-y,
-    url('/paper/grain-a.webp') 0 0 / 128px repeat, url('/paper/grain-b.webp') 0 0 / 97px repeat,
-    var(--paper);
-}
-
-:root[data-paper='grain'] .paper::before {
-  background: url('/paper/grain-a.webp') 0 0 / 128px repeat,
-    url('/paper/grain-b.webp') 0 0 / 97px repeat, var(--paper);
-}
-
-:root[data-paper='plain'] .paper::before {
-  background: var(--paper);
-}
-
-/* ?name=damion: the earlier script for the name and signature. */
-:root[data-name='damion'] {
-  --font-script: 'Damion', cursive;
-  --script-weight: 400;
-}
-
-/* ?tw=olive: the typewriter in olive, like the reference photo. */
-:root[data-tw='olive'] {
-  --tw-colour: #8a9358;
-}
-
-/* Alternative faces. Cutive Mono has one thin weight: a hairline outline
-   thickens it, and titles stay regular. DM Mono's heaviest is 500. */
-:root[data-font='plex'] {
-  --font-type: 'IBM Plex Mono', ui-monospace, monospace;
-}
-
-:root[data-font='dmmono'] {
-  --font-type: 'DM Mono', ui-monospace, monospace;
-  --title-weight: 500;
-}
-
-:root[data-font='cutive'] {
-  --font-type: 'Cutive Mono', 'Courier New', ui-monospace, monospace;
-  --title-weight: 400;
-  --text-stroke: 0.4px;
-  --tracking: -0.02em;
-}
-
-/* Desktop: the paper is only as wide as the machine (≈ 700–820 px), so a
-   slimmer margin keeps the text column readable. It still clears the bell,
-   which stands about 48 drawing px (≤ 42 css px) inside the paper. */
-@media (min-width: 720px) {
-  :root {
-    --margin: 3rem;
-  }
-}
-
-/* Phones: the paper keeps its width and the machine is scaled to it; its
-   top shows (≈ 61 px at 390 px; the whole machine, ≈ 123 px, with
-   ?machine-crop=full), clear of the home indicator. */
-@media (max-width: 719px) {
-  :root {
-    --tw-paper: 100%;
-    --tw-sx: 1;
-    --tw-strip: calc(
-      var(--tw-s, 0.3645) * var(--tw-rows-phone, 168) * 1px + env(safe-area-inset-bottom, 0px)
-    );
-  }
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html {
-  background: var(--room);
-  /* Keyboard focus and in-page jumps never land under the typewriter. */
-  scroll-padding-bottom: calc(var(--tw-strip) + 1rem);
-  -webkit-text-size-adjust: 100%;
-  /* Never fake a bold or italic the font doesn't have. */
+  --night: #1b2e4b;
+  --ink: #223c4c;
+  --paper: #f3dfb8;
+  --cream: #fff0cf;
+  --window-gold: #e6be72;
+  font-family: 'Patrick Hand', cursive;
   font-synthesis: none;
-}
-
-h1,
-h2,
-strong,
-b {
-  font-weight: var(--font-weight);
-}
-
-h3 {
-  font-weight: var(--title-weight);
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  /* The desk (night: the lamp darkens it toward the room at the edges). */
-  background: var(--desk);
-  color: var(--ink);
-  font-family: var(--font-type);
-  font-weight: var(--font-weight);
-  font-size: 1.0625rem;
-  line-height: var(--line);
-  letter-spacing: var(--tracking);
-  /* Inherited; currentColor keeps each outline in its own text's ink. */
-  -webkit-text-stroke: var(--text-stroke) currentColor;
+  color: var(--cream);
+  background: var(--night);
+  color-scheme: dark;
   -webkit-font-smoothing: antialiased;
 }
-
-@media (min-width: 640px) {
-  body {
-    font-size: 1.125rem;
-  }
+* {
+  box-sizing: border-box;
 }
-
-a {
-  color: inherit;
-  text-decoration-line: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
 }
-
-/* Focus on the paper: a dashed ring in ink (red is kept for marks). */
-:focus-visible {
-  outline: 2px dashed var(--ink);
-  outline-offset: 3px;
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
+body {
   overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+}
+button,
+input,
+a {
+  font: inherit;
+}
+button {
   border: 0;
+  background: none;
+  cursor: pointer;
 }
-
-.skip-link {
-  position: absolute;
-  left: 1rem;
-  top: -4rem;
-  z-index: 100;
-  padding: 0.5rem 0.75rem;
-  background: var(--ink);
-  color: var(--paper);
-}
-
-.skip-link:focus {
-  top: 1rem;
-}
-
-.ink-red {
-  color: var(--ink-red);
-}
-
-/* —— The sheet —— */
-
-.desk {
-  min-height: 100vh;
-  /* Tilted photos and tape may poke past the paper; never scroll sideways. */
-  overflow-x: clip;
-  padding: 0 clamp(0px, 3vw, 2rem);
-}
-
-.paper {
-  width: min(100%, var(--tw-paper));
-  min-height: 100vh;
-  margin: 0 auto;
-  padding: calc(var(--margin) * 0.6) var(--margin)
-    calc(var(--tw-strip) + 3rem);
-  /* The sheet is drawn by ::before (masked, so its edges can be worn) and
-     its shadow by ::after (just inside, so the worn edge shows the desk). */
-  position: relative;
-  isolation: isolate;
-}
-
-/* An old letter (README, Paper): overlays from scripts/paper-textures.py,
-   warm shadow or light at a few % alpha, over yellowed paper. Back to front:
-   grain, the creases (one letter page, 8.5 × 11, folded in thirds, sized to
-   the sheet's width), wrinkles and foxing (coprime tile pairs), stains (one
-   field taller than the page), and darkening toward the edges. The mask
-   wears the side edges: a wobble, a few nicks and short tears. */
-.paper::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background:
-    linear-gradient(90deg, var(--paper-edge), transparent 70px, transparent calc(100% - 70px), var(--paper-edge)),
-    linear-gradient(var(--paper-edge), transparent 90px),
-    url('/paper/stains.webp') 0 0 / 960px 7200px repeat,
-    url('/paper/foxing-a.webp') 0 0 / 512px repeat,
-    url('/paper/foxing-b.webp') 37px 211px / 389px repeat,
-    url('/paper/wrinkles-a.webp') 0 0 / 633px repeat,
-    url('/paper/wrinkles-b.webp') 0 0 / 471px repeat,
-    url('/paper/fold-aged.webp') 0 0 / 100% auto repeat-y,
-    url('/paper/grain-a.webp') 0 0 / 128px repeat,
-    url('/paper/grain-b.webp') 0 0 / 97px repeat,
-    var(--paper);
-  -webkit-mask:
-    url('/paper/edge-l.webp') left top / 18px 2400px repeat-y,
-    linear-gradient(#000 0 0) center / calc(100% - 36px) 100% no-repeat,
-    url('/paper/edge-r.webp') right top / 18px 2213px repeat-y;
-  mask:
-    url('/paper/edge-l.webp') left top / 18px 2400px repeat-y,
-    linear-gradient(#000 0 0) center / calc(100% - 36px) 100% no-repeat,
-    url('/paper/edge-r.webp') right top / 18px 2213px repeat-y;
-}
-
-.paper::after {
-  content: '';
-  position: absolute;
-  inset: 0 4px;
-  z-index: -2;
-  box-shadow:
-    0 0 0 1px rgb(60 45 20 / 0.06),
-    var(--paper-drop) var(--paper-shadow);
-}
-
-/* —— Highlighter (Highlight.tsx) ——
-   One phrase per project, swiped on left to right once it has typed.
-   Before that the swipe is empty (background-size 0). */
-.hl {
-  background: linear-gradient(var(--highlight), var(--highlight)) no-repeat 0 55% / 0% 78%;
+a,
+button {
   color: inherit;
-  padding: 0 0.08em;
-  margin: 0 -0.08em;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
-
-.hl[data-swiped] {
-  background-size: 100% 78%;
-  transition: background-size 650ms cubic-bezier(0.3, 0.6, 0.3, 1);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hl[data-swiped] {
-    transition: none;
-  }
-}
-
-.sheet p,
-.sheet ul {
-  margin: 0 0 1em;
-}
-
-h1,
-h2,
-h3 {
-  font-size: inherit;
-  line-height: inherit;
-  margin: 0;
-}
-
-/* Section labels: regular weight, spaced caps, deep red. */
-h2 {
-  margin: 0 0 1.2em;
-  color: var(--ink-red);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-}
-
-/* Inline labels (employer, short-entry titles): caps. */
-.label {
-  text-transform: uppercase;
-}
-
-/* —— Red pen dividers (src/components/Divider.tsx) —— */
-
-.divider {
-  display: flex;
-  justify-content: center;
-  margin: 2em 0;
-}
-
-.divider__line {
-  display: block;
-  width: min(240px, 62%);
-  height: auto;
-  overflow: visible;
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 2.1;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.divider__line--mirrored {
-  transform: scaleX(-1);
-}
-
-/* —— Letterhead —— */
-
-.letterhead {
-  padding-bottom: 1.2em;
-  margin-bottom: 2em;
-  border-bottom: 1px solid var(--ink);
-  text-align: center;
-}
-
-/* Hand lettering: the name at the top and the signature at the end
-   (Signature.tsx writes them on with a clip). */
-.signature {
-  display: inline-block;
-  font-family: var(--font-script);
-  font-weight: var(--script-weight);
-  letter-spacing: 0;
-  -webkit-text-stroke: 0;
-  text-transform: none;
-}
-
-.letterhead__name {
-  margin: 0;
-  font-size: 3.4em;
-  line-height: 1.15;
-}
-
-/* Contact links: plain typed words; a red pen circle draws around one on
-   hover or keyboard focus (ContactLinks.tsx). The circle is the focus
-   indicator. */
-.pen-link {
-  position: relative;
+a {
   text-decoration: none;
 }
-
-.pen-link:focus-visible {
-  outline: none;
-}
-
-.pen-link__circle {
-  position: absolute;
-  left: -0.6em;
-  top: -0.5em;
-  width: calc(100% + 1.2em);
-  height: calc(100% + 1em);
-  overflow: visible;
-  pointer-events: none;
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-dasharray: 1 2;
-  stroke-dashoffset: 1;
-  transition: stroke-dashoffset 450ms ease-out;
-}
-
-.pen-link__circle path {
-  vector-effect: non-scaling-stroke;
-}
-
-.pen-link:hover .pen-link__circle,
-.pen-link:focus-visible .pen-link__circle {
-  stroke-dashoffset: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pen-link__circle {
-    transition: none;
-  }
-}
-
-/* Touch screens can't hover: a dotted red underline says "link". */
-@media (hover: none) {
-  .pen-link {
-    text-decoration: underline dotted var(--accent) 1.5px;
-    text-underline-offset: 0.25em;
-  }
-}
-
-.letterhead__title {
-  margin: 0.2em 0 0;
-}
-
-.letterhead__links {
-  margin-top: 0.5em;
-}
-
-/* Phones: the four links fit on one line. */
-@media (max-width: 719px) {
-  .letterhead__links {
-    font-size: 0.88em;
-  }
-}
-
-.intro {
-  margin-bottom: 1em;
-  font-size: 1.15em;
-}
-
-/* One line per sentence, no gaps: a short typed note. */
-.sheet .intro p {
+h1,
+h2,
+h3,
+p {
   margin: 0;
 }
-
-/* Desktop: 1 px smaller, so every sentence that can fits on one line on
-   the widest paper (898 px at 1440). */
-@media (min-width: 720px) {
-  .intro {
-    font-size: calc(1.15em - 1px);
-  }
+.scene-footer svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
-
-/* —— Lists —— */
-
-.one-liners {
-  padding: 0;
-  list-style: none;
+::selection {
+  background: var(--window-gold);
+  color: #1b2e4b;
 }
-
-.one-liner {
-  margin-bottom: 1.6em;
+:focus-visible {
+  outline: 2px solid #ffe1a3;
+  outline-offset: 5px;
 }
-
-.one-liner p {
-  margin: 0;
+input {
+  caret-color: var(--window-gold);
+  cursor: text;
 }
-
-.one-liner .project__stack,
-.one-liner .project__links {
-  margin-top: 0.8em;
+.skip-link {
+  position: fixed;
+  left: 20px;
+  top: -100px;
+  z-index: 100;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 12px 20px;
+  font-size: 18px;
 }
-
-/* —— Projects ——
-   Reading order (DOM, tab order, typing order): head, photo, rest.
-   Phones stack them in that order; desktop puts the photo in a left column
-   beside head and rest. */
-
-.project {
-  display: grid;
-  grid-template-areas:
-    'head'
-    'media'
-    'rest';
-  margin-bottom: 4.8em;
-  scroll-margin-top: 2rem;
+.skip-link:focus {
+  top: 16px;
 }
-
-.project__head {
-  grid-area: head;
-}
-
-.project__media {
-  grid-area: media;
-  padding: 0.8em 0.6em 0;
-  margin: 0.2em 0 1.6em;
-}
-
-.project__rest {
-  grid-area: rest;
-}
-
-@media (min-width: 720px) {
-  .project {
-    /* Media about 55% of the content width, text about 45%. */
-    grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
-    grid-template-rows: auto 1fr;
-    grid-template-areas:
-      'media head'
-      'media rest';
-    column-gap: 1.5em;
-    align-items: start;
-  }
-
-  .project__media {
-    margin: 0;
-  }
-}
-
-.project__title {
-  font-size: 1.4em;
-  line-height: 1.3;
-}
-
-.project__kind,
-.project__role,
-.project__stack {
-  color: var(--ink-soft);
-}
-
-.project__kind {
-  margin-bottom: 0.6em;
-}
-
-.project__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4em 1.6em;
-}
-
-/* —— Taped media —— */
-
-.taped {
+.neighborhood {
   position: relative;
-  display: block;
-  margin: 0;
-  padding: 0.45em;
-  background: #fff;
-  /* Lit from the upper left: a small, soft shadow falling down-right. */
-  box-shadow:
-    1px 1px 1px rgb(40 25 10 / 0.12),
-    3px 5px 9px rgb(40 25 10 / 0.14);
-  transform: rotate(var(--tilt, -1.5deg));
-  transition:
-    transform 220ms ease,
-    box-shadow 220ms ease;
+  isolation: isolate;
+  height: 100svh;
+  min-height: 360px;
+  overflow: hidden;
+  background: var(--night);
 }
-
-.taped--portrait {
-  width: max-content;
-  margin-inline: auto;
+.identity {
+  position: absolute;
+  z-index: 16;
+  top: 17px;
+  left: clamp(24px, 4vw, 80px);
 }
-
-/* Portrait clips are height-capped (width follows the aspect ratio), so a
-   tall phone recording never towers over its text. */
-.taped.taped--portrait video,
-.taped.taped--portrait img {
-  width: auto;
-  height: min(56vh, 440px);
+.identity h1 {
+  font:
+    400 clamp(35px, 3.6vw, 50px) / 1.35 'Henny Penny',
+    fantasy;
+  color: #fff0cf;
 }
-
-@media (max-width: 719px) {
-  .taped.taped--portrait video,
-  .taped.taped--portrait img {
-    height: min(40vh, 320px);
-  }
+.identity p {
+  margin-top: 4px;
+  font-size: 19px;
+  line-height: 1.3;
+  color: #f5dfb7;
 }
-
-.taped video,
-.taped img {
-  display: block;
+.neighborhood[data-typeface='manrope'] .identity h1 {
+  font-family: Manrope, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+.scene-viewport {
+  position: absolute;
+  inset: 124px 0 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: clip;
+  overscroll-behavior-x: contain;
+}
+.scene-world {
+  position: relative;
+  flex: none;
+  width: min(100vw, calc((100svh - 124px) * 1.5));
+  aspect-ratio: 3/2;
+  isolation: isolate;
+  container-type: inline-size;
+}
+.scene-surround {
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  z-index: -1;
+  background: url('/scene/neighborhood-surround-asymmetric.webp') center/100%
+    100% no-repeat;
+  pointer-events: none;
+}
+.scene-image,
+.cat-canvas,
+.snow-canvas {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: auto;
-  background: #ddd6c6;
-  /* Dimmed so no photo outshines the paper (--photo-filter). Posters and
-     video frames alike. */
-  filter: var(--photo-filter);
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
 }
-
-/* Two strips of tape across the top corners. */
-.taped::before,
-.taped::after {
+.scene-image {
+  z-index: 0;
+}
+.scene-image,
+.scene-surround {
+  mask-image: linear-gradient(transparent, #000 22px);
+}
+.street-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.street-canvas {
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  pointer-events: none;
+}
+.cat-canvas {
+  z-index: 5;
+}
+.snow-canvas {
+  z-index: 12;
+}
+.chimney-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 13;
+  pointer-events: none;
+}
+.room {
+  position: absolute;
+  z-index: auto;
+}
+.room.is-active {
+  z-index: auto;
+}
+.room-visual {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  overflow: hidden;
+  transition: box-shadow 0.18s;
+}
+.room.is-active .room-visual {
+  box-shadow: 0 0 0 1.5px #fff0c6;
+}
+.room-patch {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+}
+.resident-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.room-enter {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  display: block;
+  min-height: 44px;
+  overflow: visible;
+}
+.room.is-active .room-enter {
+  z-index: 10;
+}
+.room-enter::after {
   content: '';
   position: absolute;
-  top: -0.7em;
-  width: 4.2em;
-  height: 1.5em;
-  background: var(--tape);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  top: 0;
+  left: 100%;
+  width: 14px;
+  height: 100%;
+}
+.room--east .room-enter::after {
+  left: auto;
+  right: 100%;
+}
+.room-enter:focus-visible {
+  outline-offset: 3px;
+}
+.room-caption {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-family: Manrope, sans-serif;
+  left: calc(100% + 12px);
+  top: 50%;
+  width: clamp(150px, calc(26.69cqw - 24px), 232px);
+  padding: 17px 18px 18px;
+  background: var(--paper) url('/paper/grain-a.webp');
+  background-blend-mode: multiply;
+  color: var(--ink);
+  border-radius: 2px 3px 2px 5px;
+  text-align: left;
+  box-shadow: 2px 6px 12px #10244040;
+  transform: translateY(-50%) translateX(-5px) rotate(-2deg);
+  transform-origin: left center;
+  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    clip-path 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.12s,
+    visibility 0.12s;
+  z-index: 20;
+}
+.room-caption::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  width: 12px;
+  height: 1px;
+  background: #efddb6;
+}
+.room--east .room-caption {
+  left: auto;
+  right: calc(100% + 12px);
+  transform: translateY(-50%) translateX(5px) rotate(2deg);
+  transform-origin: right center;
+  clip-path: inset(0 0 0 100%);
+}
+.room--east .room-caption::before {
+  left: auto;
+  right: -12px;
+}
+.room.is-active .room-caption {
+  opacity: 1;
+  visibility: visible;
+  clip-path: inset(-12px);
+  transform: translateY(calc(-50% + var(--paper-shift, 0px)))
+    rotate(calc(-1deg + var(--paper-turn, 0deg)));
+  transition-delay: 0.1s;
+}
+.room--east.is-active .room-caption {
+  transform: translateY(calc(-50% + var(--paper-shift, 0px)))
+    rotate(calc(1deg + var(--paper-turn, 0deg)));
+}
+.motion-paused .room {
+  --paper-turn: 0deg !important;
+  --paper-shift: 0px !important;
+}
+.motion-paused .room-caption {
+  transition: none;
+}
+.room-caption strong {
+  font:
+    600 18px / 1.4 Manrope,
+    sans-serif;
+  text-wrap: balance;
+}
+.caption-description {
+  font-size: 14px;
+  line-height: 1.55;
+  color: #294451;
+}
+.room--intro .room-visual {
+  animation: window-hello 1.8s ease-in-out 2s 1;
+}
+.is-paused .room--intro .room-visual {
+  animation: none;
+}
+@keyframes window-hello {
+  0%,
+  100% {
+    box-shadow: none;
+  }
+  50% {
+    box-shadow: 0 0 0 2px #fff0c6;
+  }
+}
+.illustrated-target {
+  position: absolute;
+  z-index: 6;
+  display: block;
+  padding: 0;
+  min-height: 44px;
+  border: 0;
+  background: none;
+}
+.scene-tooltip,
+.control-tooltip,
+.social-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 9px);
+  transform: translate(-50%, 3px);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 7px 12px;
+  border-radius: 2px;
+  box-shadow: 1px 4px 9px #10244040;
+  font:
+    400 14px/1.45 Manrope,
+    sans-serif;
+  transition:
+    opacity 0.12s,
+    transform 0.16s,
+    visibility 0.12s;
+}
+.scene-tooltip small {
+  display: block;
+  font: inherit;
+}
+.illustrated-target:hover .scene-tooltip,
+.illustrated-target:focus-visible .scene-tooltip,
+.scene-controls button:hover .control-tooltip,
+.scene-controls button:focus-visible .control-tooltip,
+.social-links a:hover .social-tooltip,
+.social-links a:focus-visible .social-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.cat-trigger {
+  left: 59.4%;
+  top: 25.5%;
+  width: 10%;
+  height: 5%;
+  z-index: 9;
+}
+.cross-trigger {
+  left: 43%;
+  top: 82%;
+  width: 15%;
+  height: 7%;
+  z-index: 7;
+}
+.storefront {
+  top: 66.7%;
+  width: 22%;
+  height: 14.5%;
+  border-radius: 3px;
+  transition: background 0.18s;
+}
+.storefront:hover,
+.storefront:focus-visible {
+  background: #ffde970b;
+}
+.bookstore {
+  left: 7.2%;
+}
+.post-office {
+  left: 73.4%;
+}
+.storefront .scene-tooltip {
+  bottom: 10%;
+}
+.scene-footer {
+  position: absolute;
+  z-index: 15;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  left: 3.5%;
+  right: 3.5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   pointer-events: none;
 }
-
-.taped::before {
-  left: -0.9em;
-  transform: rotate(-32deg);
+.scene-controls,
+.social-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  background: #142b47ee;
+  border-radius: 4px;
+  padding: 0 4px;
 }
-
-.taped::after {
-  right: -0.9em;
-  transform: rotate(28deg);
+.scene-controls button,
+.social-links a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: #fff0cf;
+  padding: 0;
 }
-
-a.taped:hover,
-a.taped:focus-visible {
-  transform: rotate(calc(var(--tilt, -1.5deg) * 0.3)) translateY(-3px);
-  box-shadow:
-    1px 2px 2px rgb(40 25 10 / 0.12),
-    5px 9px 16px rgb(40 25 10 / 0.18);
+.scene-controls button[aria-pressed='true'] {
+  color: #f5c875;
 }
-
-/* —— Ending: a letter's sign-off —— */
-
-.xr-note {
-  margin: -1.6em 0 0 !important;
+.scene-controls button[aria-pressed='true']::after {
+  content: '';
+  position: absolute;
+  right: 5px;
+  top: 7px;
+  width: 4px;
+  height: 4px;
+  background: currentColor;
+  border-radius: 50%;
 }
-
-.ending p {
-  margin: 0 0 0.6em;
+.scene-controls svg {
+  width: 19px;
+  height: 19px;
 }
-
-/* "Yours in type," then "Baidi" in the name's lettering. */
-.ending p.ending__signoff {
-  margin: 1.6em 0 0;
+.social-links svg {
+  width: 17px;
+  height: 17px;
 }
-
-.ending p.ending__signature {
-  margin: 0.1em 0 0.4em;
-  font-size: 2.6em;
-  line-height: 1.2;
+.control-divider {
+  height: 15px;
+  width: 1px;
+  background: #d5c59d40;
+  margin: 0 1px;
 }
-
-
-@media (prefers-reduced-motion: reduce) {
-  .taped {
-    transition: none;
-  }
-
-  a.taped:hover,
-  a.taped:focus-visible {
-    transform: rotate(var(--tilt, -1.5deg));
-  }
+.scene-controls button:first-child .control-tooltip {
+  left: 0;
+  transform: translateY(3px);
 }
-
-/* —— Reveal engine (see src/reveal) ——
-   Unrevealed text is painted transparent by a highlight, outline included;
-   layout and the accessibility tree are untouched. Only applied once JS has
-   registered it. */
-
-::highlight(unrevealed) {
-  color: transparent;
-  text-decoration-color: transparent;
-  -webkit-text-stroke-color: transparent;
+.scene-controls button:first-child:hover .control-tooltip,
+.scene-controls button:first-child:focus-visible .control-tooltip {
+  transform: translateY(0);
 }
-
-/* Taped media: "stuck on" when typing reaches it. */
-.taped[data-stick='pending'] {
+.social-links a:last-child .social-tooltip {
+  left: auto;
+  right: 0;
+  transform: translateY(3px);
+}
+.social-links a:last-child:hover .social-tooltip,
+.social-links a:last-child:focus-visible .social-tooltip {
+  transform: translateY(0);
+}
+.mobile-camera {
+  display: none;
+}
+.toast {
+  position: absolute;
+  z-index: 40;
+  bottom: 80px;
+  left: 50%;
+  transform: translate(-50%, 4px);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 11px 18px;
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow: 2px 5px 15px #10244040;
+  font-size: 17px;
+  line-height: 1.4;
   opacity: 0;
-  transform: rotate(calc(var(--tilt, -1.5deg) * 3)) translateY(-10px) scale(1.04);
+  pointer-events: none;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
 }
-
-.taped[data-stick='stuck'] {
-  animation: stick-on 380ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+.toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
-
-@keyframes stick-on {
+.copy-fallback {
+  position: absolute;
+  right: 4%;
+  bottom: 80px;
+  z-index: 50;
+  width: min(340px, 92vw);
+  padding: 22px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 2px 8px 20px #10244050;
+  font-size: 17px;
+}
+.copy-fallback p {
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+.copy-fallback input {
+  width: 100%;
+  padding: 9px;
+  background: #fff4d6;
+  border: 1px solid #6a705a;
+  color: var(--ink);
+  font-size: 18px;
+  user-select: all;
+}
+.copy-fallback button {
+  min-height: 44px;
+  padding: 0;
+  margin-top: 7px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.case-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(1000px, calc(100vw - 64px));
+  height: calc(100svh - 64px);
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 3px;
+  background: #f4ebd6;
+  color: var(--ink);
+  color-scheme: light;
+  box-shadow: 0 20px 70px #07172d80;
+}
+.case-dialog:not([open]) {
+  display: none;
+}
+.case-dialog::backdrop {
+  background: #10233fce;
+}
+.case-dialog[open] {
+  animation: case-open 0.2s ease-out;
+}
+@keyframes case-open {
   from {
     opacity: 0;
-    transform: rotate(calc(var(--tilt, -1.5deg) * 3)) translateY(-10px) scale(1.04);
-  }
-  40% {
-    opacity: 1;
   }
   to {
     opacity: 1;
-    transform: rotate(var(--tilt, -1.5deg));
   }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .taped[data-stick] {
-    opacity: 1;
-    transform: rotate(var(--tilt, -1.5deg));
-    animation: none;
-  }
-}
-
-/* —— The lamp (?scene=night only) —— */
-
-.lamp {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 9;
-  pointer-events: none;
-  background: var(--lamp-radial), var(--lamp-desk);
-}
-
-:root[data-scene='night'] .lamp {
-  display: block;
-}
-
-/* —— Typewriter (src/typewriter; docs/typewriter-rig.md) ——
-   The strip from the paper's entry line to the bottom of the screen is the
-   desk: the paper has gone into the machine, so nothing of it shows below
-   that line. At night the strip sits above the lamp layer, so it paints
-   the same lamp itself (the radial positioned against the viewport). The
-   machines bring their own lighting. */
-
-.typewriter {
-  position: fixed;
-  inset: auto 0 0;
-  z-index: 10;
-  height: var(--tw-strip);
-  background:
-    var(--lamp-radial) 0 calc(var(--tw-strip) - 100vh) / 100% 100vh no-repeat,
-    var(--lamp-desk),
-    var(--desk);
-  pointer-events: none;
-  /* The lever and knobs can reach past a narrow window's edges. */
-  overflow-x: clip;
-}
-
-.typewriter img {
-  display: block;
-  max-width: none;
-  user-select: none;
-}
-
-/* —— Drawn machine: layered images, scaled by --tw-s so the body matches
-   the paper. On desktop the band under the keyboard runs off the bottom
-   of the screen. Layer boxes are set inline; --pl is the paper's left
-   edge. */
-
-/* A zero-size anchor at the body's top-left corner. */
-.tw-origin {
-  position: absolute;
-  top: 0;
-  left: var(--pl, 0);
-}
-
-/* The roller shows only between the shoulders. */
-.tw-notch {
-  position: absolute;
+.case-paper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   overflow: hidden;
 }
-
-.tw-layer {
-  position: absolute;
+.case-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 18px;
+  padding: 10px 26px;
+  border-bottom: 1px solid #29465326;
 }
-
-.tw-carriage,
-.tw-notch .tw-layer,
-.tw-rcarriage {
-  will-change: transform;
-}
-
-/* The bell is the sound toggle: a 44 px hit area at least, centred on the
-   bell (position inline). */
-.tw-bell {
-  position: absolute;
-  display: grid;
-  place-items: center;
-  min-width: 44px;
+.case-nav button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   min-height: 44px;
   padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: none;
-  cursor: pointer;
-  pointer-events: auto;
-  translate: -50% -50%;
+  font-size: 18px;
+  color: var(--ink);
+}
+.case-nav button:hover {
+  color: #8e5a2e;
+}
+.case-dialog :focus-visible {
+  outline-color: #8a5f2d;
+}
+.case-scroll {
+  padding: 40px 7% 24px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #a99d7e #f4ebd6;
+}
+.case-heading {
+  padding-bottom: 30px;
+  max-width: 750px;
+}
+.case-heading h2 {
+  font:
+    400 clamp(34px, 4vw, 49px) / 1.4 'Henny Penny',
+    fantasy;
+  text-wrap: balance;
+}
+.case-heading > p {
+  font-size: 21px;
+  line-height: 1.45;
+  color: #42594f;
+  max-width: 650px;
+  margin-top: 14px;
+}
+.project-detail {
+  padding-bottom: 32px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid #243a4d22;
+}
+.project-media {
+  width: 100%;
+  background: #d9ddd3;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+.project-media video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 500px;
+  object-fit: contain;
+}
+.project-media--portrait video {
+  height: 480px;
+  max-height: 55svh;
+  width: 100%;
+}
+.project-copy {
+  max-width: 68ch;
+}
+.project-copy h3,
+.article-detail h3,
+.xr-experiments h3 {
+  font:
+    400 30px/1.45 'Henny Penny',
+    fantasy;
+  margin: 6px 0 16px;
+  text-wrap: balance;
+}
+.project-copy > p,
+.article-detail > p,
+.xr-experiments p {
+  font-size: 20px;
+  line-height: 1.6;
+  color: #304a42;
+  margin-bottom: 18px;
+}
+.project-copy > p.project-summary {
+  font-size: 22px;
+  line-height: 1.45;
+}
+.project-role {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 6px;
+}
+.project-role span {
+  font-size: 17px;
+  color: #5b6651;
+}
+.stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 15px;
+  list-style: none;
+  margin: 16px 0 22px;
+  padding: 0;
+  color: #53634f;
+}
+.stack li {
+  font-size: 17px;
+}
+.project-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+}
+.project-links a,
+.article-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 44px;
+  font-size: 19px;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 6px;
+}
+.project-links a:hover,
+.article-link:hover {
+  color: #8a5f2d;
+}
+.studio-illustration {
+  height: 240px;
+  background: url('/scene/city-resume-usps.webp') 13.6% 37.7%/372% auto;
+  border-radius: 2px;
+  margin-bottom: 28px;
+}
+.article-detail {
+  margin-bottom: 35px;
+}
+.article-detail > p {
+  max-width: 68ch;
+}
+.xr-experiments {
+  padding-bottom: 28px;
+}
+.case-end {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #243a4d22;
+  padding-top: 10px;
+}
+.case-end button {
+  min-height: 44px;
+  padding: 0;
+  font-size: 18px;
+}
+@media (max-width: 640px), (max-width: 1000px) and (orientation: portrait) {
+  .scene-viewport {
+    inset: 134px 0 95px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+  .scene-viewport::-webkit-scrollbar {
+    display: none;
+  }
+  .scene-world {
+    width: max(780px, 100vw);
+  }
+  .scene-surround {
+    display: none;
+  }
+  .street-layer {
+    overflow: hidden;
+  }
+  .mobile-camera {
+    position: absolute;
+    z-index: 15;
+    bottom: 62px;
+    left: 25px;
+    right: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .mobile-camera button {
+    min-height: 44px;
+    min-width: 70px;
+    font-size: 18px;
+    padding: 0 4px;
+  }
+  .mobile-camera button[aria-pressed='true'] {
+    color: #f4cb85;
+  }
+  .camera-track {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .camera-track i {
+    width: 4px;
+    height: 4px;
+    border: 1px solid #d8cfb4;
+    border-radius: 50%;
+  }
+  .camera-track i.is-current {
+    background: #f5d494;
+    border-color: #f5d494;
+  }
+  .scene-footer {
+    left: 22px;
+    right: 22px;
+    bottom: max(7px, env(safe-area-inset-bottom));
+  }
+  .toast {
+    bottom: 115px;
+  }
+  .copy-fallback {
+    bottom: 114px;
+    right: 20px;
+    width: calc(100vw - 40px);
+  }
+}
+@media (min-width: 641px) and (max-width: 1000px) and (orientation: portrait) {
+  .scene-world {
+    width: max(100vw, calc((100svh - 229px) * 1.5));
+  }
+}
+@media (max-width: 640px) {
+  .identity {
+    top: max(18px, env(safe-area-inset-top));
+    left: 25px;
+  }
+  .identity h1 {
+    font-size: 35px;
+  }
+  .identity p {
+    font-size: 18px;
+    margin-top: 7px;
+  }
+  .room-caption {
+    width: 150px;
+    padding: 12px 13px 14px;
+    gap: 8px;
+  }
+  .room-caption strong {
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  .caption-description {
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .case-dialog {
+    width: calc(100vw - 16px);
+    height: calc(100svh - 24px);
+  }
+  .case-nav {
+    padding: 6px 14px;
+    gap: 12px;
+  }
+  .case-nav button {
+    font-size: 16px;
+    gap: 6px;
+  }
+  .case-scroll {
+    padding: 27px 7% 18px;
+  }
+  .case-heading h2 {
+    font-size: 34px;
+  }
+  .case-heading > p {
+    font-size: 20px;
+  }
+  .project-copy h3,
+  .article-detail h3,
+  .xr-experiments h3 {
+    font-size: 27px;
+  }
+  .project-copy > p,
+  .article-detail > p {
+    font-size: 19px;
+  }
+  .project-media--portrait video {
+    height: 410px;
+  }
+  .studio-illustration {
+    height: 180px;
+  }
+}
+@media (max-width: 640px) and (max-height: 730px) {
+  .identity {
+    top: 12px;
+  }
+  .identity h1 {
+    font-size: 30px;
+  }
+  .identity p {
+    font-size: 16px;
+    margin-top: 4px;
+  }
+  .scene-viewport {
+    inset: 112px 0 94px;
+  }
+  .scene-world {
+    width: max(100vw, min(780px, calc((100svh - 206px) * 1.5)));
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .neighborhood,
+  .case-dialog {
+    cursor:
+      url('/cursors/ink-arrow.svg') 3 2,
+      auto;
+  }
+  .neighborhood :is(a, button),
+  .case-dialog :is(a, button) {
+    cursor:
+      url('/cursors/ink-pointer.svg') 8 3,
+      pointer;
+  }
+  .copy-fallback input {
+    cursor: text;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-.tw-bell img {
-  pointer-events: none;
+/* Extend the illustration's actual sky above the roofs. */
+.neighborhood {
+  background: #1b2e4b;
 }
-
-/* On the desk, focus rings are in the desk pen (accent red; night: light
-   rose). */
-.tw-bell:focus-visible,
-.tw-light:focus-visible {
-  outline: 2px solid var(--desk-pen);
-  outline-offset: 1px;
-}
-
-/* —— Roller machine (?machine=roller): no body. A rendered platen roller
-   spans the paper at the bottom of the screen, gunmetal, lit from the
-   upper left, with end caps just outside the paper; a small carriage in
-   the typewriter's colour rides along it, with the sound toggle (an
-   indicator light) on it. --roller-h sets the scale. */
-
-:root[data-machine='roller'] {
-  --roller-h: 60px;
-  --tw-paper: 900px;
-  --tw-strip: calc(var(--roller-h) + 16px + env(safe-area-inset-bottom, 0px));
-}
-
-.tw-platen {
-  position: absolute;
-  top: 0;
-  left: var(--pl, 0);
-  width: var(--pw, 100%);
-  height: var(--roller-h);
-  border-radius: calc(var(--roller-h) * 0.12);
-  /* A cylinder: dark at the top and bottom edges, a soft highlight band
-     toward the lamp (upper left), brighter at the left end. */
-  background:
-    linear-gradient(90deg, rgb(255 225 185 / 0.16), rgb(255 225 185 / 0) 45%, rgb(0 0 0 / 0.22)),
-    linear-gradient(
-      180deg,
-      #1d1f23 0%,
-      #4b5058 14%,
-      #9aa0a7 27%,
-      #6f757d 40%,
-      #464b52 62%,
-      #2a2d32 84%,
-      #151618 100%
-    );
-  box-shadow:
-    0 calc(var(--roller-h) * 0.12) calc(var(--roller-h) * 0.25) rgb(0 0 0 / 0.5);
-}
-
-/* End caps: darker metal hubs, a touch taller than the roller. */
-.tw-platen::before,
-.tw-platen::after {
+.neighborhood::before {
   content: '';
   position: absolute;
-  top: calc(var(--roller-h) * -0.08);
-  width: calc(var(--roller-h) * 0.38);
-  height: calc(var(--roller-h) * 1.16);
-  border-radius: calc(var(--roller-h) * 0.12) / calc(var(--roller-h) * 0.3);
-  background:
-    linear-gradient(90deg, rgb(255 225 185 / 0.18), rgb(0 0 0 / 0.25)),
-    linear-gradient(180deg, #121315, #3a3e44 22%, #6c7178 34%, #2c2f34 70%, #0e0f11);
-}
-
-.tw-platen::before {
-  right: 100%;
-}
-
-.tw-platen::after {
-  left: 100%;
-}
-
-/* The carriage: a small block in the typewriter's colour on the roller's
-   lower half, resting at the right end of the paper. */
-.tw-rcarriage {
-  position: absolute;
-  top: calc(var(--roller-h) * 0.42);
-  left: calc(var(--pr, 100%) - var(--roller-h) * 1.9 - 10px);
-  width: calc(var(--roller-h) * 1.9);
-  height: calc(var(--roller-h) * 0.7);
-  border-radius: calc(var(--roller-h) * 0.1);
-  background: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--tw-colour), white 22%),
-    var(--tw-colour) 40%,
-    color-mix(in oklab, var(--tw-colour), black 35%)
-  );
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.25),
-    0 3px 6px rgb(0 0 0 / 0.45);
-}
-
-/* The indicator light: the sound toggle (44 px hit area; dim = off, lit =
-   on), near the carriage's right end. */
-.tw-light {
-  position: absolute;
-  top: 50%;
-  right: calc(var(--roller-h) * 0.32);
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  margin-top: -22px;
-  margin-right: -22px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: none;
-  cursor: pointer;
-  pointer-events: auto;
-}
-
-.tw-light__lamp {
-  width: clamp(7px, calc(var(--roller-h) * 0.2), 12px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #8a6a45, #3b2a19 70%);
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.5);
-  transition:
-    background 200ms ease,
-    box-shadow 200ms ease;
-}
-
-.tw-light[aria-pressed='true'] .tw-light__lamp {
-  background: radial-gradient(circle at 35% 35%, #fff4d6, #ffb347 55%, #e0782a);
-  box-shadow:
-    0 0 6px 2px rgb(255 175 80 / 0.75),
-    0 0 16px 4px rgb(255 160 60 / 0.35);
-}
-
-/* Phones: a thinner roller, in proportion to the paper. */
-@media (max-width: 719px) {
-  :root[data-machine='roller'] {
-    --roller-h: 26px;
-  }
-}
-
-/* —— "ring for sound" —— in the desk pen on the desk right of the
-   paper, with an arrow down to the toggle. Every visit, until sound is
-   turned on; hidden where there isn't room (Typewriter.tsx measures it; on
-   phones the wiggle has to do). */
-.tw-note {
-  position: absolute;
-  color: var(--desk-pen);
-  font-family: 'Caveat', cursive;
-  font-size: 1.45rem;
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: 0;
-  -webkit-text-stroke: 0;
-  white-space: nowrap;
-  rotate: -5deg;
+  inset: 0 0 auto;
+  height: 310px;
+  background: url('/scene/sky-extension.webp') center top / auto 190px repeat-x;
+  background-color: #7087bd;
+  mask-image: linear-gradient(#000 190px, transparent);
   pointer-events: none;
 }
+.identity {
+  text-shadow: 0 2px 5px #18305145;
+}
+.identity p {
+  color: #122a43;
+  text-shadow: none;
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .scene-footer svg {
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .neighborhood:not(.motion-paused) .scene-footer :is(a, button):hover svg {
+    transform: translateY(-2px) rotate(-5deg);
+  }
+  .storefront {
+    transition: background-color 220ms;
+  }
+  .storefront:hover {
+    background-color: #ffde971c;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .room {
+    --paper-turn: 0deg !important;
+    --paper-shift: 0px !important;
+  }
+}
+@media (min-width: 500px) and (max-width: 640px) and (min-height: 731px) {
+  .scene-world {
+    width: max(780px, calc((100svh - 229px) * 1.5));
+  }
+}
 
-.tw-note__arrow {
+/* On wide screens, give the inhabited buildings the height previously held by
+   the header. The complete street and both sidewalks stay inside the frame. */
+@media (min-width: 1001px) and (min-aspect-ratio: 7/4) {
+  .scene-viewport {
+    inset: 44px 0 0;
+  }
+  .scene-world {
+    width: calc((100svh - 44px) * 1.5);
+  }
+  .identity {
+    top: 12px;
+    left: 24px;
+  }
+  .identity h1 {
+    font-size: 40px;
+    line-height: 1.25;
+  }
+  .identity p {
+    font-size: 15.5px;
+    margin-top: 2px;
+  }
+}
+
+/* Small metal plates on the empty outer walls; narrow views keep reachable edge controls. */
+.neighborhood[data-controls='walls'] .scene-footer {
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+.neighborhood[data-controls='walls'] :is(.scene-controls, .social-links) {
   position: absolute;
-  left: -26px;
-  top: 22px;
-  width: 44px;
-  height: 36px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  top: var(--wall-top);
+  display: flex;
+  flex-direction: column;
+  width: 48px;
+  gap: 0;
+  padding: 2px 0;
+  border: 1px solid #c7ac7973;
+  border-radius: 3px;
+  background: #1c3046f2;
 }
-
-/* Roller: the note stands above the desk right of the paper; the arrow
-   reaches down to the light at the carriage's right end. */
-.typewriter--roller .tw-note {
-  left: calc(var(--pr, 100%) + 18px);
-  top: -48px;
+.neighborhood[data-controls='walls'] .scene-controls {
+  left: var(--wall-left);
 }
-
-.typewriter--roller .tw-note__arrow {
-  left: -60px;
-  top: 16px;
-  width: 70px;
-  height: 90px;
+.neighborhood[data-controls='walls'] .social-links {
+  right: var(--wall-right);
 }
-
-.typewriter[data-note='off'] .tw-note {
-  display: none;
+.neighborhood[data-controls='walls']
+  :is(.scene-controls button + button, .social-links a + a) {
+  border-top: 1px solid #c7ac7940;
 }
-
-/* Phones: the bell sits at the screen's edge, so its
-   hit area leans left to stay on screen (the bell itself stays inside). */
-@media (max-width: 719px) {
-  .tw-bell {
-    translate: calc(-50% - 8px) -50%;
-  }
-
-  .tw-bell img {
-    translate: 8px 0;
-  }
+.neighborhood[data-controls='walls']
+  :is(.scene-controls button, .social-links a) {
+  width: 46px;
+  color: #e8cf9e;
+}
+.neighborhood[data-controls='walls']
+  :is(.scene-controls button, .social-links a):is(:hover, :focus-visible) {
+  color: #fff0cf;
+  background: #e6be7212;
+}
+.neighborhood[data-controls='walls'] .scene-controls button .control-tooltip {
+  top: 50%;
+  bottom: auto;
+  left: calc(100% + 10px);
+  right: auto;
+  transform: translateY(-50%);
+}
+.neighborhood[data-controls='walls'] .social-links a .social-tooltip {
+  top: 50%;
+  bottom: auto;
+  right: calc(100% + 10px);
+  left: auto;
+  transform: translateY(-50%);
+}
+.neighborhood[data-controls='edge'] :is(.scene-controls, .social-links) {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  gap: 6px;
 }

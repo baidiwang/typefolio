@@ -1,0 +1,413 @@
+.night-pass-stage {
+  --pass-gold: var(--window-gold);
+  --pass-ink: #23455d;
+  --pass-radius: 34px;
+  --pass-height: 380px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100svh;
+  min-height: 0;
+  perspective: 1600px;
+  font-family: Manrope, sans-serif;
+  pointer-events: none;
+}
+.night-card-arrival {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.night-card {
+  position: relative;
+  width: var(--cover-width);
+  height: 380px;
+  transform-origin: 0 0;
+  transform: translateX(var(--drag, 0px));
+  z-index: 2;
+  pointer-events: auto;
+}
+.night-card.has-reading {
+  --pass-radius: 48px;
+  width: var(--reading-width);
+  height: calc(100% - 56px);
+}
+.night-card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+}
+.night-card.has-reading .night-card-inner {
+  transform: rotateY(-180deg);
+}
+.pass-front,
+.pass-back {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--pass-radius);
+  overflow: hidden;
+  background: var(--pass-gold) url('/paper/grain-a.webp');
+  background-blend-mode: multiply;
+  color: var(--pass-ink);
+}
+.pass-front,
+.pass-back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 10px 22px 50px #0b182d70;
+}
+.pass-front {
+  padding: 0 0 28px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  user-select: none;
+  touch-action: pan-y;
+}
+.night-reader-slot {
+  position: absolute;
+  z-index: 3;
+  left: calc(50% + min(245px, 32vw));
+  top: calc(50% + var(--pass-height) / 2 - 104px);
+  width: 22px;
+  height: 90px;
+  border-radius: 4px;
+  background: #253446;
+  box-shadow: 4px 8px 16px #07172b55;
+  pointer-events: none;
+}
+.night-reader-slot::before {
+  content: '';
+  position: absolute;
+  inset: 17px 9px 8px;
+  background: #0a182a;
+}
+.night-reader-slot i {
+  position: absolute;
+  left: 8px;
+  top: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e6be72;
+}
+.phase-scanning .night-reader-slot i {
+  background: #bed69a;
+}
+.phase-arriving .night-reader-slot,
+.phase-opening .night-reader-slot,
+.phase-open .night-reader-slot {
+  opacity: 0;
+}
+.pass-front:hover .pass-open-action,
+.pass-front:focus-visible .pass-open-action {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.pass-front:focus-visible {
+  outline: 3px solid var(--cream);
+  outline-offset: 7px;
+}
+.pass-front-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 30px 38px 0;
+}
+.night-pass-code {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #fff0cf;
+  background: #97543e;
+  font:
+    600 21px/1 Manrope,
+    sans-serif;
+}
+.night-pass-room {
+  display: block;
+  width: 38%;
+  aspect-ratio: 2.52;
+  overflow: hidden;
+  border: 2px solid var(--pass-ink);
+}
+.pass-front-copy {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 38px 22px;
+}
+.night-pass-title {
+  display: block;
+  font:
+    italic 600 52px/1.12 Manrope,
+    sans-serif;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.has-long-title .night-pass-title {
+  font-size: 34px;
+}
+.night-pass-description {
+  display: block;
+  max-width: 54ch;
+  font:
+    400 16px/1.55 Manrope,
+    sans-serif;
+  color: #294656;
+}
+.night-pass-stripe,
+.pass-back-stripe {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 38px;
+  background: #243b54;
+  color: #fff0cf;
+}
+.pass-punches {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+.pass-punches i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #eedda64d;
+}
+.pass-punches .is-punched {
+  background: #fff0cf;
+}
+.pass-open-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 34px;
+  font:
+    400 14px/1.4 Manrope,
+    sans-serif;
+}
+.pass-open-action svg {
+  width: 22px;
+  height: 22px;
+}
+.pass-back {
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 25px;
+  color-scheme: light;
+}
+.pass-card-content {
+  position: relative;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #806d42 var(--pass-gold);
+  scrollbar-width: thin;
+  padding: 28px 42px 34px;
+  min-height: 0;
+  flex: 1;
+  font:
+    400 16px/1.75 Manrope,
+    sans-serif;
+}
+.pass-card-content .case-heading {
+  margin: 0 auto 28px;
+  max-width: 70ch;
+  padding-bottom: 0;
+}
+.pass-card-content .case-heading h2 {
+  font:
+    600 42px/1.18 Manrope,
+    sans-serif;
+  letter-spacing: -0.025em;
+  margin-bottom: 20px;
+  text-wrap: balance;
+}
+.pass-card-content .case-heading p {
+  font:
+    400 17px/1.7 Manrope,
+    sans-serif;
+  color: #294656;
+  max-width: 68ch;
+}
+.pass-card-content .project-detail,
+.pass-card-content .article-detail,
+.pass-card-content .xr-experiments {
+  max-width: 70ch;
+  margin-inline: auto;
+}
+.pass-card-content .project-copy > p,
+.pass-card-content .article-detail > p {
+  font:
+    400 16px/1.8 Manrope,
+    sans-serif;
+  color: #294656;
+  max-width: 70ch;
+}
+.pass-card-content h3 {
+  font:
+    600 27px/1.25 Manrope,
+    sans-serif;
+  letter-spacing: -0.02em;
+}
+.pass-card-content .project-role,
+.pass-card-content .project-role span,
+.pass-card-content .stack,
+.pass-card-content .stack li,
+.pass-card-content .project-links,
+.pass-card-content .project-links a,
+.pass-card-content .article-link {
+  font:
+    400 14px/1.6 Manrope,
+    sans-serif;
+  color: #294656;
+}
+.pass-card-content .project-media video {
+  max-height: 360px;
+  object-fit: contain;
+}
+.pass-card-content .project-detail {
+  margin-bottom: 32px;
+}
+.pass-back-stripe {
+  min-height: 28px;
+}
+.pass-back :focus-visible {
+  outline-color: #805826;
+}
+.pass-card-content:focus {
+  outline: none;
+}
+@media (max-width: 760px) {
+  .night-pass-stage {
+    --pass-radius: 28px;
+    --pass-height: 360px;
+  }
+  .night-card {
+    height: 360px;
+  }
+  .night-reader-slot {
+    width: 18px;
+    height: 76px;
+    top: calc(50% + var(--pass-height) / 2 - 95px);
+  }
+  .night-reader-slot::before {
+    inset-inline: 7px;
+  }
+  .night-reader-slot i {
+    left: 6px;
+  }
+  .night-card.has-reading {
+    --pass-radius: 36px;
+    height: calc(100% - 48px);
+  }
+  .pass-front-heading {
+    padding: 25px 30px 0;
+  }
+  .pass-front-copy {
+    padding: 14px 30px 22px;
+  }
+  .night-pass-title {
+    font-size: 44px;
+  }
+  .has-long-title .night-pass-title {
+    font-size: 29px;
+  }
+  .night-pass-description {
+    font-size: 15px;
+  }
+  .night-pass-code {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+  }
+  .night-pass-stripe,
+  .pass-back-stripe {
+    padding-inline: 30px;
+  }
+  .pass-card-content {
+    padding: 24px 24px 30px;
+  }
+  .pass-card-content .case-heading h2 {
+    font-size: 30px;
+  }
+  .pass-card-content .case-heading p {
+    font-size: 16px;
+  }
+}
+@media (max-width: 460px) {
+  .night-pass-stage {
+    --pass-height: 346px;
+  }
+  .night-card {
+    height: 346px;
+  }
+  .night-card.has-reading {
+    --pass-radius: 30px;
+    height: calc(100% - 42px);
+  }
+  .pass-front-heading {
+    padding: 24px 26px 0;
+  }
+  .pass-front-copy {
+    padding: 18px 26px;
+  }
+  .has-long-title .night-pass-title {
+    font-size: 26px;
+  }
+  .night-pass-description {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .night-pass-stripe,
+  .pass-back-stripe {
+    padding-inline: 26px;
+  }
+  .pass-punches {
+    gap: 10px;
+  }
+  .pass-open-action {
+    gap: 6px;
+    font-size: 13px;
+  }
+  .pass-card-content {
+    padding-inline: 22px;
+  }
+}
+@media (max-width: 600px) {
+  .night-card.has-reading {
+    height: calc(100% - 120px);
+  }
+}
+@media (max-height: 560px) and (min-width: 761px) {
+  .night-card:not(.has-reading) {
+    height: min(330px, calc(100svh - 110px));
+  }
+  .pass-front-heading {
+    padding-top: 18px;
+  }
+  .night-pass-room {
+    width: 29%;
+  }
+  .night-pass-title {
+    font-size: 38px;
+  }
+  .has-long-title .night-pass-title {
+    font-size: 28px;
+  }
+}

@@ -3,53 +3,93 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Baidi Wang · Design Engineer</title>
-    <!-- The typewriter is on every first screen: fetch its two big layers early. -->
-    <link rel="preload" as="image" type="image/webp" href="/art/typewriter-body-red.webp" />
-    <link rel="preload" as="image" type="image/webp" href="/art/typewriter-roller.webp" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Baidi Wang · design engineer based in NYC</title>
+    <link rel="preload" as="image" href="/scene/city-resume-usps.webp" />
+    <link
+      rel="preload"
+      as="font"
+      href="/fonts/henny-penny-latin-400.woff2"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      href="/fonts/patrick-hand-latin-400.woff2"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      href="/fonts/manrope-latin-400-600.woff2"
+      type="font/woff2"
+      crossorigin
+    />
     <meta
       name="description"
-      content="Baidi Wang — Design Engineer building AI interfaces and interactive web products."
+      content="Baidi Wang — design engineer based in NYC. Explore AI products, Google Play prototypes, data visualization, games, and XR through six illustrated windows."
     />
-    <meta name="theme-color" content="#ece7df" />
-
-    <!-- Open Graph / Twitter. og-image.png is the first screen in the
-         valentine theme, 1200x630. -->
+    <meta name="theme-color" content="#1b2e4b" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://baidiwang.vercel.app" />
     <meta property="og:title" content="Baidi Wang · Design Engineer" />
     <meta
       property="og:description"
-      content="Design Engineer building AI interfaces and interactive web products."
+      content="AI products, Google Play prototypes, interactive graphics, games, and XR by Baidi Wang."
     />
-    <meta property="og:image" content="https://baidiwang.vercel.app/og-image.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="A sheet of typewritten paper headed Baidi Wang, Design Engineer, coming out of a red typewriter." />
+    <meta
+      property="og:image"
+      content="https://baidiwang.vercel.app/scene/city-resume-usps.webp"
+    />
+    <meta property="og:image:width" content="1536" />
+    <meta property="og:image:height" content="1024" />
+    <meta
+      property="og:image:alt"
+      content="Six warm apartment windows, a bookshop, and a post office on a snowy New York night."
+    />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Baidi Wang · Design Engineer" />
     <meta
       name="twitter:description"
-      content="Design Engineer building AI interfaces and interactive web products."
+      content="Design engineer based in NYC. AI products, graphics, games, and XR."
     />
-    <meta name="twitter:image" content="https://baidiwang.vercel.app/og-image.png" />
+    <meta
+      name="twitter:image"
+      content="https://baidiwang.vercel.app/scene/city-resume-usps.webp"
+    />
   </head>
   <body>
     <div id="root"></div>
-    <noscript>
-      <div style="max-width: 40rem; margin: 3rem auto; padding: 2rem; background: #fbf8f2; color: #121110; font-family: 'Courier New', monospace; line-height: 1.6">
-        <h1 style="font-size: 1.4rem; letter-spacing: 0.15em">BAIDI WANG</h1>
-        <p>Design Engineer building AI interfaces and interactive web products.</p>
-        <p>This page types itself out with JavaScript. In the meantime:</p>
+    <noscript
+      ><div
+        style="
+          max-width: 40rem;
+          margin: 3rem auto;
+          padding: 2rem;
+          background: #1b2e4b;
+          color: #f3ead7;
+          font-family: sans-serif;
+          line-height: 1.8;
+        "
+      >
+        <h1>Baidi Wang</h1>
+        <p>design engineer based in NYC</p>
         <p>
-          <a href="/BaidiWangResume.pdf">Resume</a> ·
-          <a href="https://www.linkedin.com/in/abbeywang">LinkedIn</a> ·
-          <a href="https://github.com/baidiwang">GitHub</a> ·
-          <a href="mailto:baidiwang30@gmail.com">baidiwang30@gmail.com</a>
+          Enable JavaScript to explore the illustrated neighborhood and project
+          demos.
         </p>
-      </div>
-    </noscript>
+        <p>
+          <a href="/BaidiWangResume.pdf">View résumé</a> ·
+          <a href="https://www.linkedin.com/in/abbeywang">LinkedIn</a>
+        </p>
+        <p>Email: baidiwang30@gmail.com</p>
+      </div></noscript
+    >
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

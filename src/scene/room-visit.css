@@ -1,0 +1,719 @@
+.room-visit {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  max-width: none;
+  height: 100svh;
+  max-height: none;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  perspective: 1600px;
+}
+.room-visit::backdrop {
+  background: transparent;
+}
+.room-view {
+  position: absolute;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.room-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+.visit-entry-room {
+  z-index: 1;
+}
+.visit-atmosphere {
+  z-index: 0;
+  opacity: 0;
+  overflow: hidden;
+  background: #796348;
+}
+.visit-atmosphere .room-art {
+  filter: blur(10px) brightness(0.53);
+  transform: scale(1.04);
+}
+.visit-navigation {
+  position: absolute;
+  z-index: 8;
+  inset: 12px 28px auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font:
+    400 14px/1.5 Manrope,
+    sans-serif;
+  color: #fff0cf;
+}
+.visit-navigation button {
+  min-height: 44px;
+  padding: 0 8px;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  text-shadow: 0 1px 3px #162a35;
+}
+.visit-navigation :focus-visible {
+  outline-color: #fff0cf;
+}
+.room-cast {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+.room-guest {
+  position: absolute;
+  bottom: 10px;
+  width: clamp(270px, 30vw, 430px);
+  transform-origin: 0 0;
+  opacity: 0;
+  mask-image:
+    linear-gradient(90deg, transparent, #000 10%, #000 91%, transparent),
+    linear-gradient(transparent, #000 6%, #000);
+  mask-composite: intersect;
+}
+.resident-vignette {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.guest-left {
+  left: -6px;
+}
+.guest-right {
+  right: -6px;
+}
+.guest-sofa-and-cat {
+  width: clamp(355px, 35vw, 530px);
+  right: -28px;
+}
+.guest-reader {
+  width: clamp(325px, 34vw, 490px);
+  right: -20px;
+}
+.guest-painter {
+  width: clamp(280px, 27vw, 390px);
+  left: 0;
+}
+.guest-singer {
+  width: clamp(300px, 30vw, 430px);
+  left: -12px;
+}
+.guest-diner-left,
+.guest-diner-right {
+  width: clamp(140px, 18vw, 270px);
+  bottom: 20px;
+}
+.guest-diner-left {
+  left: auto;
+  right: calc(50% + min(380px, 32vw) - 20px);
+}
+.guest-diner-right {
+  right: auto;
+  left: calc(50% + min(380px, 32vw) - 20px);
+}
+.room-object {
+  --object-paper: #f3e5c7;
+  position: absolute;
+  z-index: 4;
+  top: 78px;
+  bottom: 52px;
+  left: clamp(330px, 29vw, 445px);
+  right: max(40px, calc((100vw - 1480px) / 2));
+  display: flex;
+  flex-direction: column;
+  transform-origin: 0 0;
+  color: #253f43;
+  background: var(--object-paper) url('/paper/grain-a.webp');
+  background-blend-mode: multiply;
+  color-scheme: light;
+  box-shadow: 12px 20px 45px #23171166;
+  opacity: 0;
+}
+.object-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #9b825a var(--object-paper);
+  padding: 38px 42px 36px;
+  font:
+    400 16px/1.75 Manrope,
+    sans-serif;
+}
+.object-body .case-heading {
+  max-width: 70ch;
+  padding-bottom: 26px;
+}
+.object-body .case-heading h2 {
+  font:
+    400 clamp(32px, 3.2vw, 48px) / 1.35 'Henny Penny',
+    Georgia,
+    serif;
+  text-wrap: balance;
+  margin: 0 0 18px;
+}
+.object-body .case-heading p {
+  font:
+    400 17px/1.65 Manrope,
+    sans-serif;
+  color: inherit;
+  max-width: 66ch;
+  margin: 0;
+}
+.object-body .project-copy {
+  max-width: 70ch;
+}
+.object-body .project-copy > p,
+.object-body .article-detail > p {
+  font:
+    400 16px/1.8 Manrope,
+    sans-serif;
+  color: inherit;
+  max-width: 70ch;
+  margin-bottom: 22px;
+}
+.object-body h3 {
+  font:
+    400 29px/1.4 'Henny Penny',
+    Georgia,
+    serif;
+  color: inherit;
+}
+.object-body .stack,
+.object-body .stack li,
+.object-body .project-role,
+.object-body .project-role span,
+.object-body .project-links a,
+.object-body .article-link {
+  font:
+    400 14px/1.65 Manrope,
+    sans-serif;
+  color: inherit;
+}
+.object-body .project-detail {
+  scroll-margin-top: 24px;
+  margin-bottom: 28px;
+  padding-bottom: 28px;
+  border-bottom-color: #70552b33;
+}
+.object-body .project-media {
+  margin-bottom: 24px;
+  background: #2833300d;
+  border-radius: 1px;
+}
+.object-body .project-media video {
+  max-height: 340px;
+  object-fit: contain;
+}
+.object-body .project-media--portrait video {
+  height: 340px;
+  max-height: 45svh;
+}
+.object-body .studio-illustration {
+  display: none;
+}
+.object-index {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 8px 20px;
+  flex-wrap: wrap;
+  padding: 16px 32px 0;
+  flex: none;
+  font:
+    400 13px/1.5 Manrope,
+    sans-serif;
+}
+.object-index button {
+  min-height: 36px;
+  padding: 0 4px;
+  color: inherit;
+}
+.object-index button[aria-current='page'] {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+.room-object :focus-visible {
+  outline-color: #805826;
+}
+.object-decoration {
+  position: absolute;
+  pointer-events: none;
+}
+/* A folded bistro menu with an arched outline, flanked by both diners. */
+.surface-menu {
+  left: calc(50% - min(380px, 32vw));
+  right: calc(50% - min(380px, 32vw));
+  top: 82px;
+  bottom: 58px;
+  border-radius: 52% 48% 5px 5px / 38px 32px 5px 5px;
+  --object-paper: #f5e9cf;
+  color: #623c32;
+  padding: 20px 18px 14px;
+}
+.surface-menu::before {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 1px solid #955c485c;
+  border-radius: 50% 50% 2px 2px / 30px 30px 2px 2px;
+  pointer-events: none;
+}
+.surface-menu .object-body {
+  padding: 28px 28px;
+}
+.surface-menu .case-heading h2 {
+  text-align: center;
+  font-size: clamp(29px, 2.8vw, 42px);
+}
+.surface-menu .project-detail {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.75fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.surface-menu .project-media {
+  margin: 0;
+}
+.surface-menu .project-copy > p {
+  font-size: 15px;
+}
+.surface-menu .object-decoration {
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #8b69420c;
+}
+/* Folded music paper held on the piano's stand; the pianist stays beside it. */
+.surface-score {
+  top: 84px;
+  bottom: 64px;
+  padding: 14px 0 0;
+  border-radius: 2px 18px 8px 2px;
+  clip-path: polygon(
+    0 1%,
+    48% 0,
+    51% 0.8%,
+    100% 0,
+    99% 99%,
+    53% 100%,
+    49% 99%,
+    0 100%
+  );
+}
+.surface-score::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  left: 49%;
+  width: 22px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #6d4d2320 42%,
+    #fff9e144 54%,
+    transparent
+  );
+  pointer-events: none;
+}
+.surface-score .object-decoration {
+  left: 42px;
+  right: 42px;
+  top: 22px;
+  height: 22px;
+  border-top: 1px solid #93785055;
+  border-bottom: 1px solid #93785055;
+  background: linear-gradient(
+    transparent 31%,
+    #93785044 32%,
+    #93785044 35%,
+    transparent 36%,
+    transparent 64%,
+    #93785044 65%,
+    #93785044 68%,
+    transparent 69%
+  );
+}
+.surface-score .object-body {
+  padding-top: 52px;
+}
+/* The project lives in a record sleeve, with the vinyl visible at its edge. */
+.surface-sleeve {
+  --object-paper: #263d46;
+  color: #f4e4bd;
+  right: 82px;
+  top: 94px;
+  bottom: 70px;
+  border-radius: 4px 24px 4px 4px;
+}
+.surface-sleeve::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  right: -58px;
+  top: 18%;
+  width: 260px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, #172727 0 3px, #263534 4px 5px);
+  box-shadow: 8px 15px 25px #14202b55;
+  clip-path: inset(0 0 0 calc(100% - 58px));
+}
+.surface-sleeve::after {
+  display: none;
+  content: '';
+  position: absolute;
+  z-index: -1;
+  right: 34px;
+  top: calc(18% + 92px);
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: #d0a35f;
+}
+.surface-sleeve .project-detail {
+  border-bottom-color: #e0ca9a44;
+}
+.surface-sleeve .object-index {
+  border-bottom: 1px solid #e0ca9a33;
+  padding-bottom: 10px;
+}
+.surface-sleeve :focus-visible {
+  outline-color: #ffe1a3;
+}
+/* Pocket: a cloth-bound personal journal, with the sofa and cat to its right. */
+.surface-journal {
+  left: max(40px, calc((100vw - 1480px) / 2));
+  right: clamp(350px, 31vw, 470px);
+  --object-paper: #f0e6c9;
+  border-radius: 5px 36px 28px 5px;
+  padding-left: 18px;
+}
+.surface-journal::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 18px;
+  background: #596e5d;
+  box-shadow: inset -3px 0 5px #243a3344;
+}
+.surface-journal::after {
+  content: '';
+  position: absolute;
+  right: 24px;
+  top: -9px;
+  width: 16px;
+  height: 50px;
+  background: #c48063;
+  border-radius: 0 0 2px 2px;
+}
+.surface-journal .object-body {
+  padding-right: 44px;
+}
+/* An open hardback on the bookcase, while the reader remains in his armchair. */
+.surface-bookcase {
+  left: max(42px, calc((100vw - 1480px) / 2));
+  right: clamp(350px, 31vw, 470px);
+  --object-paper: #ece3c8;
+  border-radius: 5px 20px 18px 5px;
+  border: 9px solid #78563d;
+}
+.surface-bookcase::before {
+  content: '';
+  position: absolute;
+  inset: -9px -19px auto;
+  height: 14px;
+  background: #a47c52;
+  border-radius: 3px 3px 0 0;
+  box-shadow: 0 5px 8px #48362144;
+}
+.surface-bookcase::after {
+  content: '';
+  position: absolute;
+  left: -28px;
+  right: -28px;
+  bottom: -24px;
+  height: 22px;
+  background: #77503a;
+  box-shadow: 0 7px 12px #2e271c55;
+  border-radius: 2px;
+}
+.surface-bookcase .object-index {
+  padding-inline: 24px;
+}
+.surface-bookcase .object-body {
+  padding: 28px 30px;
+}
+/* Stretched canvas and an easel: the painter's hand meets the left edge. */
+.surface-canvas {
+  top: 96px;
+  bottom: 90px;
+  --object-paper: #efdcb7;
+  border: 14px solid #9b713f;
+  border-top-color: #c59860;
+  border-right-color: #775431;
+  box-shadow: 14px 20px 40px #2e241966;
+  border-radius: 2px;
+}
+.surface-canvas::before,
+.surface-canvas::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  width: 18px;
+  height: 90px;
+  bottom: -90px;
+  background: #7c542f;
+}
+.surface-canvas::before {
+  left: 14%;
+  transform: rotate(9deg);
+}
+.surface-canvas::after {
+  right: 14%;
+  transform: rotate(-9deg);
+}
+.surface-canvas .object-decoration {
+  left: 40%;
+  width: 20%;
+  height: 22px;
+  top: -34px;
+  background: #79512d;
+  border-radius: 3px 3px 0 0;
+}
+.surface-canvas .article-detail h3 {
+  display: none;
+}
+.surface-canvas .case-heading h2 {
+  max-width: 14ch;
+}
+@media (max-width: 1100px) and (min-width: 641px) {
+  .room-object:not(.surface-menu) {
+    left: 255px;
+    right: 28px;
+  }
+  .surface-journal,
+  .surface-bookcase {
+    left: 28px !important;
+    right: 275px !important;
+  }
+  .room-guest {
+    width: 300px;
+  }
+  .guest-reader {
+    width: 330px;
+    right: -14px;
+  }
+  .guest-sofa-and-cat {
+    width: 355px;
+    right: -28px;
+  }
+  .guest-diner-left,
+  .guest-diner-right {
+    width: clamp(130px, 18vw, 200px);
+  }
+  .object-body {
+    padding: 30px 26px;
+  }
+  .object-body .case-heading h2 {
+    font-size: 34px;
+  }
+  .surface-menu .project-detail {
+    display: block;
+  }
+  .surface-menu .project-media {
+    margin-bottom: 20px;
+  }
+  .surface-score .object-body {
+    padding-top: 48px;
+  }
+}
+@media (max-width: 640px) {
+  .visit-navigation {
+    inset: 8px 12px auto;
+    font-size: 12px;
+  }
+  .visit-navigation button {
+    padding-inline: 4px;
+  }
+  .room-object,
+  .room-object:not(.surface-menu),
+  .surface-journal,
+  .surface-bookcase {
+    top: 66px;
+    bottom: 182px;
+    left: 18px !important;
+    right: 18px !important;
+  }
+  .surface-menu {
+    left: 28px !important;
+    right: 28px !important;
+    top: 66px;
+    bottom: 186px;
+    border-radius: 50% 50% 4px 4px / 24px 24px 4px 4px;
+    padding: 16px 10px 8px;
+  }
+  .surface-menu .object-body {
+    padding: 20px 18px;
+  }
+  .surface-menu .project-detail {
+    display: block;
+  }
+  .surface-menu .project-media {
+    margin-bottom: 22px;
+  }
+  .object-body,
+  .surface-bookcase .object-body {
+    padding: 26px 22px;
+  }
+  .object-body .case-heading h2,
+  .surface-menu .case-heading h2 {
+    font-size: 29px;
+  }
+  .object-body .case-heading p {
+    font-size: 15px;
+  }
+  .object-body .project-copy > p,
+  .object-body .article-detail > p {
+    font-size: 15px;
+  }
+  .object-body .project-media video {
+    max-height: 230px;
+  }
+  .object-body .project-media--portrait video {
+    height: 270px;
+    max-height: 38svh;
+  }
+  .object-index {
+    gap: 4px 10px;
+    padding: 8px 16px 0;
+    font-size: 12px;
+  }
+  .object-index button {
+    min-height: 36px;
+  }
+  .room-guest {
+    width: 200px;
+    bottom: 2px;
+  }
+  .guest-left {
+    left: 0;
+  }
+  .guest-right {
+    right: 0;
+  }
+  .guest-sofa-and-cat {
+    width: 285px;
+    right: -24px;
+    bottom: -2px;
+  }
+  .guest-reader {
+    width: 252px;
+    right: -12px;
+  }
+  .guest-painter {
+    width: 166px;
+    left: 4px;
+  }
+  .guest-singer {
+    width: 205px;
+    left: -4px;
+  }
+  .guest-pianist {
+    width: 205px;
+    left: -8px;
+  }
+  .guest-diner-left,
+  .guest-diner-right {
+    width: 132px;
+    bottom: 3px;
+  }
+  .guest-diner-left {
+    left: -8px;
+    right: auto;
+  }
+  .guest-diner-right {
+    right: -8px;
+    left: auto;
+  }
+  .surface-score .object-body {
+    padding-top: 42px;
+  }
+  .surface-score .object-decoration {
+    left: 22px;
+    right: 22px;
+    top: 14px;
+    height: 18px;
+  }
+  .surface-sleeve {
+    right: 30px !important;
+  }
+  .surface-sleeve::before {
+    right: -20px;
+    width: 190px;
+    top: 25%;
+    clip-path: inset(0 0 0 calc(100% - 20px));
+  }
+  .surface-sleeve::after {
+    display: none;
+  }
+  .surface-journal {
+    padding-left: 12px;
+    border-top-right-radius: 24px;
+  }
+  .surface-journal::before {
+    width: 12px;
+  }
+  .surface-journal .object-body {
+    padding: 26px 24px;
+  }
+  .surface-bookcase {
+    border-width: 6px;
+  }
+  .surface-bookcase::after {
+    left: -15px;
+    right: -15px;
+    bottom: -18px;
+    height: 14px;
+  }
+  .surface-canvas {
+    border-width: 9px;
+    bottom: 194px !important;
+  }
+  .surface-canvas::before,
+  .surface-canvas::after {
+    height: 65px;
+    bottom: -65px;
+  }
+}
+@media (max-height: 650px) and (min-width: 641px) {
+  .room-object {
+    top: 64px;
+    bottom: 30px;
+  }
+  .room-guest {
+    max-height: 65svh;
+    width: auto;
+  }
+  .surface-canvas {
+    bottom: 50px;
+  }
+  .surface-menu {
+    top: 64px;
+    bottom: 30px;
+  }
+}
