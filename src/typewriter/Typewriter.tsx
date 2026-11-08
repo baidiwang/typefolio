@@ -1,208 +1,263 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { reveal } from '../reveal/controller'
-import {
-  BELL_PIVOT,
-  BODY,
-  BODY_SRC,
-  KNOB_L_PIVOT,
-  KNOB_R_PIVOT,
-  LAYERS,
-  NOTCH,
-} from './layers'
+import { LINE_ART, LINE_KNOBS, LINE_LEVER_PIVOT, LINE_ROLLER } from './line'
+import { setActuator, strikeFree, syncFree } from './machine'
 import { playBell, playKey, playReturn, setSoundEnabled } from './sound'
-
-/**
- * Two machines (?machine= on previews; drawn is the default):
- * - drawn: the hand-drawn typewriter, recoloured (?tw=red|olive) and lit
- *   from above; the paper goes in behind its body's top edge.
- * - roller: no body, just a rendered platen roller spanning the paper at
- *   the bottom of the screen, with a small carriage in the typewriter's
- *   colour that slides as text types.
- * Either way the paper's entry line (the strip's top edge) is where text
- * appears (`data-reveal-inset`).
- */
-type Machine = 'drawn' | 'roller'
-const machineOf = (): Machine =>
-  document.documentElement.dataset.machine === 'roller' ? 'roller' : 'drawn'
-const colourOf = (): 'red' | 'olive' =>
-  document.documentElement.dataset.tw === 'olive' ? 'olive' : 'red'
-
-/** How much of the drawn body shows, in drawing rows below its top edge.
- *  half (default): the shoulders, the roller's notch and the top key row
- *  with its stems (≈ 119 px at 1440×900, ≈ 61 px at 390); the rest runs
- *  off the bottom of the screen. full (?machine-crop=full): down to the keyboard
- *  frame on desktop, the whole machine on phones. */
-const CROP = {
-  half: { desk: 146, phone: 168 },
-  full: { desk: BODY.keyboardBottom - BODY.top, phone: BODY.bottom - BODY.top },
-} as const
-const cropOf = () => CROP[document.documentElement.dataset.machineCrop === 'full' ? 'full' : 'half']
-
-/** Carriage travel per typed character: drawn, in reference px of the
- *  drawing; roller, as a fraction of the paper's width. */
-const STEP = 0.5
-const ROLLER_STEP = 1 / 150
-/** The drawn body's width in the drawing (desktop draws it 10% wider:
- *  --tw-sx in index.css). */
-const BODY_W = BODY.x1 - BODY.x0
 
 type Box = { x: number; y: number; w: number; h: number }
 
-/** Reference px → css px: --tw-s is css px per reference px, set from the
- *  paper's width so the (stretched) body matches it. */
+/** px of the 2x drawing → css px: --tw-s is css px per drawing px, set from
+ *  the paper's width so the roller matches it. */
 const u = (n: number) => `calc(var(--tw-s) * ${n.toFixed(2)} * 1px)`
-/** css px for `a` reference px stretched by --tw-sx, plus `b` unstretched. */
-const ux = (a: number, b = 0) =>
-  `calc(var(--tw-s) * (${a.toFixed(2)} * var(--tw-sx) + ${b.toFixed(2)}) * 1px)`
 
-/** A stretched layer (body, roller), from the body's left edge (or `ox`). */
-const stretched = ({ x, y, w, h }: Box, ox: number = BODY.x0, oy: number = BODY.top): CSSProperties => ({
-  left: ux(x - ox),
-  top: u(y - oy),
-  width: ux(w),
-  height: u(h),
-})
+/** How many rows of the 2x drawing show below the entry line (just above
+ *  the rod's clips): ≈ 74 px at 1440×900 (85 at most, with the widest
+ *  paper) and ≈ 40 px at 390, the roller's lower part running off the
+ *  screen. */
+const ROWS = { desk: 115, phone: 132 } as const
+/** The paper is a little narrower than the roller, like a real one: this
+ *  share of its length, centred on it. index.css sizes the paper so the
+ *  whole machine (LINE_MACHINE in line.ts, 1.608× the paper) is at most
+ *  88% of the viewport. */
+const PAPER = 0.96
+const PAPER_W = (LINE_ROLLER.x1 - LINE_ROLLER.x0) * PAPER
+/** The paper's left edge, in px of the 2x drawing. */
+const PAPER_X0 = LINE_ROLLER.x0 + ((LINE_ROLLER.x1 - LINE_ROLLER.x0) * (1 - PAPER)) / 2
+/** Carriage travel per character and at most, in px of the 2x drawing. */
+const STEP = 0.5
+const MAX_TRAVEL = 34
 
-/** Where each axle meets the body: the side groups hang off these columns,
- *  so the axles stay attached however the body is stretched. */
-const ANCHOR = { left: 289, right: 1250 } as const
-
-/** A small part: keeps its proportions and its distance from its side's
- *  anchor (the lever and left knob on the left; the right axle, knob and
- *  bell on the right), so each group stays together. */
-const part = ({ x, y, w, h }: Box, side: 'left' | 'right'): CSSProperties => ({
-  left: ux(ANCHOR[side] - BODY.x0, x - ANCHOR[side]),
-  top: u(y - BODY.top),
+/** A layer's box, from the paper's left edge on the entry line. */
+const box = ({ x, y, w, h }: Box): CSSProperties => ({
+  left: u(x - PAPER_X0),
+  top: u(y - LINE_ROLLER.line),
   width: u(w),
   height: u(h),
 })
-
-/** transform-origin for a pivot point, as % of a layer's box. */
-const origin = (p: { x: number; y: number }, b: Box) =>
-  `${(((p.x - b.x) / b.w) * 100).toFixed(2)}% ${(((p.y - b.y) / b.h) * 100).toFixed(2)}%`
-
-const NOTCH_BOX = { x: NOTCH.x0, y: NOTCH.y0, w: NOTCH.x1 - NOTCH.x0, h: NOTCH.y1 - NOTCH.y0 }
-const KNOB_R = LAYERS.knobR
-const BELL = LAYERS.bell
-/** The bell's centre, from the body's left edge: stretched + unstretched. */
-const BELL_CX: [number, number] = [ANCHOR.right - BODY.x0, BELL.x + BELL.w / 2 - ANCHOR.right]
-
-const BELL_BUTTON_STYLE: CSSProperties = {
-  left: ux(...BELL_CX),
-  top: u(BELL.y + BELL.h / 2 - BODY.top),
-}
-
-/** Drawn: the note sits on the desk to the right of the paper, above the
- *  bell. (Roller: placed in CSS, beside the carriage's light.) */
-const NOTE_STYLE: CSSProperties = {
-  left: `calc(${ux(...BELL_CX)} + 18px)`,
-  top: `calc(${u(BELL.y - BODY.top)} - 64px)`,
-}
+/** Behind the roller, the paper goes on (paper colour) between the rod's
+ *  clips and the roller, and where the roller slides away from the
+ *  paper's right end. */
+const BACK = box({
+  x: PAPER_X0,
+  y: LINE_ROLLER.line,
+  w: PAPER_W,
+  h: LINE_ART.roller.y + LINE_ART.roller.h - LINE_ROLLER.line,
+})
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
+/** The knobs turn one full turn per this many px scrolled. */
+const PX_PER_TURN = 600
+/** Their ridges: this many around the rim. */
+const RIDGES = 50
+/** Each frame the knobs close this share of the gap to where the scroll
+ *  says they should be: an eased stop, not a hard one. */
+const KNOB_EASE = 0.16
+
+/** Positions inside the carriage, which sits at the roller's box. */
+const inCarriage = ({ x, y, w, h }: Box): CSSProperties => ({
+  left: u(x - LINE_ART.roller.x),
+  top: u(y - LINE_ART.roller.y),
+  width: u(w),
+  height: u(h),
+})
+const KNOB_VIEWBOX = `${LINE_ART.roller.x} ${LINE_ART.roller.y} ${LINE_ART.roller.w} ${LINE_ART.roller.h}`
+const knobSpan = (outline: readonly number[]) => {
+  const xs = outline.filter((_, i) => i % 2 === 0)
+  return [Math.min(...xs), Math.max(...xs)]
+}
+/** The lever tilts about its post: as a share of its own box. */
+const LEVER_ORIGIN = `${(((LINE_LEVER_PIVOT.x - LINE_ART.lever.x) / LINE_ART.lever.w) * 100).toFixed(1)}% ${(((LINE_LEVER_PIVOT.y - LINE_ART.lever.y) / LINE_ART.lever.h) * 100).toFixed(1)}%`
+
+/** Draw a knob's ridges at `phase` (radians): each ridge runs along the
+ *  platen's axis, so on the rim seen side on it's a line at
+ *  cy + ry·sin(θ), thinner as it turns away, hidden round the back. */
+function placeRidges(lines: SVGLineElement[], knob: (typeof LINE_KNOBS)[number], phase: number) {
+  lines.forEach((line, i) => {
+    const a = (i / RIDGES) * 2 * Math.PI + phase
+    const facing = Math.cos(a)
+    if (facing < 0.08) {
+      line.style.visibility = 'hidden'
+      return
+    }
+    const y = (knob.cy + knob.ry * Math.sin(a)).toFixed(2)
+    line.setAttribute('y1', y)
+    line.setAttribute('y2', y)
+    line.style.strokeWidth = (3.2 * facing).toFixed(2)
+    line.style.visibility = ''
+  })
+}
+
 /**
- * The desk scene fixed to the bottom of the viewport (see
- * docs/typewriter-rig.md). Motion is imperative, driven by the reveal
- * controller: the carriage slides per character and returns at line end;
- * on the drawn machine the knobs turn on each line feed and the bell rings
- * at the end of an element; on the roller the carriage's light blinks.
+ * The typewriter fixed to the bottom of the viewport (docs/typewriter-rig.md):
+ * only the roller of the line-art machine, from just above its clips to the
+ * bottom of the screen. The paper matches the roller and goes into it; the
+ * strip's top edge is the entry line, where text appears
+ * (`data-reveal-inset`).
  *
- * The sound toggle is a real button: the bell (drawn) or the carriage's
- * indicator light (roller). Until sound is turned on (each visit; nothing
- * is remembered), a pen note beside it says "ring for sound" (where there's room on the desk), and it gives
- * one small wiggle when the intro finishes typing. Everything else is
+ * Motion is imperative, driven by the reveal controller: the roller slides
+ * per character and returns at line end; the bell rings at the end of an
+ * element. The letter ends on one ring and a return after the signature
+ * and the smiley doodled after it.
+ *
+ * The sound toggle is a real button: the bell at the roller's right end.
+ * Until sound is turned on (each visit; nothing is remembered), a pen note
+ * beside it says "ring for sound" (where there's room on the desk), and it
+ * gives one small wiggle when the intro finishes typing. Everything else is
  * decorative (empty alt, nothing else focusable).
  */
 export function Typewriter() {
-  const [machine] = useState(machineOf)
-  const [colour] = useState(colourOf)
   const sceneRef = useRef<HTMLDivElement>(null)
-  /** Everything that slides with the carriage. */
-  const movingRefs = useRef<(HTMLElement | null)[]>([])
-  const knobLRef = useRef<HTMLImageElement>(null)
-  const knobRRef = useRef<HTMLImageElement>(null)
-  /** The sound toggle's moving part: the bell, or the light's lamp. */
-  const toggleRef = useRef<HTMLElement | null>(null)
-  /** css px per carriage step. */
+  /** The carriage: the roller, its knobs' ridges and the lever slide
+   *  together. */
+  const carriageRef = useRef<HTMLDivElement>(null)
+  /** The roller itself: it ticks on a line feed. */
+  const rollerRef = useRef<HTMLImageElement>(null)
+  const leverRef = useRef<HTMLImageElement>(null)
+  const knobRefs = useRef<SVGGElement[]>([])
+  /** The bell: it swings when it rings. */
+  const bellRef = useRef<HTMLImageElement>(null)
+  /** css px per carriage step, and the most it travels. */
   const stepRef = useRef(1)
+  const maxRef = useRef(Infinity)
   const [soundOn, setSoundOn] = useState(false)
   /** Sound has been turned on during this visit: hides the note and skips
    *  the wiggle. Not remembered across visits. */
   const [heard, setHeard] = useState(false)
   const heardRef = useRef(false)
 
-  // Track the paper: its edges (--pl/--pr on the scene; --paper-l/--paper-r
-  // on the root, for the lamp's falloff), the drawn machine's scale, the
+  // Track the paper: its edges (--pl/--pr on the scene), the scale, the
   // carriage step, and whether the note fits on the desk.
   useLayoutEffect(() => {
     const scene = sceneRef.current
     const paper = document.querySelector<HTMLElement>('.paper')
     if (!scene || !paper) return
     const root = document.documentElement.style
-    root.setProperty('--tw-aspect', (BODY_W / (BODY.keyboardBottom - BODY.top)).toFixed(4))
-    const crop = cropOf()
-    root.setProperty('--tw-rows-desk', String(crop.desk))
-    root.setProperty('--tw-rows-phone', String(crop.phone))
+    root.setProperty('--tw-rows-desk', String(ROWS.desk))
+    root.setProperty('--tw-rows-phone', String(ROWS.phone))
     const measure = () => {
       const r = paper.getBoundingClientRect()
-      root.setProperty('--paper-l', `${r.left}px`)
-      root.setProperty('--paper-r', `${r.right}px`)
       scene.style.setProperty('--pl', `${r.left}px`)
       scene.style.setProperty('--pr', `${r.right}px`)
-      scene.style.setProperty('--pw', `${r.width}px`)
+      const s = r.width / PAPER_W
+      stepRef.current = STEP * s
+      maxRef.current = MAX_TRAVEL * s
+      root.setProperty('--tw-s', s.toFixed(5))
+      // The note sits on the desk right of the paper: about 150 px.
       const room = document.documentElement.clientWidth - 8
-      if (machine === 'drawn') {
-        const sx = parseFloat(getComputedStyle(scene).getPropertyValue('--tw-sx')) || 1
-        const s = r.width / (BODY_W * sx)
-        stepRef.current = STEP * s
-        root.setProperty('--tw-s', s.toFixed(5))
-        const bellX = (BELL_CX[0] * sx + BELL_CX[1]) * s
-        // The note needs about 150 px of desk right of the paper.
-        scene.dataset.note = r.left + bellX + 18 + 150 <= room ? 'on' : 'off'
-      } else {
-        stepRef.current = r.width * ROLLER_STEP
-        scene.dataset.note = r.right + 16 + 150 <= room ? 'on' : 'off'
-      }
+      scene.dataset.note = r.right + 14 + 150 <= room ? 'on' : 'off'
+      // The lever, for the "Back to top" button over it (BackToTop.tsx);
+      // where it's off the screen (phones), there's no button.
+      const lever = LINE_ART.lever
+      const left = r.left + (lever.x - PAPER_X0) * s
+      // The scene's top edge is the entry line.
+      const top = scene.getBoundingClientRect().top
+      root.setProperty('--tw-lever-x', `${left.toFixed(1)}px`)
+      root.setProperty('--tw-lever-y', `${(top + (lever.y - LINE_ROLLER.line) * s).toFixed(1)}px`)
+      root.setProperty('--tw-lever-w', `${(lever.w * s).toFixed(1)}px`)
+      root.setProperty('--tw-lever-h', `${(lever.h * s).toFixed(1)}px`)
+      document.documentElement.dataset.lever = left >= 4 ? 'on' : 'off'
     }
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(paper)
     ro.observe(document.documentElement)
     return () => ro.disconnect()
-  }, [machine])
+  }, [])
+
+  // The knobs turn with the scroll: one turn per PX_PER_TURN, backwards
+  // going up, easing to a stop. Only while the page scrolls; nothing under
+  // reduced motion (the ridges stay drawn as they are).
+  useEffect(() => {
+    const groups = knobRefs.current
+    const lines = groups.map((g) => [...g.querySelectorAll('line')])
+    let phase = (window.scrollY / PX_PER_TURN) * 2 * Math.PI
+    const draw = () => lines.forEach((l, k) => placeRidges(l, LINE_KNOBS[k], phase))
+    draw()
+    let frame = 0
+    const follow = () => {
+      frame = 0
+      const target = (window.scrollY / PX_PER_TURN) * 2 * Math.PI
+      const gap = target - phase
+      phase = Math.abs(gap) < 0.002 ? target : phase + gap * KNOB_EASE
+      draw()
+      if (phase !== target) frame = requestAnimationFrame(follow)
+    }
+    const onScroll = () => {
+      if (reducedMotion() || frame) return
+      frame = requestAnimationFrame(follow)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [])
 
   useEffect(() => {
-    const moving = movingRefs.current
-    const knobs = [knobLRef.current, knobRRef.current]
-    const toggle = toggleRef.current
+    const carriage = carriageRef.current
+    const roller = rollerRef.current
+    const bell = bellRef.current
+    const leverImg = leverRef.current
 
     const moveCarriage = (column: number, ms: number, easing = 'linear') => {
-      for (const el of moving) {
-        if (!el) continue
-        el.style.transition = `transform ${ms}ms ${easing}`
-        el.style.transform = `translateX(${-column * stepRef.current}px)`
-      }
+      if (!carriage) return
+      carriage.style.transition = `transform ${ms}ms ${easing}`
+      carriage.style.transform = `translateX(${-Math.min(column * stepRef.current, maxRef.current)}px)`
     }
     const carriageReturn = () => moveCarriage(0, 260, 'cubic-bezier(0.3, 0.8, 0.2, 1)')
-    // Line feed: the platen knobs turn a notch (drawn only).
+    // Line feed: the platen turns one notch and the roller gives a 1 px
+    // tick (the sheet itself never moves). `translate`, not `transform`, so
+    // it never fights the carriage's slide.
     const lineFeed = () => {
-      for (const knob of knobs) {
-        knob?.animate(
-          [
-            { transform: 'rotate(0deg)' },
-            { transform: 'rotate(-14deg)' },
-            { transform: 'rotate(3deg)' },
-            { transform: 'rotate(0deg)' },
-          ],
-          { duration: 220, easing: 'ease-out' },
-        )
-      }
+      roller?.animate(
+        [{ translate: '0 0' }, { translate: '0 1px', offset: 0.25 }, { translate: '0 0' }],
+        { duration: 180, easing: 'ease-out' },
+      )
     }
     const ring = () => {
-      cue(toggle, machine, 1)
+      swing(bell, 1)
       playBell()
     }
+
+    // The visitor's own keystrokes (machine.ts): the reply line and key
+    // presses elsewhere step, ring and return like the page's typing.
+    // Under reduced motion: sound only (if on), nothing moves.
+    setActuator({
+      step: (col, click) => {
+        if (!reducedMotion()) moveCarriage(col, 45)
+        if (click) playKey()
+      },
+      ring: () => {
+        if (!reducedMotion()) swing(bell, 1)
+        playBell()
+      },
+      carriageReturn: () => {
+        if (!reducedMotion()) {
+          carriageReturn()
+          lineFeed()
+        }
+        playReturn()
+      },
+    })
+
+    // Any printable key pressed outside a text field (no Cmd, Ctrl or Alt)
+    // makes the machine answer: nothing is typed, and the key's own job
+    // (Space scrolls, shortcuts work) is untouched: never preventDefault.
+    // At most one answer per frame.
+    let keyFrame = 0
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1 || keyFrame) return
+      const t = e.target
+      if (
+        t instanceof Element &&
+        t.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])')
+      )
+        return
+      keyFrame = requestAnimationFrame(() => (keyFrame = 0))
+      strikeFree(e.key)
+    }
+    window.addEventListener('keydown', onKey)
 
     // One small wiggle when the intro has finished typing, so the toggle
     // reads as something to touch.
@@ -210,17 +265,77 @@ export function Typewriter() {
     const stopWiggle =
       intro && !reducedMotion()
         ? reveal.whenDone(intro, () => {
-            if (!heardRef.current) cue(toggle, machine, 0.6, 700)
+            if (!heardRef.current) swing(bell, 0.6, 700)
           })
         : undefined
 
+    // The letter's last line: "Yours in type,", the signature and the
+    // smiley run as one line. The sign-off leaves the carriage where it
+    // ends (no return, no bell); while the signature writes itself and the
+    // smiley draws, the carriage carries on across them, as if they were
+    // typed; once the smiley is drawn the bell rings once (heard only with
+    // sound on) and the carriage returns with the usual ease. If they're
+    // skipped (scrolled past), the queue's idle return still brings the
+    // carriage home; under reduced motion the controller sends nothing at
+    // all.
+    const signoff = document.querySelector('.ending__signoff')
+    const signature = document.querySelector('.ending__signature .signature')
+    const smiley = document.querySelector('.ending__signature .smiley')
+    const doodles = new Map([
+      [signature, 700],
+      [smiley, 500],
+    ])
+    let current: Element | null = null
+    let column = 0
+    /** How many typed columns an element spans. */
+    const columnsOf = (el: Element) => {
+      const ch = parseFloat(getComputedStyle(document.body).fontSize) * 0.6
+      return Math.round(el.getBoundingClientRect().width / ch)
+    }
+    const stopSignature = smiley
+      ? reveal.whenDone(smiley, (instant) => {
+          if (instant || reducedMotion()) return
+          ring()
+          carriageReturn()
+          playReturn()
+          column = 0
+        })
+      : undefined
+
+    // The lever (BackToTop.tsx): a nudge on hover; on use, a throw of the
+    // lever (the carriage stays put; the knobs rewind with the scroll).
+    const onLever = (e: Event) => {
+      const kind = (e as CustomEvent<string>).detail
+      if (!leverImg) return
+      if (kind === 'hover') leverImg.dataset.hover = ''
+      if (kind === 'leave') delete leverImg.dataset.hover
+      if (kind === 'throw' && !reducedMotion()) {
+        leverImg.animate(
+          [{ rotate: '0deg' }, { rotate: '-12deg', offset: 0.35 }, { rotate: '0deg' }],
+          { duration: 520, easing: 'cubic-bezier(0.3, 0.7, 0.2, 1)' },
+        )
+      }
+    }
+    window.addEventListener('tw:lever', onLever)
+
     const unsubscribe = reveal.subscribe((event) => {
       switch (event.type) {
+        case 'start':
+          current = event.element
+          if (doodles.has(current)) {
+            column += columnsOf(current)
+            moveCarriage(column, doodles.get(current)!)
+          }
+          break
         case 'char':
-          moveCarriage(event.column + 1, 45)
+          column = event.column + 1
+          syncFree(column)
+          moveCarriage(column, 45)
           if (event.char.trim() !== '') playKey() // space bar: carriage only
           break
         case 'return':
+          if (signoff && current === signoff && event.bell) break // held for the signature
+          column = 0
           carriageReturn()
           lineFeed()
           playReturn()
@@ -232,15 +347,22 @@ export function Typewriter() {
           if (event.bell) ring()
           break
         case 'idle':
+          column = 0
+          syncFree(0)
           carriageReturn()
           break
       }
     })
     return () => {
+      setActuator(null)
+      window.removeEventListener('keydown', onKey)
+      cancelAnimationFrame(keyFrame)
+      window.removeEventListener('tw:lever', onLever)
       stopWiggle?.()
+      stopSignature?.()
       unsubscribe()
     }
-  }, [machine])
+  }, [])
 
   const toggleSound = () => {
     const next = !soundOn
@@ -248,141 +370,94 @@ export function Typewriter() {
     setSoundOn(next)
     if (next) {
       playBell()
-      if (!reducedMotion()) cue(toggleRef.current, machine, 1)
+      if (!reducedMotion()) swing(bellRef.current, 1)
       heardRef.current = true
       setHeard(true)
     }
   }
 
-  const moving = (i: number) => (el: HTMLElement | null) => {
-    movingRefs.current[i] = el
-  }
-
-  const note = !heard && (
-    <div className="tw-note" style={machine === 'drawn' ? NOTE_STYLE : undefined} aria-hidden="true">
-      <span className="tw-note__text">ring for sound</span>
-      {machine === 'drawn' ? (
-        <svg className="tw-note__arrow" viewBox="0 0 60 50" focusable="false">
-          <path d="M52 6C40 10 22 18 12 38" />
-          <path d="M5 30L12 39L20 33" />
-        </svg>
-      ) : (
-        // Longer: from the note down past the roller's end to the light.
-        <svg className="tw-note__arrow" viewBox="0 0 70 90" focusable="false">
-          <path d="M64 6C46 12 24 34 17 78" />
-          <path d="M9 69L17 80L25 71" />
-        </svg>
-      )}
-    </div>
-  )
-
-  const toggleProps = {
-    type: 'button' as const,
-    'aria-label': 'Sound',
-    'aria-pressed': soundOn,
-    title: soundOn ? 'Sound on' : 'Sound off',
-    onClick: toggleSound,
-  }
-
-  if (machine === 'roller') {
-    return (
-      <div ref={sceneRef} className="typewriter typewriter--roller" data-reveal-inset="">
-        {/* The platen roller spans the paper; its end caps sit just
-            outside it. The carriage rides along it, starting at the right. */}
-        <div className="tw-platen" aria-hidden="true" />
-        <div ref={moving(0)} className="tw-rcarriage">
-          <button {...toggleProps} className="tw-light">
-            <span
-              ref={(el) => {
-                toggleRef.current = el
-              }}
-              className="tw-light__lamp"
-            />
-          </button>
-        </div>
-        {note}
-      </div>
-    )
-  }
-
   return (
-    <div ref={sceneRef} className="typewriter typewriter--drawn" data-reveal-inset="">
-      {/* A zero-size anchor at the body's top-left corner. Back to front:
-          the roller (clipped to the notch between the shoulders), the body,
-          the lever, axle and knobs, then the bell (a button). */}
+    <div ref={sceneRef} className="typewriter" data-reveal-inset="">
+      {/* From the paper's left edge on the entry line: the paper behind,
+          then the roller (slides). */}
       <div className="tw-origin">
-        <div className="tw-notch" style={stretched(NOTCH_BOX)}>
+        <div className="tw-back" style={BACK} />
+        <div ref={carriageRef} className="tw-carriage" style={box(LINE_ART.roller)}>
+          <img ref={rollerRef} className="tw-roller" src={LINE_ART.roller.src} alt="" />
+          {/* The knobs' ridges, drawn here so they can roll. */}
+          <svg className="tw-knobs" viewBox={KNOB_VIEWBOX} preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <defs>
+              {LINE_KNOBS.map((k, i) => (
+                <clipPath key={i} id={`tw-knob-${i}`}>
+                  <polygon points={k.outline.join(' ')} />
+                </clipPath>
+              ))}
+            </defs>
+            {LINE_KNOBS.map((k, i) => {
+              const [x0, x1] = knobSpan(k.outline)
+              return (
+                <g
+                  key={i}
+                  clipPath={`url(#tw-knob-${i})`}
+                  ref={(g) => {
+                    if (g) knobRefs.current[i] = g
+                  }}
+                >
+                  {Array.from({ length: RIDGES }, (_, r) => (
+                    <line key={r} x1={x0} x2={x1} y1={k.cy} y2={k.cy} />
+                  ))}
+                </g>
+              )
+            })}
+          </svg>
           <img
-            ref={moving(0)}
-            className="tw-layer"
-            src={LAYERS.roller.src}
-            style={stretched(LAYERS.roller, NOTCH.x0, NOTCH.y0)}
+            ref={leverRef}
+            className="tw-lever"
+            src={LINE_ART.lever.src}
+            style={{ ...inCarriage(LINE_ART.lever), transformOrigin: LEVER_ORIGIN }}
             alt=""
           />
         </div>
-        <img className="tw-layer" src={BODY_SRC[colour]} style={stretched(LAYERS.body)} alt="" />
-        <div ref={moving(1)} className="tw-carriage">
-          <img className="tw-layer" src={LAYERS.lever.src} style={part(LAYERS.lever, 'left')} alt="" />
-          <img className="tw-layer" src={LAYERS.axleR.src} style={part(LAYERS.axleR, 'right')} alt="" />
-          <img
-            ref={knobLRef}
-            className="tw-layer"
-            src={LAYERS.knobL.src}
-            style={{ ...part(LAYERS.knobL, 'left'), transformOrigin: origin(KNOB_L_PIVOT, LAYERS.knobL) }}
-            alt=""
-          />
-          <img
-            ref={knobRRef}
-            className="tw-layer"
-            src={LAYERS.knobR.src}
-            style={{ ...part(KNOB_R, 'right'), transformOrigin: origin(KNOB_R_PIVOT, KNOB_R) }}
-            alt=""
-          />
-        </div>
-        <button {...toggleProps} className="tw-bell" style={BELL_BUTTON_STYLE}>
-          <img
-            ref={(el) => {
-              toggleRef.current = el
-            }}
-            src={BELL.src}
-            style={{
-              width: u(BELL.w),
-              height: u(BELL.h),
-              transformOrigin: origin(BELL_PIVOT, BELL),
-            }}
-            alt=""
-          />
-        </button>
-        {note}
       </div>
+      {/* The bell at the roller's right end, standing on the screen's bottom
+          edge: the sound toggle. */}
+      <button
+        type="button"
+        className="tw-bell"
+        aria-label="Sound"
+        aria-pressed={soundOn}
+        title={soundOn ? 'Sound on' : 'Sound off'}
+        onClick={toggleSound}
+        style={{ '--bell-h': u(LINE_ART.bell.h) } as CSSProperties}
+      >
+        <img ref={bellRef} src={LINE_ART.bell.src} alt="" />
+      </button>
+      {!heard && (
+        <div className="tw-note" aria-hidden="true">
+          <span className="tw-note__text">ring for sound</span>
+          <svg className="tw-note__arrow" viewBox="0 0 60 50" focusable="false">
+            <path d="M52 6C40 10 22 18 12 38" />
+            <path d="M5 30L12 39L20 33" />
+          </svg>
+        </div>
+      )}
     </div>
   )
 }
 
-/** The toggle answers: the bell swings about its stem (drawn), or the
- *  carriage's light blinks (roller). `amount` 1 = a ring, less = a wiggle. */
-function cue(el: HTMLElement | null, machine: Machine, amount: number, ms = 420) {
+/** The bell swings about the foot of its dome. `amount` 1 = a ring, less =
+ *  a wiggle. */
+function swing(el: HTMLElement | null, amount: number, ms = 420) {
   if (!el) return
-  if (machine === 'drawn') {
-    const deg = 10 * amount
-    el.animate(
-      [
-        { transform: 'rotate(0deg)' },
-        { transform: `rotate(${deg}deg)` },
-        { transform: `rotate(${-deg * 0.8}deg)` },
-        { transform: `rotate(${deg * 0.4}deg)` },
-        { transform: 'rotate(0deg)' },
-      ],
-      { duration: ms, easing: 'ease-out' },
-    )
-  } else {
-    el.animate(
-      [
-        { transform: 'scale(1)', filter: 'brightness(1)' },
-        { transform: `scale(${1 + 0.35 * amount})`, filter: `brightness(${1 + 1.2 * amount})` },
-        { transform: 'scale(1)', filter: 'brightness(1)' },
-      ],
-      { duration: ms + 200, easing: 'ease-out' },
-    )
-  }
+  const deg = 10 * amount
+  el.animate(
+    [
+      { transform: 'rotate(0deg)' },
+      { transform: `rotate(${deg}deg)` },
+      { transform: `rotate(${-deg * 0.8}deg)` },
+      { transform: `rotate(${deg * 0.4}deg)` },
+      { transform: 'rotate(0deg)' },
+    ],
+    { duration: ms, easing: 'ease-out' },
+  )
 }

@@ -6,6 +6,8 @@ type Props = {
   className?: string
   /** Nominal time to write it, before queue compression. */
   duration?: number
+  /** Drawn after the lettering, on the same line (the smiley). */
+  after?: ReactNode
   children: ReactNode
 }
 
@@ -17,7 +19,13 @@ type Props = {
  * registered and simply shows. It's real text, so it reads and copies as
  * usual; the lettering may later become an SVG of Baidi's own handwriting.
  */
-export function Signature({ as: Tag = 'p', className, duration = 900, children }: Props) {
+export function Signature({
+  as: Tag = 'p',
+  className,
+  duration = 900,
+  after,
+  children,
+}: Props) {
   const ref = useRef<HTMLSpanElement>(null)
 
   useLayoutEffect(() => {
@@ -42,6 +50,7 @@ export function Signature({ as: Tag = 'p', className, duration = 900, children }
       <span ref={ref} className="signature">
         {children}
       </span>
+      {after}
     </Tag>
   )
 }

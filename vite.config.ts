@@ -5,7 +5,7 @@ import { defineConfig } from 'vite'
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
   define: {
-    // Design playground (?theme=, ?font=; src/playground.ts): on in dev and
+    // Design playground (?font=, ?name=; src/playground.ts): on in dev and
     // on Vercel preview deployments (VERCEL_ENV=preview), off in production.
     // PLAYGROUND=1 forces it on for any other build.
     __PLAYGROUND__: JSON.stringify(

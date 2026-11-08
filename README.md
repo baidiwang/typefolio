@@ -35,10 +35,16 @@ Native `<dialog>` provides keyboard focus containment. Background click or Escap
 ## Assets
 
 - `public/scene/` includes extracted transparent reference sprites and generated matching illustration assets.
-- `public/fonts/` self-hosts the user-selected Henny Penny for large headings, Manrope for readable tooltips, and Patrick Hand for the existing case-study text (Latin WOFF2).
+- `public/fonts/` self-hosts Henny Penny for the homepage name and Manrope for project headings, tooltips, and case-study text (Latin WOFF2).
 - `public/media/` and `public/BaidiWangResume.pdf` are the original project demos and résumé.
 - See `docs/scene-assets.md` for illustration provenance and generation prompts.
 
 The old typewriter components and artwork remain in the repository for reference; they are no longer imported into the application bundle.
 
 Design and maintenance rules live in `AGENTS.md`, including the user’s instruction to avoid unnecessary secondary labels and descriptions. The globally installed Impeccable skill supplies additional design guidance; the user’s illustrated direction takes precedence. Small authored cursor SVGs are in `public/cursors/`.
+
+## Deployment
+
+The existing GitHub repository is `baidiwang/typefolio`. Its `main` branch is connected to the Vercel project `typefolio` in `baidiwangs-projects`, serving https://baidiwang.vercel.app. Push validated changes to `main` to trigger production deployment. The project uses the Vite preset, Node 24, `npm run build`, and the `dist` output directory.
+
+Run `npm run check` before publishing. Local `.vercel` account linkage and `.impeccable` review captures are ignored by Git; `.vercelignore` also excludes source artwork and documentation from CLI deployment uploads. Project comparison studies remain development-only.

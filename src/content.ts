@@ -22,6 +22,8 @@ export type ProjectMedia = {
   height: number
   alt: string
   formats?: Array<'webm' | 'mp4'>
+  /** Supported by the retained typewriter media component. */
+  still?: boolean
 }
 
 export type Project = {
@@ -296,6 +298,11 @@ export const xrExperiments = {
     },
     { title: 'Spatial Jam', href: 'https://devpost.com/software/async-jam' },
   ],
+}
+
+/** Number of destinations, also used by the retained typewriter components. */
+export function linkCount(links: ProjectLinks): number {
+  return [links.live, links.code, links.writeup].filter(Boolean).length
 }
 
 /** The main link for a project: where its media and title point. */
