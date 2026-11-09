@@ -45,6 +45,8 @@ Design and maintenance rules live in `AGENTS.md`, including the user’s instruc
 
 ## Deployment
 
-The existing GitHub repository is `baidiwang/typefolio`. Its `main` branch is connected to the Vercel project `typefolio` in `baidiwangs-projects`, serving https://baidiwang.vercel.app. Push validated changes to `main` to trigger production deployment. The project uses the Vite preset, Node 24, `npm run build`, and the `dist` output directory.
+The GitHub repository is `baidiwang/portfolio` (renamed from `baidiwang/typefolio`). Its `main` branch hosts the apartment portfolio. The complete previous typewriter version is preserved on the `typewriter` branch at commit `f485b3134fca33e661a96c9fd3b699077370cd1d`.
+
+The Vercel project remains `typefolio` in `baidiwangs-projects`, serving https://baidiwang.vercel.app. Push validated changes to its connected `main` branch to trigger production deployment. The project uses the Vite preset, Node 24, `npm run build`, and the `dist` output directory.
 
 Run `npm run check` before publishing. Local `.vercel` account linkage and `.impeccable` review captures are ignored by Git; `.vercelignore` also excludes source artwork and documentation from CLI deployment uploads. Project comparison studies remain development-only.
